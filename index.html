@@ -337,6 +337,25 @@ details.more summary{cursor:pointer;color:var(--muted);font-size:14px;font-weigh
 details.more[open] summary{margin-bottom:8px}
 #myVideo{display:grid;gap:10px}
 @media (prefers-reduced-motion: reduce){.pacer,.progress i,.ring .arc,.btn{transition:none!important}}
+
+/* audio e musica */
+.wrapchips{flex-wrap:wrap;overflow:visible}
+.qa{justify-content:center;margin-top:4px}
+.qa .chip{text-decoration:none}
+.subh{font-size:18px;text-transform:uppercase;margin-top:4px}
+.songs{display:grid;gap:6px}
+.song{display:flex;align-items:center;gap:10px;background:var(--sunk);border-radius:10px;padding:6px 8px;min-width:0;flex-wrap:wrap}
+.song>span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.song button.sg-play,.song button.sg-del{flex:none;width:40px;height:40px;border-radius:999px;border:0;cursor:pointer;font-size:16px}
+.song .sg-play{background:var(--accent);color:var(--on-accent)}
+.song .sg-del{background:transparent;color:var(--muted)}
+.mbar{position:fixed;left:0;right:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 14px rgba(0,0,0,.08)}
+.mbar .wrap{display:flex;align-items:center;gap:10px;padding-block:8px}
+.mb-play{flex:none;width:44px;height:44px;border-radius:999px;border:0;background:var(--accent);color:var(--on-accent);font-size:16px;cursor:pointer}
+.mb-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.mb-name small{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mb-btn{flex:none;width:40px;height:40px;border-radius:999px;border:0;background:var(--sunk);cursor:pointer;font-size:15px}
+body.has-mbar main{padding-bottom:190px}
 </style>
 
 <header class="top"><div class="wrap" id="topbar"></div></header>
@@ -363,116 +382,234 @@ const EQUIP = {macchina:'Macchina', cavi:'Cavi', bilanciere:'Bilanciere', manubr
 /* fase "in": quando si inspira (di solito la fase di ritorno); fase "out": quando si espira (di solito lo sforzo).
    tempo: secondi [ritorno, sforzo] usati dalla guida animata */
 const EX = [
- {id:'chest-press',name:'Chest press',g:'petto',e:'macchina',lv:'Principiante',
+ {id:'chest-press',name:'Chest press',g:'petto',e:'macchina',lv:'Principiante',mu:'Petto e tricipiti',
   steps:['Regola il sedile: le maniglie devono stare all\'altezza del centro del petto.','Schiena e testa appoggiate allo schienale, piedi a terra.','Spingi le maniglie in avanti fino a braccia quasi tese, senza bloccare i gomiti.','Torna indietro piano fino a sentire il petto che si allunga.'],
   br:{in:'Mentre le maniglie tornano verso di te.',out:'Mentre spingi in avanti.'},tempo:[3,2],
   err:['Staccare le spalle dallo schienale','Bloccare i gomiti a fine spinta','Far sbattere i pesi'],dose:['3','10–12','90"']},
- {id:'panca-piana',name:'Panca piana',g:'petto',e:'bilanciere',lv:'Intermedio',
+ {id:'panca-piana',name:'Panca piana',g:'petto',e:'bilanciere',lv:'Intermedio',mu:'Petto e tricipiti',
   steps:['Sdraiati con gli occhi sotto il bilanciere, piedi ben piantati a terra.','Prendi il bilanciere poco più largo delle spalle, scapole strette e abbassate.','Scendi controllando fino a sfiorare la parte bassa del petto.','Spingi verso l\'alto e leggermente indietro, fino a braccia tese.'],
   br:{in:'Prima di scendere: riempi il petto e tieni l\'aria mentre il bilanciere scende.',out:'Durante la spinta, soprattutto dopo il punto più duro.'},tempo:[3,2],
   note:'Con carichi pesanti fatti sempre assistere da qualcuno.',
   err:['Rimbalzare il bilanciere sul petto','Alzare il bacino dalla panca','Gomiti troppo aperti a 90°'],dose:['4','6–8','2\'']},
- {id:'croci-cavi',name:'Croci ai cavi',g:'petto',e:'cavi',lv:'Principiante',
+ {id:'croci-cavi',name:'Croci ai cavi',g:'petto',e:'cavi',lv:'Principiante',mu:'Petto',
   steps:['Carrucole all\'altezza delle spalle, un passo avanti al centro della macchina.','Gomiti leggermente piegati e fermi per tutto il movimento.','Porta le mani una verso l\'altra davanti al petto, come per abbracciare un albero.','Riapri lentamente fino a sentire il petto allungato.'],
   br:{in:'Mentre apri le braccia.',out:'Mentre chiudi le mani davanti a te.'},tempo:[3,2],
   err:['Piegare e stendere i gomiti (diventa una spinta)','Inclinarsi troppo in avanti'],dose:['3','12–15','60"']},
- {id:'piegamenti',name:'Piegamenti',g:'petto',e:'corpo',lv:'Principiante',
+ {id:'piegamenti',name:'Piegamenti',g:'petto',e:'corpo',lv:'Principiante',mu:'Petto e tricipiti',
   steps:['Mani appena più larghe delle spalle, corpo dritto dalla testa ai talloni.','Scendi piegando i gomiti a circa 45° dal busto.','Arriva con il petto vicino al pavimento.','Spingi per tornare su mantenendo l\'addome contratto.'],
   br:{in:'Mentre scendi.',out:'Mentre spingi per risalire.'},tempo:[2,1],
   note:'Se sono troppo difficili, appoggia le ginocchia o le mani su una panca.',
   err:['Fianchi che cedono verso il basso','Testa che va avanti prima del petto'],dose:['3','8–15','60"']},
 
- {id:'lat-machine',name:'Lat machine',g:'schiena',e:'macchina',lv:'Principiante',
+ {id:'lat-machine',name:'Lat machine',g:'schiena',e:'macchina',lv:'Principiante',mu:'Dorsali e bicipiti',
   steps:['Blocca le cosce sotto i rulli, presa larga sulla barra.','Petto in fuori, leggero arco della schiena.','Tira la barra verso la parte alta del petto portando i gomiti in basso.','Risali lentamente fino a braccia distese.'],
   br:{in:'Mentre la barra risale.',out:'Mentre tiri la barra verso il petto.'},tempo:[3,2],
   err:['Tirare dietro la nuca','Dondolare con il busto','Lasciar risalire la barra di scatto'],dose:['3','10–12','90"']},
- {id:'pulley',name:'Pulley basso',g:'schiena',e:'macchina',lv:'Principiante',
+ {id:'pulley',name:'Pulley basso',g:'schiena',e:'macchina',lv:'Principiante',mu:'Dorsali e centro schiena',
   steps:['Seduto, piedi sulla pedana e ginocchia leggermente piegate.','Busto dritto, braccia distese in avanti.','Tira la maniglia verso l\'ombelico stringendo le scapole.','Torna avanti piano senza piegare la schiena.'],
   br:{in:'Mentre le braccia tornano avanti.',out:'Mentre tiri verso la pancia.'},tempo:[3,2],
   err:['Usare la schiena come leva avanti e indietro','Alzare le spalle verso le orecchie'],dose:['3','10–12','90"']},
- {id:'rematore-manubrio',name:'Rematore con manubrio',g:'schiena',e:'manubri',lv:'Principiante',
+ {id:'rematore-manubrio',name:'Rematore con manubrio',g:'schiena',e:'manubri',lv:'Principiante',mu:'Dorsali',
   steps:['Un ginocchio e una mano sulla panca, schiena piatta.','Manubrio nella mano libera, braccio disteso.','Porta il manubrio verso il fianco, gomito vicino al corpo.','Abbassa con controllo.'],
   br:{in:'Mentre abbassi il manubrio.',out:'Mentre tiri verso il fianco.'},tempo:[2,2],
   err:['Ruotare il busto per tirare','Schiena curva'],dose:['3','10 per lato','60"']},
- {id:'trazioni-assistite',name:'Trazioni assistite',g:'schiena',e:'macchina',lv:'Principiante',
+ {id:'trazioni-assistite',name:'Trazioni assistite',g:'schiena',e:'macchina',lv:'Principiante',mu:'Dorsali e bicipiti',
   steps:['Scegli il contrappeso: più peso metti, più la macchina ti aiuta.','Ginocchia sulla pedana, presa larga sulle maniglie.','Tirati su finché il mento supera le maniglie.','Scendi lentamente fino a braccia distese.'],
   br:{in:'Mentre scendi.',out:'Mentre sali.'},tempo:[3,2],
   err:['Scendere di colpo','Fare solo mezzo movimento'],dose:['3','6–10','2\'']},
 
- {id:'leg-press',name:'Leg press',g:'gambe',e:'macchina',lv:'Principiante',
+ {id:'leg-press',name:'Leg press',g:'gambe',e:'macchina',lv:'Principiante',mu:'Cosce e glutei',
   steps:['Schiena e bacino ben appoggiati allo schienale.','Piedi sulla pedana alla larghezza delle spalle.','Sblocca la pedana e piega le ginocchia fino a circa 90°.','Spingi con tutto il piede, senza bloccare le ginocchia in fondo.'],
   br:{in:'Mentre la pedana scende verso di te.',out:'Mentre spingi.'},tempo:[3,2],
   err:['Staccare il bacino dallo schienale','Ginocchia che cadono verso l\'interno','Ginocchia bloccate a fine spinta'],dose:['3','10–12','2\'']},
- {id:'squat',name:'Squat',g:'gambe',e:'bilanciere',lv:'Intermedio',
+ {id:'squat',name:'Squat',g:'gambe',e:'bilanciere',lv:'Intermedio',mu:'Cosce e glutei',hl:['thigh','glutes'],
   steps:['Bilanciere sulla parte alta della schiena, non sul collo.','Piedi larghi come le spalle, punte leggermente aperte.','Scendi portando il bacino indietro e in basso, ginocchia nella direzione delle punte.','Risali spingendo il pavimento, petto alto.'],
   br:{in:'In alto, prima di scendere: aria nella pancia e addome contratto.',out:'Dopo il punto più duro della risalita.'},tempo:[3,2],
   note:'Lavora nel rack con le sicure regolate appena sotto la profondità che raggiungi.',
   err:['Talloni che si staccano','Schiena che si arrotonda in basso','Ginocchia che vanno verso l\'interno'],dose:['4','6–8','2\'']},
- {id:'leg-extension',name:'Leg extension',g:'gambe',e:'macchina',lv:'Principiante',
+ {id:'leg-extension',name:'Leg extension',g:'gambe',e:'macchina',lv:'Principiante',mu:'Quadricipiti',
   steps:['Ginocchio allineato al perno della macchina.','Rullo appoggiato sopra le caviglie.','Stendi le gambe fino in alto e tieni un attimo.','Scendi lentamente.'],
   br:{in:'Mentre scendi.',out:'Mentre stendi le gambe.'},tempo:[3,2],
   err:['Dare il colpo per alzare il peso','Staccare il sedere dal sedile'],dose:['3','12–15','60"']},
- {id:'leg-curl',name:'Leg curl',g:'gambe',e:'macchina',lv:'Principiante',
+ {id:'leg-curl',name:'Leg curl',g:'gambe',e:'macchina',lv:'Principiante',mu:'Femorali',hl:['hams'],
   steps:['Sdraiato o seduto, ginocchio allineato al perno.','Rullo appena sopra i talloni.','Piega le gambe portando i talloni verso il sedere.','Torna lentamente.'],
   br:{in:'Mentre le gambe tornano distese.',out:'Mentre pieghi le gambe.'},tempo:[3,2],
   err:['Alzare il bacino','Movimento troppo veloce'],dose:['3','12','60"']},
- {id:'affondi',name:'Affondi',g:'gambe',e:'manubri',lv:'Principiante',
+ {id:'affondi',name:'Affondi',g:'gambe',e:'manubri',lv:'Principiante',mu:'Cosce e glutei',hl:['thigh','glutes'],
   steps:['In piedi, un manubrio per mano lungo i fianchi.','Fai un passo lungo in avanti.','Scendi finché il ginocchio dietro quasi tocca terra.','Spingi con la gamba davanti per tornare in piedi.'],
   br:{in:'Mentre scendi.',out:'Mentre torni su.'},tempo:[2,2],
   err:['Passo troppo corto','Busto che cade in avanti'],dose:['3','10 per gamba','90"']},
- {id:'polpacci',name:'Sollevamenti sulle punte',g:'gambe',e:'macchina',lv:'Principiante',
+ {id:'polpacci',name:'Sollevamenti sulle punte',g:'gambe',e:'macchina',lv:'Principiante',mu:'Polpacci',hl:['calf'],
   steps:['Punte dei piedi sul bordo della pedana, talloni liberi.','Sali sulle punte il più in alto possibile.','Tieni un secondo in alto.','Scendi fino a sentire allungare il polpaccio.'],
   br:{in:'Mentre scendi.',out:'Mentre sali sulle punte.'},tempo:[2,2],
   err:['Rimbalzare in basso','Piegare le ginocchia'],dose:['3','15','45"']},
 
- {id:'shoulder-press',name:'Shoulder press',g:'spalle',e:'macchina',lv:'Principiante',
+ {id:'shoulder-press',name:'Shoulder press',g:'spalle',e:'macchina',lv:'Principiante',mu:'Spalle e tricipiti',
   steps:['Sedile regolato con le maniglie all\'altezza delle spalle.','Schiena appoggiata, addome contratto.','Spingi verso l\'alto fino a braccia quasi tese.','Riscendi con controllo all\'altezza delle orecchie.'],
   br:{in:'Mentre scendi.',out:'Mentre spingi verso l\'alto.'},tempo:[3,2],
   err:['Inarcare troppo la schiena','Bloccare i gomiti'],dose:['3','10–12','90"']},
- {id:'alzate-laterali',name:'Alzate laterali',g:'spalle',e:'manubri',lv:'Principiante',
+ {id:'alzate-laterali',name:'Alzate laterali',g:'spalle',e:'manubri',lv:'Principiante',mu:'Spalle (parte laterale)',
   steps:['In piedi, manubri leggeri lungo i fianchi.','Gomiti appena piegati.','Alza le braccia di lato fino all\'altezza delle spalle.','Scendi lentamente.'],
   br:{in:'Mentre abbassi.',out:'Mentre alzi.'},tempo:[3,2],
   err:['Usare pesi troppo pesanti e dondolare','Alzare le spalle verso le orecchie'],dose:['3','12–15','60"']},
- {id:'face-pull',name:'Tirate al viso',g:'spalle',e:'cavi',lv:'Principiante',
+ {id:'face-pull',name:'Tirate al viso',g:'spalle',e:'cavi',lv:'Principiante',mu:'Spalle posteriori',
   steps:['Corda sulla carrucola all\'altezza degli occhi.','Afferra la corda con i pollici verso di te.','Tira verso il viso aprendo le mani ai lati delle orecchie.','Torna avanti con controllo.'],
   br:{in:'Mentre torni avanti.',out:'Mentre tiri verso il viso.'},tempo:[2,2],
   err:['Tirare con la schiena','Gomiti troppo bassi'],dose:['3','15','60"']},
 
- {id:'curl-manubri',name:'Curl con manubri',g:'braccia',e:'manubri',lv:'Principiante',
+ {id:'curl-manubri',name:'Curl con manubri',g:'braccia',e:'manubri',lv:'Principiante',mu:'Bicipiti',
   steps:['In piedi, manubri lungo i fianchi, palmi in avanti.','Gomiti fermi vicino al corpo.','Piega le braccia portando i manubri verso le spalle.','Scendi lentamente fino a braccia distese.'],
   br:{in:'Mentre scendi.',out:'Mentre sali.'},tempo:[3,2],
   err:['Dondolare con la schiena','Gomiti che vanno in avanti'],dose:['3','10–12','60"']},
- {id:'pushdown',name:'Estensioni tricipiti ai cavi',g:'braccia',e:'cavi',lv:'Principiante',
+ {id:'pushdown',name:'Estensioni tricipiti ai cavi',g:'braccia',e:'cavi',lv:'Principiante',mu:'Tricipiti',
   steps:['Carrucola alta con corda o barra.','Gomiti attaccati ai fianchi.','Spingi verso il basso fino a braccia tese.','Risali lentamente fino a 90°.'],
   br:{in:'Mentre risali.',out:'Mentre spingi giù.'},tempo:[2,2],
   err:['Staccare i gomiti dal corpo','Piegarsi sopra la corda'],dose:['3','12','60"']},
 
- {id:'plank',name:'Plank',g:'core',e:'corpo',lv:'Principiante',
+ {id:'plank',name:'Plank',g:'core',e:'corpo',lv:'Principiante',mu:'Addome',
   steps:['Avambracci a terra, gomiti sotto le spalle.','Corpo in linea dalla testa ai talloni.','Contrai addome e glutei.','Tieni la posizione respirando con calma.'],
   br:{in:'Dal naso, lento, gonfiando i fianchi.',out:'Dalla bocca, lenta, senza mollare l\'addome.'},tempo:[4,4],
   note:'Non trattenere il fiato: respira in modo regolare per tutta la durata.',
   err:['Bacino troppo alto o troppo basso','Trattenere il respiro'],dose:['3','30–45"','45"']},
- {id:'crunch',name:'Crunch',g:'core',e:'corpo',lv:'Principiante',
+ {id:'crunch',name:'Crunch',g:'core',e:'corpo',lv:'Principiante',mu:'Addome',
   steps:['Sdraiato, ginocchia piegate, piedi a terra.','Mani dietro la testa senza tirare il collo.','Solleva le spalle da terra arrotolando la schiena.','Torna giù lentamente.'],
   br:{in:'Mentre torni giù.',out:'Mentre sali.'},tempo:[2,2],
   err:['Tirare la testa con le mani','Salire di slancio'],dose:['3','15','45"']},
- {id:'crunch-cavo',name:'Crunch ai cavi',g:'core',e:'cavi',lv:'Intermedio',
+ {id:'crunch-cavo',name:'Crunch ai cavi',g:'core',e:'cavi',lv:'Intermedio',mu:'Addome',
   steps:['In ginocchio davanti alla carrucola alta, corda vicino alla testa.','Fianchi fermi.','Arrotola il busto portando i gomiti verso le cosce.','Torna su con controllo.'],
   br:{in:'Mentre torni su.',out:'Mentre ti arrotoli verso il basso.'},tempo:[2,2],
   err:['Sedersi sui talloni','Tirare con le braccia'],dose:['3','12–15','60"']},
 
- {id:'tapis-roulant',name:'Tapis roulant',g:'cardio',e:'cardio',lv:'Tutti',
+ {id:'tapis-roulant',name:'Tapis roulant',g:'cardio',e:'cardio',lv:'Tutti',mu:'Cuore e gambe',
   steps:['Parti camminando a 5 km/h per 3 minuti.','Aumenta fino a un ritmo in cui riesci ancora a parlare.','Per variare alza la pendenza invece della velocità.','Finisci con 3 minuti di camminata lenta.'],
   br:{in:'Dal naso per 2–3 passi.',out:'Dalla bocca per 2–3 passi.'},tempo:[3,3],
   err:['Tenersi ai corrimano','Guardare i piedi'],dose:['1','20–30\'','—']},
- {id:'cyclette',name:'Cyclette',g:'cardio',e:'cardio',lv:'Tutti',
+ {id:'cyclette',name:'Cyclette',g:'cardio',e:'cardio',lv:'Tutti',mu:'Cuore e gambe',
   steps:['Sellino all\'altezza dell\'anca quando sei in piedi accanto.','Con il pedale in basso il ginocchio resta appena piegato.','Pedala a 70–90 giri al minuto.','Alterna 1 minuto più forte e 2 minuti più tranquilli.'],
   br:{in:'Regolare, dal naso quando il ritmo è facile.',out:'Lunga e completa, senza fretta.'},tempo:[3,3],
   err:['Sellino troppo basso','Schiena curva sul manubrio'],dose:['1','20–30\'','—']},
- {id:'vogatore',name:'Vogatore',g:'cardio',e:'cardio',lv:'Tutti',
+ {id:'vogatore',name:'Vogatore',g:'cardio',e:'cardio',lv:'Tutti',mu:'Cuore, gambe e schiena',
   steps:['Piedi legati, ginocchia piegate, braccia tese.','Spingi prima con le gambe.','Poi inclina leggermente il busto indietro.','Infine tira la maniglia verso lo sterno. Torna nell\'ordine inverso.'],
   br:{in:'Mentre torni avanti.',out:'Durante la spinta delle gambe.'},tempo:[2,1],
-  err:['Tirare con le braccia prima delle gambe','Schiena curva'],dose:['1','10–15\'','—']}
+  err:['Tirare con le braccia prima delle gambe','Schiena curva'],dose:['1','10–15\'','—']},
+ {id:'panca-manubri',name:'Panca piana con manubri',g:'petto',e:'manubri',lv:'Principiante',mu:'Petto e tricipiti',
+  steps:['Sdraiati sulla panca con un manubrio per mano appoggiato sulle cosce.','Porta i manubri sopra il petto, braccia tese, palmi verso i piedi.','Scendi piano aprendo i gomiti a circa 45° dal corpo, fino all\'altezza del petto.','Spingi in alto riavvicinando i manubri sopra il petto.'],
+  br:{in:'Mentre scendi verso il petto.',out:'Mentre spingi in alto.'},tempo:[3,2],
+  err:['Gomiti troppo aperti a 90°','Far rimbalzare i manubri sul petto','Inarcare troppo la schiena'],dose:['3','10–12','90"']},
+ {id:'panca-inclinata-manubri',name:'Panca inclinata con manubri',g:'petto',e:'manubri',lv:'Principiante',mu:'Petto alto e spalle',
+  steps:['Schienale inclinato a 30°, siediti con la schiena ben appoggiata.','Manubri all\'altezza delle spalle, palmi in avanti.','Spingi verso l\'alto fino a braccia quasi tese, sopra il mento.','Scendi lentamente fino all\'altezza del petto alto.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi verso l\'alto.'},tempo:[3,2],
+  err:['Schienale troppo alto (lavorano solo le spalle)','Staccare il sedere dalla panca'],dose:['3','10–12','90"']},
+ {id:'pectoral-machine',name:'Pectoral machine',g:'petto',e:'macchina',lv:'Principiante',mu:'Petto',
+  steps:['Regola il sedile: le maniglie all\'altezza del petto.','Schiena appoggiata, braccia aperte con i gomiti appena piegati.','Chiudi le braccia davanti al petto come per abbracciare un albero.','Riapri lentamente fino a sentire il petto che si allunga.'],
+  br:{in:'Mentre riapri le braccia.',out:'Mentre chiudi davanti al petto.'},tempo:[3,2],
+  err:['Aprire troppo dietro le spalle','Spingere con le mani invece che con il petto'],dose:['3','12–15','60"']},
+
+ {id:'rematore-bilanciere',name:'Rematore con bilanciere',g:'schiena',e:'bilanciere',lv:'Intermedio',mu:'Dorsali e centro schiena',
+  steps:['In piedi, ginocchia morbide, busto inclinato in avanti a circa 45° con la schiena dritta.','Bilanciere a braccia tese, presa poco più larga delle spalle.','Tira il bilanciere verso l\'ombelico stringendo le scapole.','Scendi controllando fino a braccia tese.'],
+  br:{in:'Mentre il bilanciere scende.',out:'Mentre tiri verso la pancia.'},tempo:[2,2],
+  err:['Schiena curva','Alzare il busto a ogni ripetizione','Tirare di slancio'],dose:['3','8–10','90"']},
+ {id:'pullover-cavo',name:'Pullover ai cavi',g:'schiena',e:'cavi',lv:'Principiante',mu:'Dorsali',
+  steps:['Carrucola alta con barra dritta o corda, fai un passo indietro.','Busto leggermente inclinato in avanti, braccia tese in alto.','Porta la barra verso le cosce tenendo le braccia quasi tese.','Risali lentamente fino all\'altezza della testa.'],
+  br:{in:'Mentre risali.',out:'Mentre porti la barra verso le cosce.'},tempo:[2,2],
+  err:['Piegare i gomiti trasformandolo in un pushdown','Muovere il busto avanti e indietro'],dose:['3','12–15','60"']},
+ {id:'iperestensioni',name:'Hyperextension',g:'schiena',e:'macchina',lv:'Principiante',mu:'Lombari e glutei',
+  steps:['Regola il cuscino all\'altezza dell\'anca, talloni bloccati sotto il rullo.','Braccia incrociate sul petto.','Scendi piegandoti in avanti con la schiena dritta.','Risali fino a formare una linea dritta con le gambe, senza andare oltre.'],
+  br:{in:'Mentre scendi.',out:'Mentre risali.'},tempo:[2,2],
+  err:['Salire troppo inarcando la schiena','Muoversi di slancio'],dose:['3','12–15','60"']},
+
+ {id:'stacco-rumeno',name:'Stacco rumeno',g:'gambe',e:'bilanciere',lv:'Intermedio',mu:'Femorali e glutei',hl:['hams','glutes'],
+  steps:['In piedi, bilanciere davanti alle cosce, piedi alla larghezza delle anche.','Ginocchia appena piegate e ferme.','Spingi il sedere indietro e scendi con il bilanciere vicino alle gambe, schiena dritta.','Quando senti tirare dietro le cosce, risali spingendo i fianchi in avanti.'],
+  br:{in:'Mentre scendi.',out:'Mentre risali.'},tempo:[3,2],
+  err:['Schiena curva','Bilanciere lontano dalle gambe','Piegare troppo le ginocchia'],dose:['3','8–10','120"']},
+ {id:'hip-thrust',name:'Hip thrust',g:'gambe',e:'bilanciere',lv:'Intermedio',mu:'Glutei',hl:['glutes','hams'],
+  steps:['Schiena alta appoggiata a una panca, bilanciere imbottito sulle anche.','Piedi a terra alla larghezza delle anche, ginocchia piegate.','Spingi i fianchi in alto fino a formare una linea spalle-ginocchia.','Stringi i glutei un secondo, poi scendi piano.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi i fianchi in alto.'},tempo:[2,2],
+  err:['Inarcare la schiena invece di stringere i glutei','Piedi troppo lontani'],dose:['3','10–12','90"']},
+ {id:'goblet-squat',name:'Goblet squat',g:'gambe',e:'manubri',lv:'Principiante',mu:'Cosce e glutei',hl:['thigh','glutes'],
+  steps:['Tieni un manubrio in verticale contro il petto, con due mani.','Piedi poco più larghi delle spalle, punte leggermente aperte.','Scendi come per sederti, petto alto e talloni a terra.','Risali spingendo con tutto il piede.'],
+  br:{in:'Mentre scendi.',out:'Mentre risali.'},tempo:[3,2],
+  err:['Talloni che si alzano','Ginocchia che cadono verso l\'interno'],dose:['3','10–12','90"']},
+ {id:'abductor',name:'Abductor machine',g:'gambe',e:'macchina',lv:'Principiante',mu:'Glutei (esterno coscia)',
+  steps:['Siediti con la schiena appoggiata e i cuscinetti all\'esterno delle ginocchia.','Parti con le gambe chiuse.','Apri le gambe spingendo verso l\'esterno.','Richiudi lentamente senza far sbattere i pesi.'],
+  br:{in:'Mentre richiudi.',out:'Mentre apri le gambe.'},tempo:[2,2],
+  err:['Muoversi di slancio','Staccare la schiena'],dose:['3','15','60"']},
+ {id:'adductor',name:'Adductor machine',g:'gambe',e:'macchina',lv:'Principiante',mu:'Interno coscia',
+  steps:['Siediti con la schiena appoggiata e i cuscinetti all\'interno delle ginocchia.','Parti con le gambe aperte quanto ti è comodo.','Chiudi le gambe stringendo verso il centro.','Riapri lentamente.'],
+  br:{in:'Mentre riapri.',out:'Mentre chiudi le gambe.'},tempo:[2,2],
+  err:['Aprire troppo all\'inizio','Far sbattere i pesi'],dose:['3','15','60"']},
+
+ {id:'lento-manubri',name:'Lento avanti con manubri',g:'spalle',e:'manubri',lv:'Principiante',mu:'Spalle',
+  steps:['Seduto su una panca con schienale dritto, manubri all\'altezza delle orecchie.','Palmi in avanti, gomiti sotto i polsi.','Spingi in alto fino a braccia quasi tese.','Scendi lentamente fino all\'altezza delle orecchie.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi in alto.'},tempo:[3,2],
+  err:['Inarcare la schiena','Scendere troppo poco'],dose:['3','10–12','90"']},
+ {id:'alzate-frontali',name:'Alzate frontali',g:'spalle',e:'manubri',lv:'Principiante',mu:'Spalle (parte davanti)',
+  steps:['In piedi, manubri davanti alle cosce.','Braccia tese con i gomiti appena morbidi.','Alza le braccia davanti a te fino all\'altezza delle spalle.','Scendi lentamente.'],
+  br:{in:'Mentre scendi.',out:'Mentre sali.'},tempo:[3,2],
+  err:['Dondolare con il busto','Salire sopra la testa'],dose:['3','12','60"']},
+ {id:'reverse-fly',name:'Reverse fly alla macchina',g:'spalle',e:'macchina',lv:'Principiante',mu:'Spalle posteriori',
+  steps:['Siediti rivolto verso lo schienale, petto appoggiato.','Afferra le maniglie davanti a te a braccia quasi tese.','Apri le braccia all\'indietro stringendo le scapole.','Torna avanti lentamente.'],
+  br:{in:'Mentre torni avanti.',out:'Mentre apri le braccia.'},tempo:[2,2],
+  err:['Usare peso troppo alto e tirare con la schiena','Piegare troppo i gomiti'],dose:['3','15','60"']},
+ {id:'tirate-mento',name:'Tirate al mento',g:'spalle',e:'bilanciere',lv:'Intermedio',mu:'Spalle e trapezi',hl:['delt','traps'],
+  steps:['In piedi, bilanciere davanti alle cosce, presa alla larghezza delle spalle.','Tira il bilanciere in alto vicino al corpo.','I gomiti salgono per primi, fino all\'altezza delle spalle.','Scendi lentamente.'],
+  br:{in:'Mentre scendi.',out:'Mentre tiri in alto.'},tempo:[2,2],
+  err:['Presa troppo stretta','Salire con i gomiti sopra le spalle se senti fastidio'],dose:['3','12','60"']},
+
+ {id:'curl-bilanciere',name:'Curl con bilanciere',g:'braccia',e:'bilanciere',lv:'Principiante',mu:'Bicipiti',
+  steps:['In piedi, bilanciere a braccia tese, palmi in avanti, presa alla larghezza delle spalle.','Gomiti fermi ai fianchi.','Piega le braccia portando il bilanciere verso il petto.','Scendi lentamente fino a braccia distese.'],
+  br:{in:'Mentre scendi.',out:'Mentre sali.'},tempo:[3,2],
+  err:['Dondolare con la schiena','Gomiti che si spostano in avanti','Scendere a metà'],dose:['3','10–12','60"']},
+ {id:'curl-martello',name:'Curl a martello',g:'braccia',e:'manubri',lv:'Principiante',mu:'Bicipiti e avambracci',hl:['ua','fa'],
+  steps:['In piedi, manubri lungo i fianchi con i palmi rivolti verso le gambe.','Gomiti fermi vicino al corpo.','Piega le braccia tenendo i palmi uno di fronte all\'altro, come un martello.','Scendi lentamente.'],
+  br:{in:'Mentre scendi.',out:'Mentre sali.'},tempo:[3,2],
+  err:['Ruotare i polsi','Dondolare con il busto'],dose:['3','10–12','60"']},
+ {id:'curl-scott',name:'Curl alla panca Scott',g:'braccia',e:'macchina',lv:'Principiante',mu:'Bicipiti',
+  steps:['Siediti con la parte dietro delle braccia ben appoggiata sul cuscino inclinato.','Afferra la barra o le maniglie, palmi verso l\'alto.','Piega le braccia portando la barra verso le spalle.','Scendi lentamente quasi fino a braccia tese.'],
+  br:{in:'Mentre scendi.',out:'Mentre sali.'},tempo:[3,2],
+  err:['Staccare i gomiti dal cuscino','Distendere di colpo in fondo'],dose:['3','10–12','60"']},
+ {id:'curl-cavo',name:'Curl ai cavi',g:'braccia',e:'cavi',lv:'Principiante',mu:'Bicipiti',
+  steps:['Carrucola bassa con barra, in piedi vicino alla macchina.','Gomiti fermi ai fianchi, palmi in avanti.','Piega le braccia portando la barra verso il petto.','Scendi lentamente: il cavo tiene il muscolo sempre in tensione.'],
+  br:{in:'Mentre scendi.',out:'Mentre sali.'},tempo:[3,2],
+  err:['Piegarsi in avanti','Gomiti che si staccano dai fianchi'],dose:['3','12','60"']},
+ {id:'french-press',name:'French press',g:'braccia',e:'bilanciere',lv:'Intermedio',mu:'Tricipiti',
+  steps:['Sdraiato sulla panca, bilanciere (meglio quello sagomato) a braccia tese sopra il petto.','Tieni le braccia ferme e leggermente inclinate verso la testa.','Piega solo i gomiti portando la barra verso la fronte.','Distendi le braccia tornando su.'],
+  br:{in:'Mentre scendi verso la fronte.',out:'Mentre distendi le braccia.'},tempo:[3,2],
+  err:['Aprire i gomiti verso l\'esterno','Muovere le spalle insieme ai gomiti'],dose:['3','10–12','90"']},
+ {id:'estensioni-sopra-testa',name:'Estensioni sopra la testa',g:'braccia',e:'manubri',lv:'Principiante',mu:'Tricipiti',
+  steps:['Seduto o in piedi, un manubrio tenuto con due mani sopra la testa.','Gomiti vicino alla testa, rivolti in avanti.','Piega i gomiti portando il manubrio dietro la nuca.','Distendi le braccia verso l\'alto.'],
+  br:{in:'Mentre scendi dietro la testa.',out:'Mentre distendi verso l\'alto.'},tempo:[3,2],
+  err:['Aprire i gomiti','Inarcare la schiena'],dose:['3','12','60"']},
+ {id:'kickback',name:'Kickback con manubrio',g:'braccia',e:'manubri',lv:'Principiante',mu:'Tricipiti',
+  steps:['Una mano e un ginocchio sulla panca, busto parallelo al pavimento.','Braccio vicino al fianco, gomito piegato a 90°.','Distendi il braccio all\'indietro fino a renderlo dritto.','Torna piano a 90° senza muovere il gomito.'],
+  br:{in:'Mentre torni a 90°.',out:'Mentre distendi il braccio.'},tempo:[2,2],
+  err:['Abbassare il gomito','Muovere il braccio di slancio'],dose:['3','12 per braccio','60"']},
+ {id:'dip-macchina',name:'Dip machine',g:'braccia',e:'macchina',lv:'Principiante',mu:'Tricipiti e petto',
+  steps:['Siediti con la schiena appoggiata, maniglie ai lati del corpo.','Gomiti piegati e rivolti indietro.','Spingi le maniglie in basso fino a braccia tese.','Risali lentamente fino a 90°.'],
+  br:{in:'Mentre risali.',out:'Mentre spingi giù.'},tempo:[2,2],
+  err:['Aprire i gomiti verso l\'esterno','Alzare le spalle verso le orecchie'],dose:['3','10–12','60"']},
+
+ {id:'sollevamento-gambe',name:'Sollevamento gambe',g:'core',e:'corpo',lv:'Principiante',mu:'Addome basso',
+  steps:['Sdraiato a terra, braccia lungo i fianchi, mani sotto i glutei se ti aiuta.','Gambe tese o leggermente piegate.','Alza le gambe fino a portarle in verticale.','Scendi lentamente senza toccare terra e senza inarcare la schiena.'],
+  br:{in:'Mentre scendi.',out:'Mentre sali.'},tempo:[3,2],
+  err:['Schiena che si stacca da terra','Scendere di colpo'],dose:['3','12','45"']},
+ {id:'crunch-macchina',name:'Ab crunch machine',g:'core',e:'macchina',lv:'Principiante',mu:'Addome',
+  steps:['Regola il sedile, afferra le maniglie vicino alle spalle.','Piedi bloccati sotto i rulli.','Arrotola il busto in avanti portando il petto verso le ginocchia.','Torna su lentamente.'],
+  br:{in:'Mentre torni su.',out:'Mentre ti arrotoli in avanti.'},tempo:[2,2],
+  err:['Tirare con le braccia','Usare troppo peso'],dose:['3','15','60"']},
+ {id:'mountain-climber',name:'Mountain climber',g:'core',e:'corpo',lv:'Principiante',mu:'Addome e fiato',
+  steps:['Posizione di piegamento: mani sotto le spalle, corpo dritto.','Porta un ginocchio verso il petto.','Cambia gamba velocemente, come se corressi.','Tieni il bacino basso e fermo.'],
+  br:{in:'Ogni 2 passi, dal naso.',out:'Ogni 2 passi, dalla bocca.'},tempo:[1,1],
+  err:['Sedere troppo alto','Trattenere il fiato'],dose:['3','30"','45"']},
+
+ {id:'ellittica',name:'Ellittica',g:'cardio',e:'cardio',lv:'Tutti',mu:'Cuore, gambe e braccia',
+  steps:['Sali sui pedali e afferra le maniglie mobili.','Parti piano per 3 minuti.','Spingi e tira con le braccia mentre pedali, schiena dritta.','Alza la resistenza invece della velocità per faticare di più.'],
+  br:{in:'Dal naso per 2–3 passi.',out:'Dalla bocca per 2–3 passi.'},tempo:[2,2],
+  err:['Appoggiarsi tutto sulle maniglie','Stare sulle punte'],dose:['1','15–20\'','—']},
+ {id:'stepper',name:'Stair climber',g:'cardio',e:'cardio',lv:'Tutti',mu:'Cuore, gambe e glutei',
+  steps:['Sali sulla scala mobile e scegli una velocità bassa.','Busto dritto, mani appena appoggiate ai corrimano.','Appoggia tutto il piede su ogni gradino.','Aumenta la velocità poco per volta.'],
+  br:{in:'Dal naso per 2 gradini.',out:'Dalla bocca per 2 gradini.'},tempo:[2,2],
+  err:['Tenersi forte ai corrimano','Piegarsi in avanti'],dose:['1','10–15\'','—']}
 ];
 const EXMAP = Object.fromEntries(EX.map(x=>[x.id,x]));
 
@@ -489,7 +626,13 @@ const SESS = [
  {id:'addome-15',name:'Addome 15 minuti',for:'Da fare a fine allenamento o da sola',min:15,
   items:[['plank',3,'30–45"',45],['crunch',3,'15',45],['crunch-cavo',3,'12–15',60]]},
  {id:'cardio-30',name:'Cardio 30 minuti',for:'Fiato e resistenza, ritmo in cui riesci a parlare',min:30,
-  items:[['tapis-roulant',1,'10\'',60],['cyclette',1,'10\'',60],['vogatore',1,'10\'',0]]}
+  items:[['tapis-roulant',1,'10\'',60],['cyclette',1,'10\'',60],['vogatore',1,'10\'',0]]},
+ {id:'braccia',name:'Braccia',for:'Bicipiti e tricipiti, alternati',min:45,
+  items:[['ellittica',1,'5\' riscaldamento',0],['curl-bilanciere',3,'10–12',60],['french-press',3,'10–12',60],['curl-martello',3,'10–12',60],['pushdown',3,'12',60],['curl-scott',3,'10–12',60],['estensioni-sopra-testa',3,'12',60]]},
+ {id:'glutei-gambe',name:'Glutei e gambe',for:'Glutei, cosce e interno-esterno coscia',min:50,
+  items:[['stepper',1,'5\' riscaldamento',0],['hip-thrust',4,'10–12',90],['goblet-squat',3,'10–12',90],['stacco-rumeno',3,'8–10',120],['abductor',3,'15',60],['adductor',3,'15',60]]},
+ {id:'spalle-schiena',name:'Spalle e schiena',for:'Postura dritta e spalle forti',min:50,
+  items:[['vogatore',1,'5\' riscaldamento',0],['lat-machine',3,'10–12',90],['rematore-bilanciere',3,'8–10',90],['lento-manubri',3,'10–12',90],['alzate-laterali',3,'12–15',60],['reverse-fly',3,'15',60],['iperestensioni',3,'12–15',60]]}
 ];
 const SMAP = Object.fromEntries(SESS.map(s=>[s.id,s]));
 
@@ -558,7 +701,63 @@ const ANIM = {
  'cyclette':{ab:'in',props:['bike'],crank:[170,158],
    A:{hip:[128,108],torso:22,hand:[196,92],foot:[170,174],foot2:[170,142]}, B:{hip:[128,108],torso:22,hand:[196,92],foot:[170,142],foot2:[170,174]}},
  'vogatore':{ab:'out',props:['rower'],
-   A:{hip:[132,168],torso:28,hand:[194,150],foot:[196,170]}, B:{hip:[84,168],torso:-24,hand:[118,138],foot:[196,170]}}
+   A:{hip:[132,168],torso:28,hand:[194,150],foot:[196,170]}, B:{hip:[84,168],torso:-24,hand:[118,138],foot:[196,170]}},
+ 'panca-manubri':{ab:'out',props:['bench','db'],
+   A:{hip:[170,122],torso:270,hand:[124,104],foot:[214,184],eb:-1}, B:{hip:[170,122],torso:270,hand:[120,62],foot:[214,184],eb:-1}},
+ 'panca-inclinata-manubri':{ab:'out',props:['incline','db'],
+   A:{hip:[168,140],torso:300,hand:[132,104],foot:[222,184],eb:-1}, B:{hip:[168,140],torso:300,hand:[134,50],foot:[222,184],eb:-1}},
+ 'pectoral-machine':{ab:'out',mirror:true,props:['seatfront','handles'],
+   A:{hip:[160,106],torso:0,hand:[222,66],foot:[170,184]}, B:{hip:[160,106],torso:0,hand:[170,86],foot:[170,184]}},
+ 'rematore-bilanciere':{ab:'out',props:['bar','floor'],
+   A:{hip:[128,110],torso:52,hand:[172,140],foot:[150,184],eb:-1}, B:{hip:[128,110],torso:52,hand:[146,116],foot:[150,184],eb:-1}},
+ 'pullover-cavo':{ab:'out',props:['cable','floor'],anchor:[250,6],akey:'hand',
+   A:{hip:[140,106],torso:18,hand:[206,44],foot:[146,184],eb:-1}, B:{hip:[140,106],torso:18,hand:[160,118],foot:[146,184],eb:-1}},
+ 'iperestensioni':{ab:'out',props:['hyper'],
+   A:{hip:[146,126],torso:124,hand:'down',foot:[92,178],lb:-1}, B:{hip:[146,126],torso:48,hand:'down',foot:[92,178],lb:-1}},
+ 'stacco-rumeno':{ab:'out',props:['bar','floor'],akey:'hip',
+   A:{hip:[132,112],torso:72,hand:[176,150],foot:[154,184],lb:1}, B:{hip:[150,106],torso:2,hand:[160,112],foot:[154,184]}},
+ 'hip-thrust':{ab:'out',props:['thrustbench','bar'],noArrow:false,akey:'hip',
+   A:{hip:[150,164],torso:302,hand:[150,152],foot:[200,184],lb:1,eb:1}, B:{hip:[154,128],torso:274,hand:[156,116],foot:[200,184],lb:1,eb:1}},
+ 'goblet-squat':{ab:'in',props:['db','floor'],akey:'hip',
+   A:{hip:[150,106],torso:4,hand:[164,72],foot:[154,184],eb:1}, B:{hip:[118,148],torso:40,hand:[166,122],foot:[154,184],eb:1}},
+ 'abductor':{ab:'out',mirror:true,props:['seatfront','kneepads'],akey:'ankle',aflip:true,aoff:14,hl:['outthigh'],
+   A:{hip:[160,106],torso:0,hand:[172,128],foot:[169,184]}, B:{hip:[160,106],torso:0,hand:[172,128],foot:[198,180]}},
+ 'adductor':{ab:'out',mirror:true,props:['seatfront','kneepads2'],akey:'ankle',aflip:true,aoff:14,hl:['inthigh'],
+   A:{hip:[160,106],torso:0,hand:[172,128],foot:[198,180]}, B:{hip:[160,106],torso:0,hand:[172,128],foot:[169,184]}},
+ 'lento-manubri':{ab:'out',props:['seat','back','db'],
+   A:{hip:[140,128],torso:-4,hand:[152,66],foot:[184,184],eb:1}, B:{hip:[140,128],torso:-4,hand:[146,18],foot:[184,184],eb:1}},
+ 'alzate-frontali':{ab:'out',props:['db','floor'],
+   A:{hip:[150,106],torso:0,hand:[160,110],foot:[154,184],eb:-1}, B:{hip:[150,106],torso:0,hand:[208,54],foot:[154,184],eb:-1}},
+ 'reverse-fly':{ab:'out',mirror:true,props:['seatfront','handles'],
+   A:{hip:[160,106],torso:0,hand:[170,86],foot:[170,184]}, B:{hip:[160,106],torso:0,hand:[226,70],foot:[170,184]}},
+ 'tirate-mento':{ab:'out',props:['bar','floor'],
+   A:{hip:[150,106],torso:0,hand:[160,112],foot:[154,184],eb:-1}, B:{hip:[150,106],torso:0,hand:[166,58],foot:[154,184],eb:-1}},
+ 'curl-bilanciere':{ab:'out',props:['bar','floor'],
+   A:{hip:[150,106],torso:0,hand:[158,112],foot:[154,184],eb:-1}, B:{hip:[150,106],torso:0,hand:[170,66],foot:[154,184],eb:-1}},
+ 'curl-martello':{ab:'out',props:['dbv','floor'],
+   A:{hip:[150,106],torso:0,hand:[154,112],foot:[154,184],eb:-1}, B:{hip:[150,106],torso:0,hand:[168,64],foot:[154,184],eb:-1}},
+ 'curl-scott':{ab:'out',props:['seat','scott','grip'],
+   A:{hip:[124,132],torso:8,hand:[196,112],foot:[170,184],eb:-1}, B:{hip:[124,132],torso:8,hand:[150,62],foot:[170,184],eb:-1}},
+ 'curl-cavo':{ab:'out',props:['cable','floor','grip'],anchor:[214,182],
+   A:{hip:[150,106],torso:0,hand:[158,112],foot:[154,184],eb:-1}, B:{hip:[150,106],torso:0,hand:[170,66],foot:[154,184],eb:-1}},
+ 'french-press':{ab:'out',props:['bench','bar'],
+   A:{hip:[170,122],torso:270,hand:[96,104],foot:[214,184],eb:1}, B:{hip:[170,122],torso:270,hand:[110,66],foot:[214,184],eb:1}},
+ 'estensioni-sopra-testa':{ab:'out',props:['seat','back','db'],
+   A:{hip:[140,128],torso:-4,hand:[124,82],foot:[184,184],eb:1}, B:{hip:[140,128],torso:-4,hand:[144,20],foot:[184,184],eb:1}},
+ 'kickback':{ab:'out',props:['rowbench','db'],
+   A:{hip:[110,108],torso:82,hand:[134,128],foot:[96,184],eb:1,hand2:[200,128]}, B:{hip:[110,108],torso:82,hand:[104,110],foot:[96,184],eb:1,hand2:[200,128]}},
+ 'dip-macchina':{ab:'out',props:['seat','back','grip'],
+   A:{hip:[140,128],torso:-4,hand:[150,96],foot:[184,184],eb:1}, B:{hip:[140,128],torso:-4,hand:[144,130],foot:[184,184],eb:1}},
+ 'sollevamento-gambe':{ab:'out',props:['floor'],
+   A:{hip:[150,176],torso:270,hand:[154,182],foot:[228,182],lb:1,eb:1}, B:{hip:[150,176],torso:270,hand:[154,182],foot:[164,102],lb:1,eb:1}},
+ 'crunch-macchina':{ab:'out',props:['seat','grip'],
+   A:{hip:[140,128],torso:-2,hand:[156,74],foot:[184,184],eb:1}, B:{hip:[140,128],torso:36,hand:[184,98],foot:[184,184],eb:1}},
+ 'mountain-climber':{ab:'out',props:['floor'],
+   A:{hip:[112,140],torso:66,hand:[166,184],foot:[48,184],foot2:[122,172],eb:-1}, B:{hip:[112,140],torso:66,hand:[166,184],foot:[122,172],foot2:[48,184],eb:-1}},
+ 'ellittica':{ab:'in',props:['ellip'],
+   A:{hip:[150,96],torso:2,hand:[186,92],hand2:[170,104],foot:[174,170],foot2:[126,178]}, B:{hip:[150,96],torso:2,hand:[170,104],hand2:[186,92],foot:[126,178],foot2:[174,170]}},
+ 'stepper':{ab:'in',props:['stairs'],
+   A:{hip:[150,100],torso:6,hand:[186,104],foot:[172,156],foot2:[150,180]}, B:{hip:[150,100],torso:6,hand:[186,104],foot:[150,180],foot2:[172,156]}}
 };
 
 const L = {torso:52, ua:30, fa:28, th:40, sh:38, foot:12, head:10};
@@ -573,7 +772,7 @@ function ik(S, T, l1, l2, bend){
 }
 function lerpPose(A,B,t){
   const o={};
-  for(const k in A){ const a=A[k], b=B[k];
+  for(const k in A){ const a=A[k], b=(B[k]==null?a:B[k]);
     if(Array.isArray(a)) o[k]=[a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t];
     else if(typeof a==='number') o[k]=a+(b-a)*t; else o[k]=a; }
   return o;
@@ -594,8 +793,22 @@ function solve(P, mirror){
   if(P.foot2){ const [k2,a2]=ik(hip,P.foot2,L.th,L.sh,lb); r.knee2=k2; r.ankle2=a2; r.toe2=P.toe2||[a2[0]+12,a2[1]+1]; }
   return r;
 }
-function drawScene(ctx, id, t, col){
+const HL_DEF = {petto:['chest'], schiena:['back'], gambe:['thigh'], spalle:['delt'], braccia:['ua'], core:['abs'], cardio:['thigh']};
+const MU_DEF = {petto:'Petto', schiena:'Dorsali', gambe:'Cosce e glutei', spalle:'Spalle', braccia:'Braccia', core:'Addome', cardio:'Cuore e gambe'};
+const arrowCache = {};
+function arrowFor(id){
+  if(id in arrowCache) return arrowCache[id];
+  const A=ANIM[id], x=EXMAP[id]; let r=null;
+  if(A && !(x && x.g==='cardio') && !A.noArrow){
+    const JA=solve(A.A,A.mirror), JB=solve(A.B,A.mirror); let best=0;
+    (A.akey?[A.akey]:['hand','ankle','hip','head']).forEach(k=>{ const d=Math.hypot(JB[k][0]-JA[k][0],JB[k][1]-JA[k][1]); if(d>best){ best=d; r={k, pa:JA[k], pb:JB[k], mid:[(JA.hip[0]+JA.sh[0])/2,(JA.hip[1]+JA.sh[1])/2]}; } });
+    if(best<14) r=null;
+  }
+  return arrowCache[id]=r;
+}
+function drawScene(ctx, id, t, col, info){
   const A = ANIM[id]; if(!A) return;
+  const X = EXMAP[id] || {g:'core'};
   const P = lerpPose(A.A, A.B, t), J = solve(P, A.mirror);
   const W=320, H=200;
   ctx.clearRect(0,0,W,H);
@@ -615,24 +828,55 @@ function drawScene(ctx, id, t, col){
   if(pr.has('rowbench')){ rect(150,J.hip[1]+22,90,9,M); line([[200,J.hip[1]+31],[200,GROUND]],5,M); }
   if(pr.has('recline')){ const b0=add(J.hip,dirv(P.torso+90),-10); line([b0, add(b0,dirv(P.torso),56)],8,M); rect(J.hip[0]-20,J.hip[1]+8,40,8,M); line([[J.hip[0],J.hip[1]+16],[J.hip[0],GROUND]],5,M); line([[120,176],[270,40]],4,col.line); }
   if(pr.has('step')){ rect(130,172,70,14,M); }
+  if(pr.has('incline')){ const b0=add(J.hip,dirv(P.torso-90),10); line([add(b0,dirv(P.torso),-6), add(b0,dirv(P.torso),56)],8,M); rect(J.hip[0]-6,J.hip[1]+8,46,8,M); line([[J.hip[0]+14,J.hip[1]+16],[J.hip[0]+14,GROUND]],5,M); line([[J.hip[0]-30,J.hip[1]-20],[J.hip[0]-30,GROUND]],5,M); }
+  if(pr.has('seatfront')){ rect(J.hip[0]-28,J.hip[1]+4,72,9,M); line([[J.hip[0]+8,J.hip[1]+13],[J.hip[0]+8,GROUND]],6,M); rect(J.hip[0]-18,J.hip[1]-60,52,62,col.line); }
+  if(pr.has('hyper')){ line([[80,GROUND],[176,GROUND]],5,M); line([[100,178],[164,128]],6,M); line([[164,128],[164,GROUND]],5,M); disc([96,170],6,M); }
+  if(pr.has('thrustbench')){ rect(70,130,48,10,M); line([[80,140],[80,GROUND]],5,M); line([[108,140],[108,GROUND]],5,M); }
+  if(pr.has('scott')){ const e=[J.sh[0]+18,J.sh[1]+26]; line([[J.sh[0]+6,J.sh[1]+12],[J.sh[0]+44,J.sh[1]+44]],8,M); line([[J.sh[0]+30,J.sh[1]+44],[J.sh[0]+30,GROUND]],5,M); }
+  if(pr.has('ellip')){ rect(70,182,180,5,M); line([[210,182],[226,70]],6,M); line([[186,92],[226,70]],3,col.line); line([[170,104],[226,70]],3,col.line); }
+  if(pr.has('stairs')){ for(let k=0;k<4;k++) rect(132+k*16,180-k*12-12,60,8,col.line); line([[226,180],[226,96]],5,M); line([[186,104],[226,96]],5,M); }
   if(pr.has('treadmill')){ rect(60,180,200,7,M); line([[236,180],[250,96]],5,M); line([[238,104],[266,96]],6,M); }
   if(pr.has('bike')){ const c=A.crank; line([[J.hip[0],J.hip[1]+8],[c[0],c[1]],[196,96]],6,M); line([[c[0]-10,GROUND],[c[0]+30,GROUND]],6,M); line([[J.hip[0]-14,J.hip[1]+7],[J.hip[0]+12,J.hip[1]+7]],6,M); line([[188,94],[204,90]],6,M); ctx.beginPath(); ctx.arc(c[0],c[1],16,0,Math.PI*2); ctx.lineWidth=2; ctx.strokeStyle=col.line; ctx.stroke(); }
   if(pr.has('rower')){ line([[40,180],[230,180]],5,M); rect(J.hip[0]-16,J.hip[1]+6,32,6,M); line([[204,152],[204,180]],6,M); disc([236,160],20,col.line); }
   if(pr.has('kneepad')){ rect(J.knee[0]-12,J.knee[1]-14,26,8,M); }
   if(pr.has('footplate')){ line([[214,138],[214,176]],6,M); }
-  // gambe e braccia lontane
+  // figura piena: contorno nel colore di fondo + riempimento
+  const BG=col.bg;
+  const limb=(pts,ws,c)=>{ for(let i=1;i<pts.length;i++) line([pts[i-1],pts[i]],ws[i-1]+3,BG); for(let i=1;i<pts.length;i++) line([pts[i-1],pts[i]],ws[i-1],c); };
+  const glow=(fn)=>{ ctx.save(); ctx.globalAlpha=.92; ctx.shadowColor=K; ctx.shadowBlur=8; fn(); ctx.restore(); };
+  const HL = A.hl || X.hl || HL_DEF[X.g] || [];
+  const td = dirv(P.torso), fr = [-td[1], td[0]];
+  const along=(a,b,f)=>[a[0]+(b[0]-a[0])*f, a[1]+(b[1]-a[1])*f];
+  const offp=(p,k)=>[p[0]+fr[0]*k, p[1]+fr[1]*k];
   if(A.mirror){
-    line([mir(J.hipS),mir(J.knee),mir(J.ankle),mir(J.toe)],10,Fb);
-    line([mir(J.shS),mir(J.elbow),mir(J.hand)],8,Fb);
+    limb([mir(J.hipS),mir(J.knee),mir(J.ankle),mir(J.toe)],[13,10,6],Fb);
+    limb([mir(J.shS),mir(J.elbow),mir(J.hand)],[10,8],Fb);
   }
-  if(J.knee2) line([J.hip,J.knee2,J.ankle2,J.toe2],10,Fb);
-  if(J.elbow2) line([J.sh,J.elbow2,J.hand2],8,Fb);
+  if(J.knee2) limb([J.hip,J.knee2,J.ankle2,J.toe2],[13,10,6],Fb);
+  if(J.elbow2) limb([J.sh,J.elbow2,J.hand2],[10,8],Fb);
   // corpo
-  line([J.hipS,J.knee,J.ankle,J.toe],10,F);
-  line([J.hip,J.sh],15,F);
-  if(A.mirror) line([[J.sh[0]-16,J.sh[1]],[J.sh[0]+16,J.sh[1]]],10,F);
-  disc(J.head,L.head,F);
+  limb([J.hipS,J.knee,J.ankle,J.toe],[14,10,6],F);
+  if(HL.includes('thigh')||HL.includes('hams')||HL.includes('outthigh')||HL.includes('inthigh')){ const sd = HL.includes('outthigh')?3:HL.includes('inthigh')?-3:0;
+    glow(()=>line([[along(J.hipS,J.knee,.12)[0]+sd,along(J.hipS,J.knee,.12)[1]],[along(J.hipS,J.knee,.85)[0]+sd,along(J.hipS,J.knee,.85)[1]]],7,K));
+    if(A.mirror) glow(()=>line([[mir(along(J.hipS,J.knee,.12))[0]-sd,along(J.hipS,J.knee,.12)[1]],[mir(along(J.hipS,J.knee,.85))[0]-sd,along(J.hipS,J.knee,.85)[1]]],7,K)); }
+  if(HL.includes('calf')) glow(()=>line([along(J.knee,J.ankle,.12),along(J.knee,J.ankle,.6)],7,K));
+  if(HL.includes('glutes')) glow(()=>disc(offp(J.hip,-4),6.5,K));
+  line([J.hip,J.sh],23,BG); line([J.hip,J.sh],20,F);
+  line([J.sh,J.head],7,F);
+  if(A.mirror){ line([[J.sh[0]-17,J.sh[1]+2],[J.sh[0]+17,J.sh[1]+2]],14,BG); line([[J.sh[0]-16,J.sh[1]+2],[J.sh[0]+16,J.sh[1]+2]],12,F); }
+  disc(J.head,L.head+2.5,BG); disc(J.head,L.head+1,F);
+  if(A.mirror){
+    if(HL.includes('chest')) glow(()=>line([[J.sh[0]-11,J.sh[1]+10],[J.sh[0]+11,J.sh[1]+10]],8,K));
+    if(HL.includes('abs')) glow(()=>line([along(J.hip,J.sh,.15),along(J.hip,J.sh,.55)],8,K));
+  } else {
+    if(HL.includes('chest')) glow(()=>line([offp(along(J.hip,J.sh,.58),5),offp(along(J.hip,J.sh,.86),5)],8,K));
+    if(HL.includes('back')) glow(()=>line([offp(along(J.hip,J.sh,.35),-5),offp(along(J.hip,J.sh,.85),-5)],8,K));
+    if(HL.includes('abs')) glow(()=>line([offp(along(J.hip,J.sh,.12),5),offp(along(J.hip,J.sh,.52),5)],7,K));
+    if(HL.includes('lowback')) glow(()=>line([offp(along(J.hip,J.sh,.08),-5),offp(along(J.hip,J.sh,.4),-5)],7,K));
+  }
+  if(HL.includes('traps')) glow(()=>line([along(J.sh,J.head,.0),along(J.sh,J.head,.45)],8,K));
   // attrezzi davanti
+  if(pr.has('hyper')){ const pd=[J.hip[0]+10,J.hip[1]+4]; rect(pd[0]-10,pd[1]-6,24,12,K); }
   if(pr.has('padTop')){ disc([J.ankle[0]+2,J.ankle[1]-8],7,K); }
   if(pr.has('pad')){ disc([J.ankle[0]+2,J.ankle[1]+8],7,K); }
   if(pr.has('kneepad2')){ rect(J.knee[0]-14,J.knee[1]+5,30,8,K); line([[J.knee[0],J.knee[1]+13],[J.knee[0],GROUND]],4,M); }
@@ -641,13 +885,37 @@ function drawScene(ctx, id, t, col){
   if(pr.has('cable')||pr.has('cables')){ line([A.anchor,J.hand],1.5,col.line,'butt'); disc(A.anchor,6,M); if(A.mirror) { line([mir(A.anchor),mir(J.hand)],1.5,col.line,'butt'); disc(mir(A.anchor),6,M); } }
   if(pr.has('latbar')){ line([A.anchor,J.hand],1.5,col.line,'butt'); line([[J.hand[0]-26,J.hand[1]],[J.hand[0]+26,J.hand[1]]],6,K); disc(A.anchor,6,M); }
   if(pr.has('pullbar')){ line([[100,34],[220,34]],6,M); line([[110,34],[110,GROUND]],4,col.line); }
-  line([J.shS,J.elbow,J.hand],9,F);
+  limb([J.shS,J.elbow,J.hand],[10,8],F); disc(J.hand,4.5,F);
+  if(HL.includes('ua')) glow(()=>line([along(J.shS,J.elbow,.15),along(J.shS,J.elbow,.85)],6.5,K));
+  if(HL.includes('fa')) glow(()=>line([along(J.elbow,J.hand,.1),along(J.elbow,J.hand,.6)],5.5,K));
+  if(HL.includes('delt')){ glow(()=>disc(J.shS,7,K)); if(A.mirror) glow(()=>disc(mir(J.shS),7,K)); }
   if(pr.has('bar')){ const h=J.hand; disc(h,16,K); disc(h,4,col.bg); }
   if(pr.has('db')){ const h=J.hand; line([[h[0]-7,h[1]],[h[0]+7,h[1]]],10,K,'butt'); if(A.mirror){ const m=mir(h); line([[m[0]-7,m[1]],[m[0]+7,m[1]]],10,K,'butt'); } if(J.hand2&&!pr.has('rowbench')){} }
   if(pr.has('grip')) disc(J.hand,6,K);
+  if(pr.has('dbv')){ const h=J.hand; line([[h[0],h[1]-7],[h[0],h[1]+7]],10,K,'butt'); }
+  if(pr.has('handles')){ disc(J.hand,5,K); disc(mir(J.hand),5,K); }
+  if(pr.has('kneepads')){ disc([J.knee[0]+8,J.knee[1]],6,K); disc([mir(J.knee)[0]-8,J.knee[1]],6,K); }
+  if(pr.has('kneepads2')){ disc([J.knee[0]-8,J.knee[1]],6,K); disc([mir(J.knee)[0]+8,J.knee[1]],6,K); }
   if(pr.has('lever')) disc(J.hand,6,K);
   if(pr.has('rower')){ line([J.hand,[226,158]],1.5,col.line,'butt'); }
   if(pr.has('bike')){ disc(J.ankle,4,K); }
+  // freccia del movimento
+  const ar = arrowFor(id);
+  if(ar){
+    const dx=ar.pb[0]-ar.pa[0], dy=ar.pb[1]-ar.pa[1], d=Math.hypot(dx,dy); let n=[-dy/d, dx/d];
+    if(n[0]*(ar.pa[0]-ar.mid[0])+n[1]*(ar.pa[1]-ar.mid[1])<0) n=[-n[0],-n[1]];
+    if(A.aflip) n=[-n[0],-n[1]];
+    const off=A.aoff||20, s0=[ar.pa[0]+n[0]*off+dx*.1, ar.pa[1]+n[1]*off+dy*.1], s1=[ar.pb[0]+n[0]*off-dx*.1, ar.pb[1]+n[1]*off-dy*.1];
+    const dir = info ? info.dir : 1, from = dir>0?s0:s1, to = dir>0?s1:s0, u=[(to[0]-from[0])/(d*.8),(to[1]-from[1])/(d*.8)];
+    ctx.save(); ctx.globalAlpha=.85; ctx.setLineDash([5,4]); line([from,to],2.5,K,'butt'); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(to[0]+u[0]*6,to[1]+u[1]*6); ctx.lineTo(to[0]-u[0]*6-u[1]*6,to[1]-u[1]*6+u[0]*6); ctx.lineTo(to[0]-u[0]*6+u[1]*6,to[1]-u[1]*6-u[0]*6); ctx.closePath(); ctx.fillStyle=K; ctx.fill(); ctx.restore();
+  }
+  // scritte: muscolo che lavora e conteggio
+  ctx.save(); ctx.font='700 13px "Barlow Condensed", sans-serif'; ctx.textBaseline='top';
+  const mu=(X.mu||MU_DEF[X.g]||'').toUpperCase();
+  if(mu){ disc([16,16],4.5,K); ctx.fillStyle=F; ctx.fillText('LAVORA: '+mu, 26, 9); }
+  if(info && info.count){ ctx.font='800 26px "Barlow Condensed", sans-serif'; ctx.textAlign='right'; ctx.fillStyle=F; ctx.fillText(String(info.count), 308, 6); }
+  ctx.restore();
 }
 
 /* --- dati: copia sul dispositivo + salvataggio privato sul tuo account --- */
@@ -749,7 +1017,7 @@ function recordsOf(hist){
 
 let filt = store.get('filt',{q:'',g:'',e:''});
 let pacerTimer=null, tick=null, wake=null, edit=null;
-let run = store.get('run',null);
+let run = store.get('run',null), lastSaid = '';
 const saveRun = ()=> run ? store.set('run',run) : store.del('run');
 
 function brand(){ $top.innerHTML = '<div class="brand"><span class="plates" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Palestra Facile</div><span class="sync" id="sync"></span>'; paintSync(); }
@@ -777,12 +1045,12 @@ function viewList(){
     <div id="results" class="view"></div></section>`;
   const draw = ()=>{
     const q = filt.q.trim().toLowerCase();
-    const hits = EX.filter(x=>(!filt.g||x.g===filt.g)&&(!filt.e||x.e===filt.e)&&(!q||(x.name+' '+EQUIP[x.e]+' '+GROUPS[x.g].label).toLowerCase().includes(q)));
+    const hits = EX.filter(x=>(!filt.g||x.g===filt.g)&&(!filt.e||x.e===filt.e)&&(!q||(x.name+' '+EQUIP[x.e]+' '+GROUPS[x.g].label+' '+(x.mu||'')).toLowerCase().includes(q)));
     const out = Object.keys(GROUPS).map(g=>{
       const xs = hits.filter(x=>x.g===g); if(!xs.length) return '';
       return `<div class="group-title"><span class="dot" style="background:${GROUPS[g].color};width:14px;height:14px"></span><h2>${GROUPS[g].label}</h2><span class="count">${xs.length}</span></div>
       <div class="list">${xs.map(x=>{ const r = isTime(x)?null:recordsOf(histFor(x.id));
-        return `<a class="row" href="#ex-${x.id}"><span class="ico" style="--c:${GROUPS[g].color}">${ICON[x.e]}</span><span><strong>${esc(x.name)}</strong><small>${EQUIP[x.e]} · ${x.lv}${r&&r.kg?` · record ${kgf(r.kg)} kg`:''}</small></span>${chev}</a>`}).join('')}</div>`;
+        return `<a class="row" href="#ex-${x.id}"><span class="ico" style="--c:${GROUPS[g].color}">${ICON[x.e]}</span><span><strong>${esc(x.name)}</strong><small>${x.mu?esc(x.mu)+' · ':''}${EQUIP[x.e]}${r&&r.kg?` · record ${kgf(r.kg)} kg`:''}</small></span>${chev}</a>`}).join('')}</div>`;
     }).join('');
     document.getElementById('results').innerHTML = out || '<div class="empty">Nessun esercizio trovato. Prova a togliere un filtro.</div>';
   };
@@ -811,10 +1079,12 @@ function makeAnim(x, cv, word, sub){
   let playing=false, t0=0, offset=0, lastPhase=-1;
   const label = ph => { const out = ph===0 ? first==='out' : first!=='out';
     if(word){ word.textContent = out?'Espira':'Inspira'; word.className = out?'out':'in'; }
-    if(sub) sub.textContent = out ? x.br.out : x.br.in; };
+    if(sub) sub.textContent = out ? x.br.out : x.br.in;
+    if(AU.breath && cv.id==='demo' && playing) say(out?'Espira':'Inspira', true); };
   const frame = now => { const el=(now-t0+offset)%(d1+d2); let t, ph;
     if(el<d1){ ph=0; t=ease(el/d1); } else { ph=1; t=1-ease((el-d1)/d2); }
-    drawScene(ctx, x.id, t, col); if(ph!==lastPhase){ label(ph); lastPhase=ph; }
+    const left = ph===0 ? (d1-el)/1000 : (d1+d2-el)/1000;
+    drawScene(ctx, x.id, t, col, {dir: ph===0?1:-1, count: Math.ceil(left)}); if(ph!==lastPhase){ label(ph); lastPhase=ph; }
     animRAF = requestAnimationFrame(frame); };
   drawScene(ctx, x.id, 0, col);
   return {
@@ -922,11 +1192,13 @@ function viewExercise(id){
   $app.innerHTML = `<article class="view">
     <div class="ex-head" style="--c:${G.color}">${plate(G.color)}
       <div class="tags"><span class="tag"><span class="dot" style="background:${G.color}"></span>${G.label}</span><span class="tag">${EQUIP[x.e]}</span><span class="tag">${x.lv}</span></div>
+      ${x.mu?`<p class="lead" style="margin:0">Muscoli: <b>${esc(x.mu)}</b></p>`:''}
       <h1>${esc(x.name)}</h1>
     </div>
     <section class="card" aria-label="Video e guida al respiro">
       ${pacerHTML(x)}
       <div class="links">
+        ${canSpeak?'<button class="btn small" type="button" id="explain">🔊 Ascolta la spiegazione</button>':''}
         <a class="btn ghost small" href="${yt(x.name+' esecuzione corretta palestra')}" target="_blank" rel="noopener">Guarda video su YouTube ↗</a>
         ${mine?`<a class="btn small" href="${esc(mine)}" target="_blank" rel="noopener">▶ Il mio video ↗</a>`:''}
       </div>
@@ -950,6 +1222,14 @@ function viewExercise(id){
     <p class="fine">Indicazioni generali per chi è in buona salute. In caso di dolori o problemi fisici chiedi a un istruttore o a un medico.</p>
   </article>`;
   bindPacer(x); paintMyVideo(id);
+  const exb=document.getElementById('explain');
+  if(exb) exb.onclick=()=>{
+    if(explaining){ explaining=false; try{speechSynthesis.cancel()}catch(e){} exb.textContent='🔊 Ascolta la spiegazione'; return; }
+    const low=t=>t.charAt(0).toLowerCase()+t.slice(1);
+    const txt = x.name+'. Lavora: '+(x.mu||MU_DEF[x.g])+'. Come si fa. '+x.steps.join(' ')+' Respirazione. Inspira: '+low(x.br.in)+' Espira: '+low(x.br.out)+' '+(x.note||'')+' Errori da evitare: '+x.err.map(low).join('; ')+'. Quante: '+x.dose[0]+(x.dose[0]==='1'?' volta':' serie')+', '+spokenReps(x.dose[1])+(x.dose[2]&&x.dose[2]!=='—'?', recupero '+spokenReps(x.dose[2])+'.':'.');
+    say(txt.replace(/°/g,' gradi').replace(/km\/h/g,'chilometri orari'), true); explaining=true; exb.textContent='■ Ferma la voce';
+    const iv=setInterval(()=>{ try{ if(!speechSynthesis.speaking){ clearInterval(iv); explaining=false; const b=document.getElementById('explain'); if(b) b.textContent='🔊 Ascolta la spiegazione'; } }catch(e){ clearInterval(iv); } },500);
+  };
   document.getElementById('mineForm').onsubmit = e=>{
     e.preventDefault();
     const v = document.getElementById('mineUrl').value.trim();
@@ -985,7 +1265,9 @@ function viewSessions(){
       <a class="btn ghost big" href="#scheda-nuova">+ Nuova scheda</a></div>
     <div class="group-title"><h2>Schede pronte</h2><span class="count">${SESS.length}</span></div>
     <p class="lead">Premi Inizia: l'app ti guida esercizio per esercizio, registra peso e ripetizioni e fa partire il recupero.</p>
-    <div class="sessions">${SESS.map(s=>sessCard(s,false)).join('')}</div></section>`;
+    <div class="sessions">${SESS.map(s=>sessCard(s,false)).join('')}</div>
+    ${audioCardHTML()}</section>`;
+  bindAudioCard(viewSessions);
   $app.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{
     const s = SMAP[b.dataset.copy];
     edit = {id:'my'+Date.now().toString(36), name:s.name+' (mia)', items:clone(s.items), isNew:true};
@@ -1091,12 +1373,6 @@ function startRun(id){
   try{ navigator.wakeLock && navigator.wakeLock.request('screen').then(w=>wake=w).catch(()=>{}) }catch(e){}
   drawRun();
 }
-function beep(){
-  try{ const A=window.AudioContext||window.webkitAudioContext; if(!A) return; const c=new A(), o=c.createOscillator(), g=c.createGain();
-    o.frequency.value=880; g.gain.value=.15; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+.25);
-    if(navigator.vibrate) navigator.vibrate(200);
-  }catch(e){}
-}
 function defaults(p, setNo){
   const here = run.sets.filter(s=>s.ex===p.ex);
   if(here.length) return {kg:here[here.length-1].kg, reps:here[here.length-1].reps};
@@ -1116,6 +1392,10 @@ function drawRun(){
   const timeEx = isTime(x);
   const h = histFor(p.ex), last = h[h.length-1];
   const d = defaults(p, run.set);
+  const sayKey = resting ? 'r'+run.restEnd : run.i+'-'+run.set;
+  if(sayKey!==lastSaid){ lastSaid=sayKey;
+    if(resting) say('Recupero, '+spokenRest(Math.round((run.restEnd-Date.now())/1000))+'. '+(run.set>1?'Poi serie '+run.set+' di '+p.sets+'.':'Poi '+x.name+'.'));
+    else say((run.set===1?x.name+'. ':'')+'Serie '+run.set+' di '+p.sets+'. '+spokenReps(p.reps)+(!timeEx && /^[\d–\- ]+$/.test(String(p.reps).trim())?' ripetizioni':'')+'.'); }
   $app.innerHTML = `<section class="run">
     <div class="progress" aria-label="Avanzamento"><i style="width:${Math.min(100,Math.round(done/total*100))}%"></i></div>
     <div><div class="eyebrow">${esc(run.name)} · esercizio ${run.i+1} di ${run.plan.length}</div><h1>${esc(x.name)}</h1></div>
@@ -1137,11 +1417,15 @@ function drawRun(){
       <div class="minor"><button class="btn ghost small" type="button" id="addSet">+ Serie</button><button class="btn ghost small" type="button" id="skipEx">Salta esercizio</button><a class="btn ghost small" href="#ex-${x.id}">Come si fa</a></div>
       ${ANIM[x.id]?`<div class="player mini"><canvas class="demo" id="demo2" role="img" aria-label="Animazione di ${esc(x.name)}"></canvas><div class="label"><b id="w2"></b></div></div>`:''}
       <div class="next">${esc(nxt)}</div>`}
+    <div class="chips wrapchips qa" role="group" aria-label="Audio">${canSpeak?`<button class="chip" type="button" id="qVoice" aria-pressed="${AU.voice}">${AU.voice?'🔊 Voce':'🔇 Voce'}</button>`:''}${music.list.length?`<button class="chip" type="button" id="qMusic" aria-pressed="${!!(music.el&&!music.el.paused)}">${music.el&&!music.el.paused?'❚❚ Musica':'▶ Musica'}</button>`:''}<a class="chip" href="https://open.spotify.com/" target="_blank" rel="noopener">Apri Spotify</a></div>
     <div class="confirm" id="endWrap" style="margin-top:8px"><button class="btn ghost small" type="button" id="endRun">Termina allenamento</button></div>
   </section>`;
   if(resting){
     const c = document.getElementById('clock');
-    tick = setInterval(()=>{ const left=(run.restEnd-Date.now())/1000; paintRest(); if(left<=0){ clearInterval(tick); beep(); run.restEnd=0; saveRun(); if(location.hash==='#allena-'+run.id) drawRun(); } },250);
+    let lastSec = Math.ceil((run.restEnd-Date.now())/1000);
+    tick = setInterval(()=>{ const left=(run.restEnd-Date.now())/1000, sec=Math.ceil(left); paintRest();
+      if(sec!==lastSec){ if(sec===10 && (run.restTotal||0)>=25000) say('Ancora 10 secondi.'); if(sec>=1 && sec<=3) beep('tick'); lastSec=sec; }
+      if(left<=0){ clearInterval(tick); beep('go'); run.restEnd=0; saveRun(); if(location.hash==='#allena-'+run.id) drawRun(); } },200);
     document.getElementById('skip').onclick = ()=>{ run.restEnd=0; saveRun(); drawRun(); };
     document.getElementById('plus').onclick = ()=>{ run.restEnd+=15000; run.restTotal=(run.restTotal||0)+15000; saveRun(); paintRest(); };
     document.getElementById('minus').onclick = ()=>{ run.restEnd-=15000; saveRun(); paintRest(); };
@@ -1171,6 +1455,8 @@ function drawRun(){
       saveRun(); drawRun();
     };
   }
+  const qv=document.getElementById('qVoice'); if(qv) qv.onclick=()=>{ AU.voice=!AU.voice; saveAU(); qv.setAttribute('aria-pressed',String(AU.voice)); qv.textContent=AU.voice?'🔊 Voce':'🔇 Voce'; if(AU.voice) say('Voce attiva.'); else try{speechSynthesis.cancel()}catch(e){} };
+  const qm=document.getElementById('qMusic'); if(qm) qm.onclick=mToggle;
   document.getElementById('endRun').onclick = ()=>{
     document.getElementById('endWrap').innerHTML = `<span>${run.sets.length?'Salvare le serie fatte e chiudere?':'Chiudere senza salvare?'}</span>${run.sets.length?'<button class="btn small" type="button" id="endSave">Salva e chiudi</button>':''}<button class="btn ghost small" type="button" id="endDrop">${run.sets.length?'Chiudi senza salvare':'Sì, chiudi'}</button><button class="btn ghost small" type="button" id="endNo">Continua</button>`;
     const es=document.getElementById('endSave'); if(es) es.onclick=finish;
@@ -1196,7 +1482,8 @@ function finish(){
     else if(a.vol>b.vol) prs.push([EXMAP[ex].name,`volume ${kgf(a.vol)} kg`]);
   });
   const name = run.name, nsets = run.sets.length;
-  endRun(); view='done';
+  endRun(); view='done'; lastSaid='';
+  beep('done'); say('Allenamento completato. '+nsets+' serie in '+mins+' minuti. Ottimo lavoro!');
   try{ history.replaceState(null,'','#fatto'); }catch(e){}
   backBar('Sessioni','#sessioni');
   $app.innerHTML = `<section class="rest" style="margin-top:24px"><div class="eyebrow">Fatto</div>
@@ -1205,6 +1492,117 @@ function finish(){
     ${prs.length?`<div class="prs"><div class="eyebrow">Nuovi record</div>${prs.map(p=>`<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`:''}
     <p class="next">Salvata nel diario. Bevi acqua e fai qualche minuto di allungamento.</p>
     <div class="links"><a class="btn" href="#diario">Vai al diario</a><a class="btn ghost" href="#sessioni">Altre sessioni</a></div></section>`;
+}
+
+/* ---------------- AUDIO: suoni, voce, musica ---------------- */
+const AU = Object.assign({beep:true, voice:true, breath:false, shuffle:false}, store.get('audio',{}));
+const saveAU = ()=>store.set('audio',AU);
+let actx = null;
+function ac(){ try{ if(!actx){ const A=window.AudioContext||window.webkitAudioContext; if(A) actx=new A(); } if(actx && actx.state==='suspended') actx.resume(); }catch(e){} return actx; }
+document.addEventListener('pointerdown', ()=>ac(), {capture:true});
+function tone(freq, dur, when, vol){ const c=ac(); if(!c) return; const t=c.currentTime+(when||0), o=c.createOscillator(), g=c.createGain();
+  o.type='sine'; o.frequency.value=freq; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(vol||.25,t+.02); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+.05); }
+function beep(kind){
+  if(AU.beep){ try{
+    if(kind==='tick') tone(660,.12);
+    else if(kind==='done'){ tone(660,.16); tone(880,.16,.18); tone(1175,.4,.36); }
+    else { tone(880,.18); tone(1175,.45,.2); }
+  }catch(e){} }
+  try{ navigator.vibrate && navigator.vibrate(kind==='tick'?40 : kind==='done'?[150,80,150,80,300] : [200,100,300]); }catch(e){}
+}
+const canSpeak = 'speechSynthesis' in window;
+let itVoice = null;
+function pickVoice(){ try{ const vs=speechSynthesis.getVoices(); itVoice = vs.find(v=>/^it/i.test(v.lang)&&v.localService) || vs.find(v=>/^it/i.test(v.lang)) || null; }catch(e){} }
+if(canSpeak){ pickVoice(); try{ speechSynthesis.addEventListener('voiceschanged', pickVoice); }catch(e){} }
+function say(text, force){
+  if(!canSpeak || !(AU.voice || force)) return;
+  try{ speechSynthesis.cancel(); duck(true);
+    const parts = String(text).split(/(?<=[.;!?])\s+/).filter(Boolean);
+    parts.forEach((t,k)=>{ const u=new SpeechSynthesisUtterance(t); u.lang='it-IT'; if(itVoice) u.voice=itVoice; u.rate=1.02;
+      if(k===parts.length-1) u.onend=()=>duck(false); u.onerror=()=>duck(false); speechSynthesis.speak(u); });
+  }catch(e){}
+}
+const spokenReps = r => String(r).replace(/(\d+)\s*–\s*(\d+)/g,'da $1 a $2').replace(/(\d+)"/g,'$1 secondi').replace(/(\d+)'/g,'$1 minuti');
+const spokenRest = s => s<60 ? s+' secondi' : (s%60 ? Math.floor(s/60)+' minuti e '+(s%60)+' secondi' : (s/60===1?'un minuto':(s/60)+' minuti'));
+
+/* canzoni salvate sul telefono */
+const mdb = {
+  open(){ return new Promise((res,rej)=>{ try{ const r=indexedDB.open('pf-music',1); r.onupgradeneeded=()=>r.result.createObjectStore('m'); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }catch(e){ rej(e); } }); },
+  async get(k){ try{ const d=await this.open(); return await new Promise(res=>{ const q=d.transaction('m').objectStore('m').get(k); q.onsuccess=()=>res(q.result||null); q.onerror=()=>res(null); }); }catch(e){ return null; } },
+  async set(k,v){ const d=await this.open(); return new Promise((res,rej)=>{ const t=d.transaction('m','readwrite'); t.objectStore('m').put(v,k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error); }); },
+  async del(k){ try{ const d=await this.open(); await new Promise(res=>{ const t=d.transaction('m','readwrite'); t.objectStore('m').delete(k); t.oncomplete=res; t.onerror=res; }); }catch(e){} }
+};
+const music = { list: store.get('songs',[]), i:0, el:null, url:null, loaded:false };
+const saveSongs = ()=>store.set('songs', music.list);
+const VOL = 1, DUCK = .3;
+function mEl(){ if(!music.el){ const a=new Audio(); a.preload='auto'; a.onended=()=>mNext(); a.onplay=a.onpause=()=>paintMbar(); music.el=a; } return music.el; }
+async function mLoad(i){ const s=music.list[i]; if(!s) return false; const blob=await mdb.get(s.id); if(!blob) return false;
+  if(music.url) URL.revokeObjectURL(music.url); music.url=URL.createObjectURL(blob); const a=mEl(); a.src=music.url; music.i=i; music.loaded=true;
+  try{ if('mediaSession' in navigator) navigator.mediaSession.metadata = new MediaMetadata({title:s.name, artist:'Palestra Facile', artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'}]}); }catch(e){}
+  return true; }
+async function mPlay(i){ if(!music.list.length) return; if(i!=null || !music.loaded){ if(!(await mLoad(i!=null?i:Math.min(music.i,music.list.length-1)))) return; }
+  const a=mEl(); a.volume=VOL; try{ await a.play(); }catch(e){} paintMbar(); }
+function mPause(){ if(music.el) music.el.pause(); paintMbar(); }
+function mToggle(){ (!music.el || music.el.paused) ? mPlay() : mPause(); }
+function mNext(){ const n=music.list.length; if(!n) return; mPlay(AU.shuffle && n>1 ? (music.i+1+Math.floor(Math.random()*(n-1)))%n : (music.i+1)%n); }
+function mStop(){ if(music.el){ music.el.pause(); music.el.removeAttribute('src'); music.el.load(); } if(music.url){ URL.revokeObjectURL(music.url); music.url=null; } music.loaded=false; paintMbar(); }
+function duck(on){ if(music.el && !music.el.paused) music.el.volume = on ? VOL*DUCK : VOL; }
+try{ if('mediaSession' in navigator){ navigator.mediaSession.setActionHandler('play',()=>mPlay()); navigator.mediaSession.setActionHandler('pause',mPause); navigator.mediaSession.setActionHandler('nexttrack',mNext); } }catch(e){}
+const mbar = document.createElement('div'); mbar.className='mbar'; mbar.hidden=true; document.body.appendChild(mbar);
+function paintMbar(){
+  const on = music.loaded && music.list[music.i];
+  mbar.hidden = !on; document.body.classList.toggle('has-mbar', !!on);
+  if(!on) return;
+  const nav=document.querySelector('nav.tabs'); mbar.style.bottom = (nav?nav.offsetHeight:0)+'px';
+  const playing = music.el && !music.el.paused;
+  mbar.innerHTML = `<div class="wrap"><button type="button" class="mb-play" aria-label="${playing?'Pausa':'Riproduci'}">${playing?'❚❚':'▶'}</button>
+    <span class="mb-name"><small>${playing?'In riproduzione':'In pausa'}</small>${esc(music.list[music.i].name)}</span>
+    <button type="button" class="mb-btn" data-mb="next" aria-label="Canzone successiva">⏭</button><button type="button" class="mb-btn" data-mb="stop" aria-label="Chiudi la musica">✕</button></div>`;
+  mbar.querySelector('.mb-play').onclick = mToggle;
+  mbar.querySelector('[data-mb="next"]').onclick = mNext;
+  mbar.querySelector('[data-mb="stop"]').onclick = mStop;
+  const q=document.getElementById('qMusic'); if(q){ q.setAttribute('aria-pressed', String(playing)); q.textContent = playing ? '❚❚ Musica' : '▶ Musica'; }
+}
+addEventListener('resize', ()=>{ if(!mbar.hidden) paintMbar(); });
+
+function audioCardHTML(){
+  const sw = (k,label,hint) => `<button class="chip" type="button" data-au="${k}" aria-pressed="${!!AU[k]}">${AU[k]?'✓ ':''}${label}</button>`;
+  return `<section class="card" id="audioCard"><h2>Audio e musica</h2>
+    <div class="chips wrapchips" role="group" aria-label="Audio">
+      ${sw('beep','Suoni e vibrazione')}${canSpeak?sw('voice','Voce guida')+sw('breath','Voce sul respiro'):''}
+    </div>
+    <p class="note">${canSpeak ? `<b>Suoni</b>: bip negli ultimi 3 secondi di recupero. <b>Voce guida</b>: ti dice serie, ripetizioni e recupero. <b>Voce sul respiro</b>: nella pagina "Come si fa" dice "inspira" ed "espira" insieme all'omino.` : 'Su questo telefono la voce non è disponibile, restano suoni e vibrazione.'}</p>
+    ${canSpeak?'<div class="links"><button class="btn ghost small" type="button" id="auTest">🔊 Prova la voce</button></div>':''}
+    <h3 class="subh">Le tue canzoni</h3>
+    ${music.list.length ? `<div class="songs">${music.list.map((s,k)=>`<div class="song" data-sw="${s.id}"><button type="button" class="sg-play" data-sp="${k}" aria-label="Riproduci ${esc(s.name)}">▶</button><span>${esc(s.name)}</span><button type="button" class="sg-del" data-sd="${s.id}" aria-label="Togli ${esc(s.name)}">✕</button></div>`).join('')}</div>
+      <div class="chips"><button class="chip" type="button" data-au="shuffle" aria-pressed="${!!AU.shuffle}">${AU.shuffle?'✓ ':''}Ordine casuale</button></div>` : ''}
+    <div class="links"><label class="btn ghost small upl" for="songFile">＋ Aggiungi canzoni</label><input id="songFile" type="file" accept="audio/*" multiple hidden>
+      <a class="btn ghost small" href="https://open.spotify.com/" target="_blank" rel="noopener">Apri Spotify</a></div>
+    <p class="note" id="songMsg" aria-live="polite">${music.list.length?'':'Scegli dei file musicali dal telefono (mp3 e simili): restano salvati qui e si sentono anche senza internet. '}Se usi Spotify, avvialo prima: la musica continua sotto e la voce dell'app si sente sopra.</p>
+  </section>`;
+}
+function bindAudioCard(redraw){
+  const card=document.getElementById('audioCard'); if(!card) return;
+  card.querySelectorAll('[data-au]').forEach(b=>b.onclick=()=>{ const k=b.dataset.au; AU[k]=!AU[k]; saveAU(); if(k==='beep'&&AU.beep) beep('go'); if(k==='voice'&&AU.voice) say('Voce guida attiva.'); keepScroll(redraw); });
+  const t=document.getElementById('auTest'); if(t) t.onclick=()=>say('Ciao! Serie 1 di 3, Leg Press, 10 ripetizioni. Inspira mentre scendi, espira mentre spingi.', true);
+  card.querySelectorAll('[data-sp]').forEach(b=>b.onclick=()=>mPlay(+b.dataset.sp));
+  card.querySelectorAll('[data-sd]').forEach(b=>b.onclick=()=>{
+    const id=b.dataset.sd, row=card.querySelector(`[data-sw="${id}"]`);
+    row.innerHTML='<span>Togliere questa canzone?</span><button class="btn small" type="button" data-y>Sì</button><button class="btn ghost small" type="button" data-n>No</button>';
+    row.querySelector('[data-n]').onclick=()=>keepScroll(redraw);
+    row.querySelector('[data-y]').onclick=async ()=>{ const k=music.list.findIndex(s=>s.id===id);
+      if(k===music.i && music.loaded) mStop(); else if(k>=0 && k<music.i) music.i--;
+      music.list=music.list.filter(s=>s.id!==id); saveSongs(); await mdb.del(id); keepScroll(redraw); };
+  });
+  document.getElementById('songFile').onchange = async e=>{
+    const files=[...(e.target.files||[])]; if(!files.length) return;
+    const msg=document.getElementById('songMsg'); let ok=0, bad=0;
+    for(const f of files){ msg.textContent=`Salvo ${f.name}…`;
+      try{ const id='s'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); await mdb.set(id,f); music.list.push({id, name:f.name.replace(/\.[^.]+$/,'')}); ok++; }catch(err){ bad++; } }
+    saveSongs(); keepScroll(redraw);
+    const m2=document.getElementById('songMsg'); if(m2) m2.textContent = bad ? `Salvate ${ok} canzoni. ${bad} non si sono salvate: forse il telefono è pieno.` : `Salvate ${ok} ${ok===1?'canzone':'canzoni'}. Premi ▶ per ascoltare.`;
+  };
 }
 
 /* ---------------- DIARIO ---------------- */
@@ -1362,8 +1760,10 @@ function bindBackup(){
 }
 
 /* ---------------- NAVIGAZIONE ---------------- */
+let explaining=false;
 function route(soft){
   stopPacer(); stopAnim();
+  if(explaining){ explaining=false; try{speechSynthesis.cancel()}catch(e){} }
   const h = (location.hash||'#esercizi').slice(1);
   if(!h.startsWith('allena-')) clearInterval(tick);
   const go = ()=>{
