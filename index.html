@@ -367,6 +367,14 @@ details.more[open] summary{margin-bottom:8px}
 .wrapchips{flex-wrap:wrap;overflow:visible}
 .qa{justify-content:center;margin-top:4px}
 .qa .chip{text-decoration:none}
+.micbar{margin-top:10px;background:var(--sunk);border-radius:8px;padding:10px 12px;font-size:15px;line-height:1.4}
+.micbar .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);margin-right:7px;vertical-align:1px;animation:micp 1.4s ease-in-out infinite}
+@keyframes micp{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.micbar .live{animation:none}}
+.micbar .heard{display:block;margin-top:4px;opacity:.8}
+.stepper input.flash{outline:3px solid var(--accent);outline-offset:1px}
+.micbar details{margin-top:6px}.micbar summary{cursor:pointer;font-weight:600}
+.micbar ul{margin:6px 0 0;padding-left:20px}.micbar li{margin:3px 0}
 .subh{font-size:18px;text-transform:uppercase;margin-top:4px}
 .songs{display:grid;gap:6px}
 .song{display:flex;align-items:center;gap:10px;background:var(--sunk);border-radius:10px;padding:6px 8px;min-width:0;flex-wrap:wrap}
@@ -2835,6 +2843,7 @@ function defaults(p, setNo){
 }
 function drawRun(){
   clearInterval(tick); stopAnim();
+  if(run.pauseLeft!=null){ if(run.restEnd) run.restEnd = Date.now()+run.pauseLeft; else delete run.pauseLeft; }
   const p = run.plan[run.i], x = EXMAP[p.ex];
   const total = run.plan.reduce((a,q)=>a+q.sets,0);
   const done = run.sets.length;
@@ -2853,9 +2862,9 @@ function drawRun(){
     <div class="progress" aria-label="Avanzamento"><i style="width:${Math.min(100,Math.round(done/total*100))}%"></i></div>
     <div><div class="eyebrow">${esc(run.name)} · esercizio ${run.i+1} di ${run.plan.length}</div><h1>${esc(x.name)}</h1></div>
     ${resting ? `
-      <div class="rest"><div class="eyebrow">Recupero</div><div class="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="90"/><circle class="arc" id="arc" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="${ringOff()}"/></svg><div class="clock" id="clock">${fmt((run.restEnd-Date.now())/1000)}</div></div>
+      <div class="rest"><div class="eyebrow">${run.pauseLeft!=null?'Recupero in pausa':'Recupero'}</div><div class="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="90"/><circle class="arc" id="arc" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="${ringOff()}"/></svg><div class="clock" id="clock">${fmt((run.restEnd-Date.now())/1000)}</div></div>
         <div class="next">${run.set>1?`Prossima: serie ${run.set} di ${esc(x.name)}`:`Prossimo esercizio: ${esc(x.name)}`}</div>
-        <div class="links"><button class="btn ghost small" id="minus" type="button">−15"</button><button class="btn ghost small" id="plus" type="button">+15"</button><button class="btn small" id="skip" type="button">Salta recupero</button></div></div>
+        <div class="links"><button class="btn ghost small" id="minus" type="button">−15"</button><button class="btn ghost small" id="plus" type="button">+15"</button><button class="btn ghost small" id="pauseRest" type="button">${run.pauseLeft!=null?'▶ Riprendi':'❚❚ Pausa'}</button><button class="btn small" id="skip" type="button">Salta recupero</button></div></div>
       <div class="remind"><span><b>Intanto:</b> respira lento e profondo, inspira dal naso ed espira dalla bocca.</span></div>`
     : `
       <div class="pips" aria-hidden="true">${Array.from({length:p.sets},(_,k)=>`<i class="${k<run.set-1?'done':k===run.set-1?'now':''}"></i>`).join('')}</div>
@@ -2871,18 +2880,21 @@ function drawRun(){
       <div class="minor"><button class="btn ghost small" type="button" id="addSet">+ Serie</button><button class="btn ghost small" type="button" id="skipEx">Salta esercizio</button><a class="btn ghost small" href="#ex-${x.id}">Come si fa</a></div>
       ${ANIM[x.id]?`<div class="player mini"><canvas class="demo" id="demo2" role="img" aria-label="Animazione di ${esc(x.name)}"></canvas><div class="label"><b id="w2"></b></div></div>`:''}
       <div class="next">${esc(nxt)}</div>`}
-    <div class="chips wrapchips qa" role="group" aria-label="Audio">${canSpeak?`<button class="chip" type="button" id="qVoice" aria-pressed="${AU.voice}">${AU.voice?'🔊 Voce':'🔇 Voce'}</button>`:''}${music.list.length?`<button class="chip" type="button" id="qMusic" aria-pressed="${!!(music.el&&!music.el.paused)}">${music.el&&!music.el.paused?'❚❚ Musica':'▶ Musica'}</button>`:''}<a class="chip" href="https://open.spotify.com/" target="_blank" rel="noopener">Apri Spotify</a></div>
+    <div class="chips wrapchips qa" role="group" aria-label="Audio">${canSpeak?`<button class="chip" type="button" id="qVoice" aria-pressed="${AU.voice}">${AU.voice?'🔊 Voce':'🔇 Voce'}</button>`:''}${music.list.length?`<button class="chip" type="button" id="qMusic" aria-pressed="${!!(music.el&&!music.el.paused)}">${music.el&&!music.el.paused?'❚❚ Musica':'▶ Musica'}</button>`:''}<a class="chip" href="https://open.spotify.com/" target="_blank" rel="noopener">Apri Spotify</a>${canListen?`<button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button>`:''}</div>
+    <div class="micbar" id="micBar" hidden></div>
     <div class="confirm" id="endWrap" style="margin-top:8px"><button class="btn ghost small" type="button" id="endRun">Termina allenamento</button></div>
   </section>`;
   if(resting){
     const c = document.getElementById('clock');
     let lastSec = Math.ceil((run.restEnd-Date.now())/1000);
-    tick = setInterval(()=>{ const left=(run.restEnd-Date.now())/1000, sec=Math.ceil(left); paintRest();
+    tick = setInterval(()=>{ if(run.pauseLeft!=null){ run.restEnd=Date.now()+run.pauseLeft; paintRest(); return; }
+      const left=(run.restEnd-Date.now())/1000, sec=Math.ceil(left); paintRest();
       if(sec!==lastSec){ if(sec===10 && (run.restTotal||0)>=25000) say('Ancora 10 secondi.'); if(sec>=1 && sec<=3) beep('tick'); lastSec=sec; }
       if(left<=0){ clearInterval(tick); beep('go'); run.restEnd=0; saveRun(); if(location.hash==='#allena-'+run.id) drawRun(); } },200);
-    document.getElementById('skip').onclick = ()=>{ run.restEnd=0; saveRun(); drawRun(); };
-    document.getElementById('plus').onclick = ()=>{ run.restEnd+=15000; run.restTotal=(run.restTotal||0)+15000; saveRun(); paintRest(); };
-    document.getElementById('minus').onclick = ()=>{ run.restEnd-=15000; saveRun(); paintRest(); };
+    document.getElementById('skip').onclick = ()=>{ run.restEnd=0; delete run.pauseLeft; saveRun(); drawRun(); };
+    document.getElementById('plus').onclick = ()=>{ run.restEnd+=15000; if(run.pauseLeft!=null) run.pauseLeft+=15000; run.restTotal=(run.restTotal||0)+15000; saveRun(); paintRest(); };
+    document.getElementById('minus').onclick = ()=>{ run.restEnd-=15000; if(run.pauseLeft!=null) run.pauseLeft=Math.max(1000,run.pauseLeft-15000); saveRun(); paintRest(); };
+    document.getElementById('pauseRest').onclick = ()=>restPause(run.pauseLeft==null);
   } else {
     $app.querySelectorAll('[data-step]').forEach(b=>b.onclick=()=>{
       const inp = document.getElementById(b.dataset.step==='kg'?'kgIn':'repsIn');
@@ -2907,12 +2919,16 @@ function drawRun(){
       const lastOfAll = run.set>=p.sets && run.i>=run.plan.length-1;
       if(lastOfAll) return finish();
       if(run.set<p.sets) run.set++; else { run.i++; run.set=1; }
+      delete run.pauseLeft;
       if(p.rest>0){ run.restEnd = Date.now()+p.rest*1000; run.restTotal = p.rest*1000; }
       saveRun(); drawRun();
     };
   }
   const qv=document.getElementById('qVoice'); if(qv) qv.onclick=()=>{ AU.voice=!AU.voice; saveAU(); qv.setAttribute('aria-pressed',String(AU.voice)); qv.textContent=AU.voice?'🔊 Voce':'🔇 Voce'; if(AU.voice) say('Voce attiva.'); else try{speechSynthesis.cancel()}catch(e){} };
   const qm=document.getElementById('qMusic'); if(qm) qm.onclick=mToggle;
+  const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; saveAU(); mic.msg='';
+    if(AU.mic){ say("Comandi a voce attivi. Quando finisci la serie di' fatta."); micStart(); } else { micStop(); say('Comandi a voce spenti.'); } paintMic(); };
+  paintMic(); if(AU.mic) micStart();
   document.getElementById('endRun').onclick = ()=>{
     document.getElementById('endWrap').innerHTML = `<span>${run.sets.length?'Salvare le serie fatte e chiudere?':'Chiudere senza salvare?'}</span>${run.sets.length?'<button class="btn small" type="button" id="endSave">Salva e chiudi</button>':''}<button class="btn ghost small" type="button" id="endDrop">${run.sets.length?'Chiudi senza salvare':'Sì, chiudi'}</button><button class="btn ghost small" type="button" id="endNo">Continua</button>`;
     const es=document.getElementById('endSave'); if(es) es.onclick=finish;
@@ -2922,7 +2938,7 @@ function drawRun(){
 }
 function ringOff(){ const tot=run.restTotal||1, left=Math.max(0,run.restEnd-Date.now()); return (565.5*(1-Math.min(1,left/tot))).toFixed(1); }
 function paintRest(){ const c=document.getElementById('clock'), a=document.getElementById('arc'); if(c) c.textContent=fmt((run.restEnd-Date.now())/1000); if(a) a.setAttribute('stroke-dashoffset',ringOff()); }
-function endRun(){ clearInterval(tick); run=null; saveRun(); try{wake&&wake.release()}catch(e){} wake=null; }
+function endRun(){ clearInterval(tick); micStop(); run=null; saveRun(); try{wake&&wake.release()}catch(e){} wake=null; }
 function finish(){
   clearInterval(tick);
   const before = {}; [...new Set(run.sets.map(s=>s.ex))].forEach(ex=>before[ex]=recordsOf(histFor(ex)));
@@ -2975,14 +2991,147 @@ function pickVoice(){ try{ const vs=speechSynthesis.getVoices(); itVoice = vs.fi
 if(canSpeak){ pickVoice(); try{ speechSynthesis.addEventListener('voiceschanged', pickVoice); }catch(e){} }
 function say(text, force){
   if(!canSpeak || !(AU.voice || force)) return;
+  mic.said = String(text); mic.saidAt = Date.now();
   try{ speechSynthesis.cancel(); duck(true);
     const parts = String(text).split(/(?<=[.;!?])\s+/).filter(Boolean);
     parts.forEach((t,k)=>{ const u=new SpeechSynthesisUtterance(t); u.lang='it-IT'; if(itVoice) u.voice=itVoice; u.rate=1.02;
-      if(k===parts.length-1) u.onend=()=>duck(false); u.onerror=()=>duck(false); speechSynthesis.speak(u); });
+      if(k===parts.length-1) u.onend=()=>{ duck(false); mic.quietUntil=Date.now()+2500; }; u.onerror=()=>duck(false); speechSynthesis.speak(u); });
   }catch(e){}
 }
 const spokenReps = r => String(r).replace(/(\d+)\s*–\s*(\d+)/g,'da $1 a $2').replace(/(\d+)"/g,'$1 secondi').replace(/(\d+)'/g,'$1 minuti');
 const spokenRest = s => s<60 ? s+' secondi' : (s%60 ? Math.floor(s/60)+' minuti e '+(s%60)+' secondi' : (s/60===1?'un minuto':(s/60)+' minuti'));
+
+/* ---------------- COMANDI A VOCE (mani libere) ---------------- */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const canListen = !!SR;
+const mic = {rec:null, on:false, heard:'', msg:'', quietUntil:0, said:'', saidAt:0, endAsk:0, err:'', timer:0};
+const NUMW = (()=>{ const m={zero:0,un:1,una:1}, u=['','uno','due','tre','quattro','cinque','sei','sette','otto','nove'],
+  t=['dieci','undici','dodici','tredici','quattordici','quindici','sedici','diciassette','diciotto','diciannove'],
+  d=['','','venti','trenta','quaranta','cinquanta','sessanta','settanta','ottanta','novanta'];
+  for(let i=1;i<10;i++) m[u[i]]=i; t.forEach((w,i)=>m[w]=10+i);
+  for(let i=2;i<10;i++){ m[d[i]]=i*10; for(let j=1;j<10;j++){ const w = /^[uo]/.test(u[j]) ? d[i].slice(0,-1)+u[j] : d[i]+u[j]; m[w]=i*10+j; } }
+  Object.keys(m).forEach(w=>{ const v=m[w]; if(v>0){ m['cento'+w]=100+v; if(/^[uo]/.test(w)) m['cent'+w]=100+v; } }); m.cento=100; m.duecento=200; return m; })();
+function micNorm(t){
+  let s = String(t).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[’']/g,' ');
+  s = s.split(/\s+/).map(w=>{ const c=w.replace(/[^a-z0-9.,]/g,''); return c in NUMW ? String(NUMW[c]) : c; }).filter(Boolean).join(' ');
+  return s.replace(/(\d+)[.,](\d+)/g,'$1.$2').replace(/(\d+) virgola (\d+)/g,'$1.$2').replace(/(\d+) e mezzo/g,'$1.5').replace(/(\d+)(kg|rip)\b/g,'$1 $2');
+}
+function micParse(raw){
+  const s = micNorm(raw), has = re=>re.test(s), a = {};
+  const kg = s.match(/(\d+(?:\.\d+)?) ?(?:kg|chil\w*|kil\w*)\b/) || s.match(/\b(?:peso|chili|kg) (\d+(?:\.\d+)?)/);
+  const rp = s.match(/(\d+) ?(?:ripetizion\w*|rip|volte|reps?)\b/) || s.match(/\bripetizion\w* (\d+)/);
+  if(kg) a.kg = parseFloat(kg[1]);
+  if(rp) a.reps = parseInt(rp[1],10);
+  if(!kg && !rp){ const only = s.match(/^(?:ne ho fatte |ho fatto |fatte )?(\d+)(?: fatte)?$/); if(only) a.reps = parseInt(only[1],10); }
+  if(has(/\b(spegni|disattiva|basta)\b.*\b(microfono|comandi|ascolto)\b/)) a.off = 1;
+  else if(has(/\b(termina|chiudi|fine|finisci)\b.*\ballenamento\b/)) a.end = 1;
+  else if(has(/^(si|si si|conferma|confermo|salva|si salva)\b/)) a.yes = 1;
+  else if(has(/\b(comandi|aiuto|cosa posso dire)\b/)) a.help = 1;
+  else if(has(/\b(ripeti|cosa devo fare|a che punto)\b/)) a.repeat = 1;
+  else if(has(/\bsalta\b.*\besercizio\b/)) a.skipEx = 1;
+  else if(has(/\b(pausa|ferma|aspetta|stop)\b/) && !has(/\bmusica\b/)) a.pause = 1;
+  else if(has(/\b(riprendi|continua|ripartiamo)\b/)) a.resume = 1;
+  else if(has(/\b(musica|canzone)\b/)) a.music = has(/\b(prossima|successiva|cambia)\b/) ? 'next' : 1;
+  else if(has(/\b(piu|aggiungi|altri)\b.*\b(tempo|secondi|15)\b/)) a.more = 1;
+  else if(has(/\bmeno\b.*\b(tempo|secondi|15)\b/)) a.less = 1;
+  else if(has(/\b(salta|saltiamo|pronto|pronta|via|vai|avanti)\b/)) a.go = 1;
+  if(has(/\b(fatt[aoie]|finit[aoie]|completat[ao]|serie fatta|terminat[ao])\b/) && !a.end) a.done = 1;
+  return Object.keys(a).length ? a : null;
+}
+function micEcho(t){ // la frase è la voce dell'app stessa?
+  if(!mic.said || Date.now()-mic.saidAt > 15000) return false;
+  const h = micNorm(t), w = micNorm(mic.said);
+  return h.length>3 && w.includes(h);
+}
+function onHeard(alts){
+  if(!run || view!=='run') return;
+  const speaking = canSpeak && (()=>{ try{ return speechSynthesis.speaking; }catch(e){ return false; } })();
+  if((speaking || Date.now() < mic.quietUntil) && alts.some(micEcho)) return;
+  let a=null, txt=alts[0]||'';
+  for(const t of alts){ a = micParse(t); if(a){ txt=t; break; } }
+  mic.heard = txt.trim(); paintMic();
+  if(a) micDo(a);
+}
+function micSetVal(id, v){ const el=document.getElementById(id); if(el){ el.value = id==='kgIn' ? kgf(v) : v; el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),700); } return !!el; }
+function restPause(on){
+  if(!run || !(run.restEnd>Date.now() || run.pauseLeft!=null)) return false;
+  if(on){ if(run.pauseLeft==null) run.pauseLeft = Math.max(1000, run.restEnd-Date.now()); }
+  else if(run.pauseLeft!=null){ run.restEnd = Date.now()+run.pauseLeft; delete run.pauseLeft; }
+  saveRun(); drawRun(); return true;
+}
+function micDo(a){
+  const resting = run.restEnd > Date.now() || run.pauseLeft!=null;
+  const tap = id=>{ const b=document.getElementById(id); if(b){ b.click(); return true; } return false; };
+  try{ navigator.vibrate && navigator.vibrate(30); }catch(e){}
+  if(a.off){ AU.mic=false; saveAU(); micStop(); say('Comandi a voce spenti.', true); return paintMic(); }
+  if(a.help) return say("Puoi dire: fatta. Dodici ripetizioni. Quaranta chili. Salta. Pausa. Riprendi. Altri quindici secondi. Salta esercizio. Ripeti. Musica. Termina allenamento.", true);
+  if(a.repeat){ lastSaid=''; return drawRun(); }
+  if(a.music){ if(!music.list.length) return say('Non hai canzoni salvate.', true); if(a.music==='next' && typeof mNext==='function') return mNext(); return mToggle(); }
+  if(a.end){ mic.endAsk = Date.now(); return say("Vuoi salvare e chiudere l'allenamento? Di' sì per confermare.", true); }
+  if(a.yes && Date.now()-mic.endAsk < 15000){ mic.endAsk=0; return run.sets.length ? finish() : (endRun(true), location.hash='sessioni'); }
+  if(resting){
+    if(a.pause) return restPause(true) && say('Recupero in pausa.', true);
+    if(a.resume) return restPause(false);
+    if(a.more) return tap('plus') && say('Più quindici secondi.', true);
+    if(a.less) return tap('minus') && say('Meno quindici secondi.', true);
+    if(a.go || a.done) return tap('skip');
+    if(a.kg!=null || a.reps!=null) return say('Ora sei in recupero. Dimmi i numeri quando inizi la serie.', true);
+    return;
+  }
+  if(a.skipEx) return tap('skipEx');
+  if(a.pause){ if(music.el && !music.el.paused) return mToggle(); return say("Prenditi il tuo tempo. Quando finisci la serie di' fatta.", true); }
+  const parts=[];
+  if(a.reps!=null && micSetVal('repsIn', a.reps)) parts.push(a.reps+(a.reps===1?' ripetizione':' ripetizioni'));
+  if(a.kg!=null && micSetVal('kgIn', a.kg)) parts.push(kgf(a.kg).replace('.',',')+' chili');
+  if(a.done){
+    tap('doneSet');
+    const e=document.getElementById('err'); if(e && !e.hidden) say('Quante ripetizioni hai fatto?', true);
+    return;
+  }
+  if(a.go && !parts.length) return say("Per saltare l'esercizio di' salta esercizio. Quando finisci la serie di' fatta.", true);
+  if(parts.length) say(parts.join(', ')+'.', true);
+}
+function micWanted(){ return !!(canListen && AU.mic && run && view==='run' && location.hash==='#allena-'+run.id && document.visibilityState!=='hidden'); }
+function micStart(){
+  clearTimeout(mic.timer);
+  if(mic.on || !micWanted()) return;
+  try{
+    const r = new SR(); r.lang='it-IT'; r.continuous=true; r.interimResults=false; r.maxAlternatives=3;
+    r.onresult = e=>{ for(let k=e.resultIndex;k<e.results.length;k++){ const res=e.results[k]; if(!res.isFinal) continue;
+      const alts=[]; for(let j=0;j<res.length;j++) alts.push(res[j].transcript); onHeard(alts); } };
+    r.onerror = e=>{ mic.err = e.error;
+      if(e.error==='not-allowed' || e.error==='service-not-allowed'){ AU.mic=false; saveAU(); mic.msg='Il microfono è bloccato. Tocca il lucchetto vicino all\'indirizzo (o Impostazioni sito di Chrome) e consenti il microfono.'; }
+      else if(e.error==='network') mic.msg='I comandi a voce hanno bisogno di internet. Appena torna la linea riparto da solo.';
+      else if(e.error==='audio-capture') mic.msg='Non trovo il microfono del telefono.';
+      paintMic(); };
+    r.onstart = ()=>{ if(mic.err!=='network') mic.msg=''; paintMic(); };
+    r.onend = ()=>{ mic.on=false; mic.rec=null; const wait = mic.err==='network' ? 5000 : mic.err==='audio-capture' ? 8000 : 250; mic.err='';
+      if(micWanted()) mic.timer = setTimeout(micStart, wait); paintMic(); };
+    mic.rec=r; mic.on=true; r.start();
+  }catch(e){ mic.on=false; mic.rec=null; }
+  paintMic();
+}
+function micStop(){ clearTimeout(mic.timer); const r=mic.rec; mic.rec=null; mic.on=false; if(r) try{ r.onend=null; r.onerror=null; r.abort(); }catch(e){} }
+function paintMic(){
+  const c=document.getElementById('qMic'); if(c){ c.setAttribute('aria-pressed',String(!!AU.mic)); c.textContent = AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'; }
+  const b=document.getElementById('micBar'); if(!b) return;
+  if(!AU.mic && !mic.msg){ b.hidden=true; return; }
+  b.hidden=false;
+  const resting = run && (run.restEnd > Date.now() || run.pauseLeft!=null);
+  b.innerHTML = (AU.mic ? `<b>${mic.on?'<span class="live" aria-hidden="true"></span>Ti ascolto':'🎙 Accendo il microfono…'}</b> · ${resting?"di' «salta», «pausa» o «altri 15 secondi»":"di' per esempio «12 ripetizioni, 40 chili, fatta»"}` : '')
+    + (mic.msg?`<span class="heard" style="color:var(--red)">${esc(mic.msg)}</span>`:'')
+    + (mic.heard&&AU.mic?`<span class="heard">Ho sentito: «${esc(mic.heard)}»</span>`:'')
+    + (AU.mic?`<details><summary>Cosa posso dire</summary><ul>
+      <li><b>«Fatta»</b> (o «finito»): segna la serie e parte il recupero</li>
+      <li><b>«12 ripetizioni»</b>, <b>«40 chili»</b>, anche insieme: «10 ripetizioni con 35 chili, fatta»</li>
+      <li><b>«Salta»</b>: salta il recupero · <b>«Salta esercizio»</b></li>
+      <li><b>«Pausa»</b> / <b>«Riprendi»</b>: ferma il conto del recupero</li>
+      <li><b>«Altri 15 secondi»</b> / <b>«Meno tempo»</b></li>
+      <li><b>«Ripeti»</b>: ti ridico a che punto sei · <b>«Musica»</b></li>
+      <li><b>«Termina allenamento»</b>, poi <b>«Sì»</b> · <b>«Spegni microfono»</b></li>
+      </ul><p style="margin:6px 0 0;opacity:.8">Serve internet e il permesso del microfono. Funziona meglio con Chrome su Android. Lo schermo deve restare acceso.</p></details>`:'');
+}
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') micStart(); else micStop(); });
 
 /* canzoni salvate sul telefono */
 const mdb = {
@@ -3840,7 +3989,7 @@ function route(soft){
   stopPacer(); stopAnim(); dispose3D();
   if(explaining){ explaining=false; try{speechSynthesis.cancel()}catch(e){} }
   const h = (location.hash||'#esercizi').slice(1);
-  if(!h.startsWith('allena-')) clearInterval(tick);
+  if(!h.startsWith('allena-')){ clearInterval(tick); micStop(); }
   const go = ()=>{
     if(h.startsWith('ex-')) return viewExercise(h.slice(3));
     if(h.startsWith('allena-')) return startRun(h.slice(7));
