@@ -4065,5 +4065,13 @@ window.PF_EN={
 "Una sagoma meno muscolosa.": "A less muscular shape.",
 "Basta ridurre le serie con i pesi e fare più attività aerobica: i muscoli calano piano. Per restare in salute tieni comunque 2 allenamenti di forza a settimana.": "Just cut back on weight sets and do more aerobic activity: muscles shrink slowly. To stay healthy, still keep 2 strength sessions a week.",
 "La differenza è soprattutto nei muscoli: allenati con i pesi 2–3 volte a settimana, almeno 10 serie per muscolo, e mangia abbastanza proteine.": "The difference is mostly muscle: train with weights 2–3 times a week, at least 10 sets per muscle, and eat enough protein.",
+"Molto magra": "Very thin",
+"Magra": "Thin",
+"Snella": "Slim",
+"Atletica": "Athletic",
+"Muscolosa": "Muscular",
+"Molto muscolosa": "Very muscular",
+"Obesa": "Obese",
+"1 molto magra · 2 magra · 3 snella · 4 nella media · 5 atletica · 6 muscolosa · 7 molto muscolosa · 8 leggero sovrappeso · 9 sovrappeso · 10 obesa": "1 very thin · 2 thin · 3 slim · 4 average · 5 athletic · 6 muscular · 7 very muscular · 8 slightly overweight · 9 overweight · 10 obese",
 "(cm)": "(cm)"
 };
