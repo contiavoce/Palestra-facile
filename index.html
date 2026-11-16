@@ -479,7 +479,7 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .cmap{padding:6px}.cpath{width:100%;height:auto;display:block}
 .cempty{padding:40px 10px;text-align:center;opacity:.6}
 .cbtns{display:grid;gap:10px}
-.rplans .chips{display:flex;gap:8px;flex-wrap:wrap}
+.rplans .chips{display:flex;gap:8px;flex-wrap:wrap}.rpgl{margin:8px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .rpnext{display:grid;gap:4px;background:var(--sunk);border-radius:14px;padding:12px;margin:0 0 10px}.rpnext span{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.rpnext b{font-size:19px}.rpnext i{font-style:normal;color:var(--muted);font-size:14px;margin-bottom:6px}
 .rpweeks{display:grid;gap:12px}.rpw{display:grid;gap:4px}.rpw>b{font-size:15px}
 .rpd{display:grid;grid-template-columns:30px 1fr auto auto;align-items:center;gap:6px;border-top:1px solid var(--line);padding-top:4px}.rpd>span{font-weight:700;color:var(--muted);font-size:13px}.rpd p{margin:0;font-size:14px}.rpd small{color:var(--muted)}.rpd.ok>span{color:#1f8a50}.rpd.ok p{opacity:.65}.rpd .btn{min-width:40px;padding:4px 8px}
@@ -3935,7 +3935,8 @@ const RSEG = {
  rec:{n:'Recupero', s:'Recupero: corri lentissimo o cammina', z:[.55,.70], c:'#6b8aa8'},
  sog:{n:'Ritmo soglia', s:'Ritmo soglia: comodamente faticoso, riesci a dire solo poche parole', z:[.80,.88], c:'#E8833A'},
  int:{n:'Veloce', s:'Veloce! Forte ma costante, senza scatti', z:[.85,.95], c:'#d6341e'},
- all:{n:'Allungo', s:'Allungo: veloce e sciolto, non uno sprint', z:null, c:'#b06d00'}
+ all:{n:'Allungo', s:'Allungo: veloce e sciolto, non uno sprint', z:null, c:'#b06d00'},
+ pro:{n:'Prova', s:'Prova: corri al tuo ritmo migliore, regolare dall\'inizio alla fine', z:null, c:'#7a3fb0'}
 };
 const M_ = m=>Math.round(m*60);
 function rRep(n, a, b){ const o=[]; for(let i=0;i<n;i++){ o.push(a.slice()); if(b && i<n-1) o.push(b.slice()); } return o; }
@@ -3963,13 +3964,39 @@ const RP_E = (()=>{ const fac=[40,40,45,30,45,45,50,35], lun=[70,75,80,60,80,85,
     rSess(`Facile ${Math.max(30,f-5)}' + 8 allunghi`, [['fac',M_(Math.max(30,f-5))], ...rRep(8,['all',20],['rec',60])]),
     rSess(`Soglia ${sg[w][0]} × ${sg[w][1]}' (recupero 2')`, [['fac',M_(15)], ...rRep(sg[w][0],['sog',M_(sg[w][1])],['rec',M_(2)]), ['fac',M_(10)]]),
     rSess(`Lungo facile ${lun[w]}'`, [['fac',M_(lun[w])]]) ]); })();
+
+// OBIETTIVI DI DISTANZA: ultima settimana con scarico (Bosquet 2007) e prova sulla distanza misurata dal GPS
+const kmSay = m => (m/1000).toLocaleString('it-IT',{maximumFractionDigits:1});
+const facS = f => rSess(`Facile ${f}'`, [['fac',M_(f)]]);
+const ivS = (n,a,b,wu=10) => rSess(`Intervalli ${n} × ${a}' veloce (recupero ${b}')`, [['fac',M_(wu)], ...rRep(n,['int',M_(a)],['rec',M_(b)]), ['fac',M_(10)]]);
+const sgS = (n,a,b=2) => rSess(n>1?`Soglia ${n} × ${a}' (recupero ${b}')`:`Soglia ${a}' di fila`, [['fac',M_(15)], ...rRep(n,['sog',M_(a)],['rec',M_(b)]), ['fac',M_(10)]]);
+const lnS = f => rSess(`Lungo facile ${f}'`, [['fac',M_(f)]]);
+const alS = f => rSess(`Facile ${f}' + 6 allunghi`, [['fac',M_(f)], ...rRep(6,['all',20],['rec',60])]);
+const prS = m => rSess(`Prova sui ${kmSay(m)} km`, [['fac',M_(12)], ...rRep(3,['all',20],['rec',60]), ['pro',0,m], ['cam',M_(5)]]);
+const RP_5 = [
+ [facS(25), ivS(6,2,2), lnS(40)], [facS(30), ivS(5,3,2), lnS(44)], [facS(30), ivS(4,4,3), lnS(48)], [facS(25), ivS(4,2,2), lnS(35)],
+ [alS(30), sgS(2,8), lnS(50)], [alS(30), ivS(5,4,3), lnS(52)], [facS(25), ivS(4,3,2), lnS(40)], [facS(20), ivS(3,2,2), prS(5000)]];
+const RP_10 = [
+ [facS(30), ivS(5,3,2), alS(30), lnS(50)], [facS(30), sgS(2,10), alS(30), lnS(55)], [facS(35), ivS(4,4,3), alS(30), lnS(60)], [facS(25), sgS(2,8), facS(25), lnS(45)],
+ [facS(35), ivS(5,4,3), alS(30), lnS(65)], [facS(35), sgS(3,10), alS(35), lnS(70)], [facS(40), ivS(5,4,3), alS(35), lnS(75)], [facS(30), sgS(1,25), facS(30), lnS(55)],
+ [facS(35), ivS(4,4,3), alS(30), lnS(60)], [facS(25), ivS(3,3,3), alS(20), prS(10000)]];
+const RP_21 = [
+ [facS(35), ivS(5,3,2), alS(35), lnS(60)], [facS(35), sgS(2,10), alS(35), lnS(65)], [facS(40), ivS(4,4,3), alS(35), lnS(70)], [facS(30), sgS(2,8), facS(30), lnS(55)],
+ [facS(40), sgS(3,10), alS(40), lnS(75)], [facS(40), ivS(5,4,3), alS(40), lnS(80)], [facS(45), sgS(2,15), alS(40), lnS(88)], [facS(30), ivS(4,3,3), facS(30), lnS(65)],
+ [facS(45), sgS(3,12), alS(40), lnS(95)], [facS(45), ivS(5,4,3), alS(40), lnS(100)], [facS(35), sgS(2,12), alS(30), lnS(70)], [facS(30), sgS(2,6), alS(20), prS(21097)]];
 const RUNPLANS = {
  principiante:{name:'Principiante', weeks:RP_P, days:'3 uscite a settimana con un giorno di riposo in mezzo (es. lun-mer-ven)',
   info:'Per chi parte da zero. Alterni corsa lenta e camminata: in 9 settimane arrivi a correre 30 minuti di fila. Corri così piano da riuscire a parlare. Se una settimana ti è sembrata dura, ripetila: va benissimo.'},
  intermedio:{name:'Intermedio', weeks:RP_I, days:'4 uscite a settimana (es. lun, mer, ven, dom col lungo)',
   info:'Per chi corre già 30 minuti di fila. 3 uscite su 4 sono facili e 1 è veloce: è la regola 80/20. Le settimane 4 e 8 sono più leggere per recuperare. Il lungo cresce al massimo del 10%.'},
  esperto:{name:'Esperto', weeks:RP_E, days:'5 uscite a settimana, mai due sedute dure di fila',
-  info:'Per chi corre già 4–5 volte a settimana con un lungo di almeno 65 minuti. Due sedute dure (intervalli 4×4 e soglia), il resto facile: circa 80% facile e 20% duro. Settimane 4 e 8 più leggere.'}
+  info:'Per chi corre già 4–5 volte a settimana con un lungo di almeno 65 minuti. Due sedute dure (intervalli 4×4 e soglia), il resto facile: circa 80% facile e 20% duro. Settimane 4 e 8 più leggere.'},
+ k5:{name:'5 km', g:1, weeks:RP_5, days:'3 uscite a settimana per 8 settimane',
+  info:'Per correre i 5 km più veloce. Serve già correre 30 minuti di fila. Una seduta veloce, una facile e un lungo. L\'ultima settimana è più leggera e finisce con la prova sui 5 km: il GPS ti dice quando arrivi.'},
+ k10:{name:'10 km', g:1, weeks:RP_10, days:'4 uscite a settimana per 10 settimane',
+  info:'Per preparare i 10 km. Serve correre già 3 volte a settimana e almeno 45 minuti di fila. Intervalli e soglia a settimane alterne, il resto facile. Ultima settimana di scarico e prova sui 10 km.'},
+ k21:{name:'Mezza maratona', g:1, weeks:RP_21, days:'4 uscite a settimana per 12 settimane',
+  info:'Per arrivare a correre i 21 km. Serve correre già 3–4 volte a settimana con un lungo di almeno 55 minuti. Il lungo arriva a 100 minuti, poi 2 settimane di scarico e la prova sui 21,1 km.'}
 };
 const SCI_RUN = `<div class="sci">
   <p>${pill('s')}<b>80% facile, 20% duro.</b> Gli atleti di resistenza più forti fanno circa l'80% degli allenamenti piano e il 20% duro. Negli studi questo schema migliora il fiato almeno quanto, o più, di fare tutto a ritmo medio.<cite>Seiler e Kjerland, Scand J Med Sci Sports 2006 · Stöggl e Sperlich, Front Physiol 2014 · Rosenblat e coll., J Strength Cond Res 2019 (meta-analisi)</cite></p>
@@ -3979,6 +4006,7 @@ const SCI_RUN = `<div class="sci">
   <p>${pill('s')}<b>Corsa-camminata per iniziare.</b> Alternare corsa e camminata e allungare piano la corsa è il modo consigliato per partire in sicurezza; per la salute bastano 75–150 minuti a settimana di attività intensa come la corsa.<cite>OMS, linee guida 2020 · ACSM, Guidelines for Exercise Testing and Prescription</cite></p>
   <p>${pill('s')}<b>Il test della parola.</b> Se riesci a parlare in frasi complete sei nella zona facile; quando riesci a dire solo poche parole sei vicino alla soglia.<cite>Reed e Pipe, Phys Sportsmed 2014 (revisione)</cite></p>
   <p>${pill('m')}<b>Battito massimo stimato</b> = 208 − 0,7 × età. È una stima: per alcune persone sbaglia anche di 10 battiti, quindi conta anche come ti senti.<cite>Tanaka, Monahan e Seals, J Am Coll Cardiol 2001</cite></p>
+  <p>${pill('s')}<b>Scarico prima della prova.</b> Ridurre i km del 40–60% nelle ultime 1–2 settimane, mantenendo qualche tratto veloce, migliora la prestazione il giorno della gara.<cite>Bosquet e coll., Med Sci Sports Exerc 2007 (meta-analisi)</cite></p>
   <p>${pill('w')}<b>Allunghi e settimane leggere.</b> Pratiche diffuse tra gli allenatori per tecnica e recupero, con poche prove dirette.</p>
   <p class="note">Se hai problemi di cuore, pressione alta, dolori o non ti alleni da tanto, senti prima il medico. Se senti dolore al petto, giramenti di testa o fiato che non torna, fermati.</p>
 </div>`;
@@ -3987,7 +4015,8 @@ if(!RUNPLANS[rplan.lv]) rplan.lv='principiante';
 const rpSave = ()=>store.set('runplan', rplan);
 const rpKey = (lv,w,d)=>lv+'|'+w+'|'+d;
 const rpGet = (lv,w,d)=>{ const P=RUNPLANS[lv]; return P && P.weeks[w] && P.weeks[w][d]; };
-const rpTot = s => s.segs.reduce((a,x)=>a+x[1],0);
+const segSec = x => x[2] ? Math.round(x[2]*0.36) : x[1];
+const rpTot = s => s.segs.reduce((a,x)=>a+segSec(x),0);
 function rpNext(lv){ const P=RUNPLANS[lv]; for(let w=0;w<P.weeks.length;w++) for(let d=0;d<P.weeks[w].length;d++) if(!rplan.done[rpKey(lv,w,d)]) return [w,d]; return null; }
 const rpZoneTxt = z => { if(!z) return ''; const mx=hrMax(); return `${Math.round(z[0]*100)}–${Math.round(z[1]*100)}%`+(mx?` · ${Math.round(z[0]*mx)}–${Math.round(z[1]*mx)} bpm`:''); };
 function rpStart(lv,w,d){
@@ -3996,11 +4025,14 @@ function rpStart(lv,w,d){
   corsaStart({lv,w,d,t:s.t,segs:s.segs,i:-1,warn:0,push:-1});
 }
 // dove sono nel piano: indice del segmento, secondi passati e rimasti
-function rpPos(){ const p=corsa&&corsa.plan; if(!p) return null; const t=corsaSec(); let a=0;
-  for(let i=0;i<p.segs.length;i++){ const L=p.segs[i][1]; if(t<a+L) return {i, el:t-a, left:a+L-t, t}; a+=L; } return {i:p.segs.length, el:0, left:0, t, end:true}; }
+function rpPos(){ const p=corsa&&corsa.plan; if(!p) return null; const t=corsaSec(); p.ends=p.ends||[];
+  while(p.ends.length<p.segs.length){ const i=p.ends.length, a=i?p.ends[i-1]:0, sg=p.segs[i];
+    if(sg[2]){ if(p.mi!==i){ p.mi=i; p.m0=corsa.m; } const dn=corsa.m-p.m0; if(dn>=sg[2]){ p.ends.push(t); continue; } return {i, el:t-a, mLeft:sg[2]-dn, fr:dn/sg[2], t}; }
+    if(t>=a+sg[1]){ p.ends.push(a+sg[1]); continue; } return {i, el:t-a, left:a+sg[1]-t, fr:(t-a)/sg[1], t}; }
+  return {i:p.segs.length, el:0, left:0, t, end:true}; }
 function rpCue(p, i){ const sg=p.segs[i], T=RSEG[sg[0]];
   const hard = p.segs.filter(x=>x[0]===sg[0]).length, k = p.segs.slice(0,i+1).filter(x=>x[0]===sg[0]).length;
-  let txt = T.s+' per '+spokenRest(sg[1])+'.';
+  let txt = T.s+' per '+(sg[2] ? kmSay(sg[2]).replace(',',' virgola ')+' chilometri. Ti avviso io quando arrivi' : spokenRest(sg[1]))+'.';
   if((sg[0]==='int'||sg[0]==='sog'||sg[0]==='all') && hard>1) txt = (sg[0]==='all'?'Allungo ':'Ripetizione ')+k+' di '+hard+'. '+txt;
   if(sg[0]==='int'||sg[0]==='sog'){ const mx=hrMax(); if(mx) txt += ' Battito tra '+Math.round(T.z[0]*mx)+' e '+Math.round(T.z[1]*mx)+'.'; }
   const nx=p.segs[i+1]; if(i===0) txt = 'Settimana '+(p.w+1)+', giorno '+(p.d+1)+'. '+txt;
@@ -4012,9 +4044,10 @@ function rpTick(){
   if(q.end){ p.fin=1; beep('done'); say('Allenamento del piano finito, bravo! Cammina qualche minuto, poi premi Fine e salva.', true); corsaSave(); return; }
   if(q.i!==p.i){ p.i=q.i; p.push=-1; beep('go'); say(rpCue(p,q.i), true); corsaSave(); return; }
   const sg=p.segs[q.i], L=Math.round(q.left);
-  if(L<=3 && L>=1 && p.cd!==q.i+'-'+L){ p.cd=q.i+'-'+L; beep('tick'); }
-  if(sg[1]>=240 && L===60 && p.min!==q.i){ p.min=q.i; say('Ancora un minuto.', true); }
-  if(sg[1]>=1200 && Math.abs(q.el-sg[1]/2)<0.6 && p.half!==q.i){ p.half=q.i; say('Sei a metà. Continua così, piano.', true); }
+  if(sg[2]){ const ml=q.mLeft; if(ml<=1000 && sg[2]>1500 && p.k1!==q.i){ p.k1=q.i; say('Ultimo chilometro, dai!', true); } if(ml<=200 && p.k2!==q.i){ p.k2=q.i; say('Ultimi 200 metri!', true); } }
+  else if(L<=3 && L>=1 && p.cd!==q.i+'-'+L){ p.cd=q.i+'-'+L; beep('tick'); }
+  if(!sg[2] && sg[1]>=240 && L===60 && p.min!==q.i){ p.min=q.i; say('Ancora un minuto.', true); }
+  if(!sg[2] && sg[1]>=1200 && Math.abs(q.el-sg[1]/2)<0.6 && p.half!==q.i){ p.half=q.i; say('Sei a metà. Continua così, piano.', true); }
   // consigli dal battito (solo con la fascia o l'orologio collegati)
   const T=RSEG[sg[0]], mx=hrMax();
   if(T.z && mx && hrLive() && q.el>60){ const b=hr.bpm, now=Date.now();
@@ -4026,17 +4059,19 @@ function rpTick(){
 function rpGuideHTML(){ const p=corsa&&corsa.plan; if(!p) return '';
   return `<div class="card rpguide" id="rpG"><div class="rpgh"><span>${esc(RUNPLANS[p.lv].name)} · Sett. ${p.w+1} · Giorno ${p.d+1}</span><small>${esc(p.t)}</small></div>
     <div class="rpnow"><b id="rpN">–</b><span id="rpL">0:00</span></div><p class="rpz" id="rpZ"></p>
-    <div class="rpbar" aria-hidden="true">${p.segs.map(x=>`<i style="flex:${x[1]};background:${RSEG[x[0]].c}"></i>`).join('')}<u id="rpC"></u></div>
+    <div class="rpbar" aria-hidden="true">${p.segs.map(x=>`<i style="flex:${segSec(x)};background:${RSEG[x[0]].c}"></i>`).join('')}<u id="rpC"></u></div>
     <p class="note" id="rpX"></p></div>`; }
 function rpPaint(){ const p=corsa&&corsa.plan, el=document.getElementById('rpG'); if(!p||!el) return; const q=rpPos(); if(!q) return;
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
   const tot=rpTot(p);
   if(q.end){ set('rpN','Finito!'); set('rpL',''); set('rpZ',''); set('rpX','Hai completato la seduta. Premi «Fine e salva».'); }
   else { const sg=p.segs[q.i], T=RSEG[sg[0]], nx=p.segs[q.i+1];
-    set('rpN', T.n); set('rpL', fmtDur(q.left)); document.getElementById('rpN').style.color=T.c;
-    set('rpZ', T.z ? 'Zona: '+rpZoneTxt(T.z) : '20 secondi veloce e sciolto');
-    set('rpX', `Parte ${q.i+1} di ${p.segs.length}`+(nx?` · poi ${RSEG[nx[0]].n.toLowerCase()} ${fmtDur(nx[1])}`:' · ultima parte')+` · mancano ${fmtDur(Math.max(0,tot-q.t))}`); }
-  const c=document.getElementById('rpC'); if(c) c.style.left=Math.min(100,q.t/tot*100)+'%';
+    set('rpN', T.n); set('rpL', sg[2] ? (q.mLeft/1000).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2})+' km' : fmtDur(q.left)); document.getElementById('rpN').style.color=T.c;
+    set('rpZ', T.z ? 'Zona: '+rpZoneTxt(T.z) : sg[2] ? 'Il tuo ritmo migliore, regolare: mancano questi km' : '20 secondi veloce e sciolto');
+    const rest = p.segs.slice(q.i+1).reduce((x,y)=>x+segSec(y),0) + (sg[2] ? q.mLeft*0.36 : q.left);
+    set('rpX', `Parte ${q.i+1} di ${p.segs.length}`+(nx?` · poi ${RSEG[nx[0]].n.toLowerCase()} ${nx[2]?kmSay(nx[2])+' km':fmtDur(nx[1])}`:' · ultima parte')+` · mancano ${sg[2]||p.segs.slice(q.i+1).some(x=>x[2])?'circa ':''}${fmtDur(Math.max(0,rest))}`); }
+  const before = p.segs.slice(0,q.end?p.segs.length:q.i).reduce((x,y)=>x+segSec(y),0) + (q.end?0:segSec(p.segs[q.i])*q.fr);
+  const c=document.getElementById('rpC'); if(c) c.style.left=Math.min(100,before/tot*100)+'%';
 }
 function rpPlansHTML(){
   const lv=rplan.lv, P=RUNPLANS[lv], nx=rpNext(lv);
@@ -4044,14 +4079,15 @@ function rpPlansHTML(){
   const doneN = Object.keys(rplan.done).filter(k=>k.startsWith(lv+'|')).length, totN=P.weeks.reduce((a,w)=>a+w.length,0);
   return `<div class="card rplans"><h2 style="font-size:22px;text-transform:uppercase;margin:0 0 4px">Piani di corsa</h2>
     <p class="note" style="margin:0 0 10px">Basati sugli studi più recenti. La voce ti guida: quando correre, camminare o spingere.</p>
-    <div class="chips" role="group" aria-label="Livello corsa">${Object.keys(RUNPLANS).map(k=>`<button class="chip" type="button" data-rpl="${k}" aria-pressed="${k===lv}">${RUNPLANS[k].name}</button>`).join('')}</div>
+    <p class="rpgl">Per livello</p><div class="chips" role="group" aria-label="Livello corsa">${Object.keys(RUNPLANS).filter(k=>!RUNPLANS[k].g).map(k=>`<button class="chip" type="button" data-rpl="${k}" aria-pressed="${k===lv}">${RUNPLANS[k].name}</button>`).join('')}</div>
+    <p class="rpgl">Per obiettivo</p><div class="chips" role="group" aria-label="Obiettivo corsa">${Object.keys(RUNPLANS).filter(k=>RUNPLANS[k].g).map(k=>`<button class="chip" type="button" data-rpl="${k}" aria-pressed="${k===lv}">${RUNPLANS[k].name}</button>`).join('')}</div>
     <p class="lead" style="margin:10px 0 4px">${esc(P.info)}</p><p class="note" style="margin:0 0 10px"><b>${esc(P.days)}</b> · fatte ${doneN} di ${totN}</p>
     ${ns ? `<div class="rpnext"><span>Prossima: settimana ${nx[0]+1}, giorno ${nx[1]+1}</span><b>${esc(ns.t)}</b><i>Circa ${Math.round(rpTot(ns)/60)} minuti</i>
       <button class="btn big" type="button" data-rpgo="${nx[0]}|${nx[1]}">▶ Inizia con la guida</button></div>`
       : `<div class="rpnext"><b>Piano completato! 🎉</b><span>Puoi passare al livello successivo o ricominciare.</span><button class="btn ghost small" type="button" id="rpReset">Ricomincia questo piano</button></div>`}
     <details class="more"><summary>Tutte le settimane</summary><div class="rpweeks">${P.weeks.map((W,w)=>`<div class="rpw"><b>Settimana ${w+1}</b>${W.map((s,d)=>{ const k=rpKey(lv,w,d), dn=rplan.done[k];
       return `<div class="rpd${dn?' ok':''}"><span>${dn?'✓':'G'+(d+1)}</span><p>${esc(s.t)} <small>· ${Math.round(rpTot(s)/60)}'</small></p><button class="btn ghost small" type="button" data-rpgo="${w}|${d}" aria-label="Inizia settimana ${w+1} giorno ${d+1}">▶</button><button class="btn ghost small" type="button" data-rpok="${k}" aria-label="${dn?'Segna da fare':'Segna come fatta'}">${dn?'↺':'✓'}</button></div>`; }).join('')}</div>`).join('')}</div></details>
-    <div class="rpleg">${['cam','fac','rec','sog','int','all'].map(k=>`<span><u style="background:${RSEG[k].c}"></u>${RSEG[k].n}${RSEG[k].z?' '+Math.round(RSEG[k].z[0]*100)+'–'+Math.round(RSEG[k].z[1]*100)+'%':''}</span>`).join('')}</div>
+    <div class="rpleg">${['cam','fac','rec','sog','int','all','pro'].map(k=>`<span><u style="background:${RSEG[k].c}"></u>${RSEG[k].n}${RSEG[k].z?' '+Math.round(RSEG[k].z[0]*100)+'–'+Math.round(RSEG[k].z[1]*100)+'%':''}</span>`).join('')}</div>
     ${hrAge()?'':'<p class="note">Scrivi la tua età nella scheda <a href="#corpo">Corpo</a> (o collega il cardio): così l\'app calcola i tuoi battiti per ogni zona.</p>'}
     <details class="more"><summary>Da dove vengono questi piani</summary>${SCI_RUN}</details></div>`;
 }
