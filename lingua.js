@@ -18,18 +18,17 @@
     cmd: function(s){ return s; }
   };
 
-  /* ---------- scelta lingua: riquadro in cima alla prima pagina ---------- */
+  /* ---------- scelta lingua: riquadro nella pagina Impostazioni ---------- */
   function addRow(){
-    var hero = document.querySelector('#app section.hero');
-    if (!hero || (hero.previousElementSibling && hero.previousElementSibling.id === 'langRow')) return;
-    var old = document.getElementById('langRow'); if (old) old.remove();
+    var slot = document.getElementById('langSlot');
+    if (!slot || slot.querySelector('#langRow')) return;
     var r = document.createElement('div');
     r.id = 'langRow'; r.className = 'langrow'; r.setAttribute('data-noi18n', '');
     r.innerHTML = '<span class="lt">🌐 ' + (EN ? 'Language' : 'Lingua') + '</span>' +
       '<button type="button" data-l="it"' + (EN ? '' : ' class="on" aria-pressed="true"') + '>🇮🇹 Italiano</button>' +
       '<button type="button" data-l="en"' + (EN ? ' class="on" aria-pressed="true"' : '') + '>🇬🇧 English</button>';
     r.onclick = function(e){ var b = e.target.closest('button'); if (b && b.dataset.l !== lang) I18N.set(b.dataset.l); };
-    hero.parentNode.insertBefore(r, hero);
+    slot.appendChild(r);
   }
   var css = '.langrow{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:8px 10px;background:var(--surface);border:1px solid var(--line);border-radius:16px}' +
             '.langrow .lt{font-weight:700;font-size:14px;margin-right:auto;white-space:nowrap}' +
