@@ -200,6 +200,7 @@ nav.tabs a[aria-current="page"] svg{stroke-width:2.4}
 
 /* sessioni */
 .sessions{display:grid;gap:12px}
+.lvlbox{display:grid;gap:12px}
 .sess{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px}
 .sess-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .sess h2{font-size:26px;text-transform:uppercase}
@@ -1877,6 +1878,36 @@ const SESS = [
  {id:'spalle-schiena',name:'Spalle e schiena',for:'Postura dritta e spalle forti',min:50,
   items:[['vogatore',1,'5\' riscaldamento',0],['lat-machine',3,'10–12',90],['rematore-bilanciere',3,'8–10',90],['lento-manubri',3,'10–12',90],['alzate-laterali',3,'12–15',60],['reverse-fly',3,'15',60],['iperestensioni',3,'12–15',60]]}
 ];
+/* piani per livello (studio linee guida ACSM 2026 e meta-analisi recenti) */
+const LIVELLI = {
+ principiante:{name:'Principiante',info:'Da 0 a 6 mesi di palestra. 3 giorni a settimana alternando A e B (es. lun-mer-ven). Ripetizioni 10–15, chiudi ogni serie con 2–3 ripetizioni ancora in canna. Quando fai tutte le serie al massimo delle ripetizioni, aumenta il peso di poco.'},
+ intermedio:{name:'Intermedio',info:'Da 6 mesi a 2 anni. 4 giorni: Alta A, Bassa A, riposo, Alta B, Bassa B. Ogni muscolo lavora 2 volte a settimana. Chiudi le serie con 1–2 ripetizioni in canna. Ogni 6–8 settimane fai una settimana leggera con metà delle serie.'},
+ esperto:{name:'Esperto',info:'Oltre 2 anni. 5 giorni: Forza alta, Forza bassa, riposo, Spinta, Tirata, Gambe e glutei. Sui primi esercizi di forza fai la prima serie più pesante (4–6), poi le altre con il 10% in meno. Blocchi di 4–6 settimane, poi 1 settimana leggera.'}
+};
+SESS.push(
+ {id:'liv-p-a',lvl:'principiante',name:'Principiante A',for:'Corpo intero · alterna con la B',min:45,
+  items:[['tapis-roulant',1,'5\' facile',0],['leg-press',3,'10–15',90],['chest-press',3,'10–15',90],['lat-machine',3,'10–15',90],['leg-curl',2,'12–15',60],['shoulder-press',2,'10–12',60],['plank',2,'20–30"',45]]},
+ {id:'liv-p-b',lvl:'principiante',name:'Principiante B',for:'Corpo intero · alterna con la A',min:45,
+  items:[['cyclette',1,'5\' facile',0],['goblet-squat',3,'10–12',90],['pulley',3,'10–15',90],['pectoral-machine',2,'12–15',60],['hip-thrust',2,'10–12',90],['alzate-laterali',2,'12–15',60],['crunch',2,'12–15',45]]},
+ {id:'liv-i-alta-a',lvl:'intermedio',name:'Intermedio · Parte alta A',for:'Petto, schiena, spalle, braccia',min:60,
+  items:[['vogatore',1,'5\' riscaldamento',0],['panca-piana',4,'6–8',150],['lat-machine',4,'8–10',120],['shoulder-press',3,'8–10',120],['pulley',3,'10–12',90],['alzate-laterali',3,'12–15',60],['curl-manubri',2,'10–12',60],['pushdown',2,'10–12',60]]},
+ {id:'liv-i-bassa-a',lvl:'intermedio',name:'Intermedio · Parte bassa A',for:'Cosce, glutei, polpacci, addome',min:60,
+  items:[['cyclette',1,'5\' riscaldamento',0],['squat',4,'6–8',180],['stacco-rumeno',3,'8–10',120],['leg-press',3,'10–12',120],['leg-curl',3,'10–12',90],['polpacci',3,'12–15',60],['crunch-cavo',3,'12–15',60]]},
+ {id:'liv-i-alta-b',lvl:'intermedio',name:'Intermedio · Parte alta B',for:'Petto, schiena, spalle, braccia',min:60,
+  items:[['vogatore',1,'5\' riscaldamento',0],['panca-inclinata-manubri',3,'8–10',120],['rematore-manubrio',3,'8–10 per lato',90],['chest-press',3,'10–12',90],['trazioni-assistite',3,'8–10',120],['face-pull',3,'15',60],['curl-martello',2,'12',60],['estensioni-sopra-testa',2,'12',60],['alzate-laterali',2,'15',60]]},
+ {id:'liv-i-bassa-b',lvl:'intermedio',name:'Intermedio · Parte bassa B',for:'Glutei, cosce, addome',min:55,
+  items:[['cyclette',1,'5\' riscaldamento',0],['hip-thrust',4,'8–10',120],['affondi',3,'10 per gamba',90],['leg-extension',3,'12–15',60],['leg-curl',3,'12–15',60],['abductor',2,'15',60],['sollevamento-gambe',3,'12',60]]},
+ {id:'liv-e-forza-alta',lvl:'esperto',name:'Esperto · Forza parte alta',for:'Esercizi pesanti per petto, schiena, spalle',min:70,
+  items:[['vogatore',1,'5\' riscaldamento',0],['panca-piana',4,'1ª 4–6, poi 6–8',180],['rematore-bilanciere',4,'6–8',150],['lento-manubri',3,'8–10',120],['trazioni-assistite',3,'6–10',120],['alzate-laterali',3,'12–15',60],['curl-bilanciere',3,'8–10',90],['french-press',3,'8–10',90]]},
+ {id:'liv-e-forza-bassa',lvl:'esperto',name:'Esperto · Forza parte bassa',for:'Esercizi pesanti per gambe e glutei',min:70,
+  items:[['cyclette',1,'5\' riscaldamento',0],['squat',4,'1ª 4–6, poi 6–8',210],['stacco-rumeno',4,'6–8',180],['leg-press',3,'10–12',120],['leg-curl',3,'10–12',90],['polpacci',4,'10–12',60],['crunch-macchina',3,'10–12',60]]},
+ {id:'liv-e-spinta',lvl:'esperto',name:'Esperto · Spinta',for:'Petto, spalle, tricipiti',min:65,
+  items:[['ellittica',1,'5\' riscaldamento',0],['panca-inclinata-manubri',4,'8–10',120],['chest-press',3,'10–12',120],['croci-cavi',3,'12–15',60],['shoulder-press',3,'8–10',120],['alzate-laterali',4,'12–20',60],['dip-macchina',3,'10–12',90],['estensioni-sopra-testa',3,'12–15',60]]},
+ {id:'liv-e-tirata',lvl:'esperto',name:'Esperto · Tirata',for:'Schiena, spalle dietro, bicipiti',min:65,
+  items:[['vogatore',1,'5\' riscaldamento',0],['lat-machine',4,'8–10',120],['pulley',3,'10–12',120],['rematore-manubrio',3,'10 per lato',90],['pullover-cavo',3,'12–15',60],['reverse-fly',3,'15',60],['curl-scott',3,'10–12',60],['curl-martello',2,'12',60]]},
+ {id:'liv-e-gambe',lvl:'esperto',name:'Esperto · Gambe e glutei',for:'Glutei, cosce, interno-esterno coscia, addome',min:65,
+  items:[['stepper',1,'5\' riscaldamento',0],['hip-thrust',4,'8–10',120],['affondi',3,'10 per gamba',120],['leg-extension',3,'12–15',60],['leg-curl',3,'12–15',60],['adductor',3,'15',60],['abductor',2,'15',60],['sollevamento-gambe',3,'15',60]]}
+);
 const SMAP = Object.fromEntries(SESS.map(s=>[s.id,s]));
 
 
@@ -2663,6 +2694,7 @@ function sessCard(s, mine){
       ${mine?`<a class="btn ghost" href="#scheda-${s.id}">Modifica</a>`:`<button class="btn ghost" type="button" data-copy="${s.id}">Personalizza</button><a class="btn ghost" href="${yt(s.name+' allenamento palestra')}" target="_blank" rel="noopener">Video ↗</a>`}</div>
   </article>`;
 }
+let lvlSel = (()=>{ try{ const v=localStorage.getItem('pf-lvl'); return LIVELLI[v]?v:'principiante'; }catch(e){ return 'principiante'; } })();
 function viewSessions(){
   view='sessions'; brand(); setTab('sessioni');
   $app.innerHTML = `<section class="view">
@@ -2672,11 +2704,21 @@ function viewSessions(){
     <div class="group-title"><h2>Le mie schede</h2><span class="count">${S.routines.length}</span></div>
     <div class="sessions">${S.routines.map(s=>sessCard(s,true)).join('') || '<div class="empty">Crea la tua scheda con gli esercizi che vuoi, oppure premi Personalizza su una scheda pronta qui sotto.</div>'}
       <a class="btn ghost big" href="#scheda-nuova">+ Nuova scheda</a><a class="btn big" href="#importa">📷 Importa scheda da foto</a></div>
-    <div class="group-title"><h2>Schede pronte</h2><span class="count">${SESS.length}</span></div>
+    <div class="group-title"><h2>Piani per livello</h2><span class="count">${SESS.filter(s=>s.lvl).length}</span></div>
+    <p class="lead">Basati sulle linee guida 2026 e sugli studi scientifici più recenti. Scegli il tuo livello.</p>
+    <div class="chips" role="group" aria-label="Livello">${Object.keys(LIVELLI).map(k=>`<button class="chip" type="button" data-lvl="${k}" aria-pressed="${k===lvlSel}">${LIVELLI[k].name}</button>`).join('')}</div>
+    ${Object.keys(LIVELLI).map(k=>`<div class="lvlbox" data-box="${k}" ${k===lvlSel?'':'hidden'}><p class="lead">${esc(LIVELLI[k].info)}</p>
+      <div class="sessions">${SESS.filter(s=>s.lvl===k).map(s=>sessCard(s,false)).join('')}</div></div>`).join('')}
+    <div class="group-title"><h2>Schede pronte</h2><span class="count">${SESS.filter(s=>!s.lvl).length}</span></div>
     <p class="lead">Premi Inizia: l'app ti guida esercizio per esercizio, registra peso e ripetizioni e fa partire il recupero.</p>
-    <div class="sessions">${SESS.map(s=>sessCard(s,false)).join('')}</div>
+    <div class="sessions">${SESS.filter(s=>!s.lvl).map(s=>sessCard(s,false)).join('')}</div>
     ${audioCardHTML()}</section>`;
   bindAudioCard(viewSessions);
+  $app.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>{
+    lvlSel=b.dataset.lvl; try{ localStorage.setItem('pf-lvl',lvlSel); }catch(e){}
+    $app.querySelectorAll('[data-lvl]').forEach(c=>c.setAttribute('aria-pressed',c.dataset.lvl===lvlSel));
+    $app.querySelectorAll('[data-box]').forEach(d=>d.hidden=d.dataset.box!==lvlSel);
+  });
   $app.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{
     const s = SMAP[b.dataset.copy];
     edit = {id:'my'+Date.now().toString(36), name:s.name+' (mia)', items:clone(s.items), isNew:true};
