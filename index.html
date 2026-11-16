@@ -408,6 +408,7 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .hero-pics .hp:first-child{grid-row:span 2}
 .hero-body{position:absolute;right:8px;top:10px;bottom:10px;height:calc(100% - 20px);width:auto;max-width:40%;object-fit:contain;border-radius:16px;background:#fff;box-shadow:0 6px 16px rgba(0,0,0,.35)}
 
+.gv.aud .gvcap{display:none}
 .gvaud{width:100%;margin:10px 0 2px;background:#d6341e;color:#fff;border:0}
 .ccard{display:flex;align-items:center;justify-content:space-between;gap:8px;text-decoration:none;color:inherit;border-left:6px solid #d6341e;padding:12px 8px 12px 16px;overflow:hidden}
 .ccard>div{display:flex;flex-direction:column;gap:4px}.ccard b{font-size:20px}.ccard span{color:var(--mut,#6b6b70);font-size:14px}
@@ -2499,7 +2500,7 @@ async function paintMyVideo(id){
     const gv=document.getElementById('gv');
     const ga=document.getElementById('gvAud');
     if(ga) ga.onclick=()=>{ const vv=document.getElementById('gvv'), on=ga.dataset.on!=='1'; ga.dataset.on=on?'1':'';
-      vv.src = on ? 'g-'+id+'.mp4' : v.src; vv.muted=!on; vv.loop=!on; vv.controls=on; vv.currentTime=0; vv.play().catch(()=>{});
+      document.getElementById('gv').classList.toggle('aud',on); vv.src = on ? 'g-'+id+'.mp4' : v.src; vv.muted=!on; vv.loop=!on; vv.controls=on; vv.currentTime=0; vv.play().catch(()=>{});
       ga.textContent = on ? '🔇 Torna al video muto' : '🔊 Guarda con voce e respiro'; };
     document.getElementById('gvfs').onclick=()=>{ const on=!gv.classList.contains('full'); gv.classList.toggle('full',on); document.body.classList.toggle('noscroll',on);
       try{ if(on && gv.requestFullscreen) gv.requestFullscreen().catch(()=>{}); else if(!on && document.fullscreenElement) document.exitFullscreen(); }catch(e){}
