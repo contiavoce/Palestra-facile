@@ -570,7 +570,7 @@ body.noscroll{overflow:hidden}
 .crow{display:flex;align-items:center;gap:10px}.crow input{border:1px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--bg);color:var(--fg);font:inherit;font-size:16px}
 .cplans{display:grid;gap:8px}.cplan{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--sunk);border-radius:10px;padding:6px 6px 6px 12px;font-size:15px}
 .coachl{border-left:4px solid #7a3fb0}
-.silrow{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}.silrow.big{grid-template-columns:repeat(10,68px);overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}.silrow.big .silimg{max-height:none}.silb{border:2px solid transparent;background:var(--sunk);border-radius:10px;padding:4px 1px 2px;cursor:pointer;display:grid;justify-items:center;gap:1px;color:var(--muted);min-width:0}.silb b{font-size:12px;color:var(--fg)}.silb svg{width:100%;height:auto;max-height:84px}.silimg{display:block;width:100%;aspect-ratio:150/360;max-height:110px;background-size:900% 100%;background-repeat:no-repeat;border-radius:6px;mix-blend-mode:multiply}.silb[aria-pressed="true"]{border-color:#7a3fb0;color:#7a3fb0;background:color-mix(in srgb,#7a3fb0 12%,var(--surface))}
+.silrow{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}.silrow.big{grid-template-columns:repeat(10,68px);overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}.silrow.big .silimg{max-height:none}.silb{border:2px solid transparent;background:var(--sunk);border-radius:10px;padding:4px 1px 2px;cursor:pointer;display:grid;justify-items:center;gap:1px;color:var(--muted);min-width:0}.silb b{font-size:12px;color:var(--fg)}.silb svg{width:100%;height:auto;max-height:84px}.silimg{display:block;width:100%;aspect-ratio:156/360;max-height:110px;background-size:900% 100%;background-repeat:no-repeat;border-radius:6px;mix-blend-mode:multiply}.silb[aria-pressed="true"]{border-color:#7a3fb0;color:#7a3fb0;background:color-mix(in srgb,#7a3fb0 12%,var(--surface))}
 .cagree{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:16px;padding:12px;background:var(--sunk);border-radius:12px}.cagree input{width:22px;height:22px;flex:none;margin-top:2px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .coachc{position:relative}.coachc.off{border-left-color:var(--line);opacity:.95}.coachc a.cgo{text-decoration:none}
@@ -5534,7 +5534,7 @@ const SIL_NAME = ['','Molto magro','Magro','Snello','Nella media','Atletico','Mu
 const SIL_N = SIL_NAME.length-1, SIL_ALL = Array.from({length:SIL_N},(_,i)=>i+1);
 const silMus = k => k>=5 && k<=7; // 5–7: livelli di muscoli, non di grasso
 // figure fatte con Gemini da Ale: una striscia con 9 figure affiancate (una per riquadro)
-const SIL_IMG = {};
+const SIL_IMG = {m:'sil-m.webp'};
 const SIL_BMI = [17, 19, 21, 23.5, 24.5, 26.5, 29, 27.5, 31, 36];
 // grasso relativo (la 5 è muscolosa: grasso come la 3–4)
 const SIL_FAT = [0, 1, 2, 3, 4, 3, 3.2, 3.5, 5, 6, 7];
