@@ -456,6 +456,8 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .ccard>div{display:flex;flex-direction:column;gap:4px}.ccard b{font-size:20px}.ccard span{color:var(--mut,#6b6b70);font-size:14px}
 .ccard .cgo{font-style:normal;font-weight:700;color:#d6341e;margin-top:4px}
 .ccard img{height:130px;width:auto;border-radius:12px;background:#fff;flex:none}
+.where{display:grid;gap:12px}.ccard img.wide{width:150px;height:110px;object-fit:cover}
+@media (max-width:380px){.ccard img.wide{width:118px;height:96px}.ccard img{height:104px}}
 .cmapgl{display:none;position:relative;height:320px;border-radius:18px;overflow:hidden;margin:0 0 4px}.cmapgl.on{display:block}
 #cCenter{position:absolute;z-index:2;left:10px;top:10px}
 .rgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rgrid div{background:#8881;border-radius:12px;padding:10px}
@@ -2947,32 +2949,44 @@ function sessCard(s, mine){
 }
 let lvlSel = (()=>{ try{ const v=localStorage.getItem('pf-lvl'); return LIVELLI[v]?v:'principiante'; }catch(e){ return 'principiante'; } })();
 let clSel = (()=>{ try{ const v=localStorage.getItem('pf-cl'); return LIVELLI_CL[v]?v:'principiante'; }catch(e){ return 'principiante'; } })();
-function viewSessions(){
+function viewSessions(sub){
   view='sessions'; brand(); setTab('sessioni');
-  $app.innerHTML = `<section class="view">
-    <div><div class="eyebrow">Schede</div><h1 style="font-size:40px;text-transform:uppercase">Sessioni</h1></div>
-    ${runBanner()}
-    ${corsaCard()}
-    <div class="group-title"><h2>Le mie schede</h2><span class="count">${S.routines.length}</span></div>
-    <div class="sessions">${S.routines.map(s=>sessCard(s,true)).join('') || '<div class="empty">Crea la tua scheda con gli esercizi che vuoi, oppure premi Personalizza su una scheda pronta qui sotto.</div>'}
-      <a class="btn ghost big" href="#scheda-nuova">+ Nuova scheda</a><a class="btn big" href="#importa">📷 Importa scheda da foto</a></div>
+  const T = {palestra:'In palestra', casa:'Senza palestra'};
+  if(sub && T[sub]) backBar('Sessioni','#sessioni');
+  const body = sub==='palestra' ? `
+    <div><div class="eyebrow">Sessioni</div><h1 style="font-size:40px;text-transform:uppercase">In palestra</h1></div>
     <div class="group-title"><h2>Piani per livello</h2><span class="count">${SESS.filter(s=>s.lvl).length}</span></div>
     <p class="lead">Basati sulle linee guida 2026 e sugli studi scientifici più recenti. Scegli il tuo livello.</p>
     <div class="chips" role="group" aria-label="Livello">${Object.keys(LIVELLI).map(k=>`<button class="chip" type="button" data-lvl="${k}" aria-pressed="${k===lvlSel}">${LIVELLI[k].name}</button>`).join('')}</div>
     ${Object.keys(LIVELLI).map(k=>`<div class="lvlbox" data-box="${k}" ${k===lvlSel?'':'hidden'}><p class="lead">${esc(LIVELLI[k].info)}</p>
       <div class="sessions">${SESS.filter(s=>s.lvl===k).map(s=>sessCard(s,false)).join('')}</div></div>`).join('')}
-    <div class="group-title"><h2>Senza palestra</h2><span class="count">${SESS.filter(s=>s.cl).length}</span></div>
+    <div class="group-title"><h2>Schede pronte</h2><span class="count">${SESS.filter(s=>!s.lvl&&!s.cl).length}</span></div>
+    <p class="lead">Premi Inizia: l'app ti guida esercizio per esercizio, registra peso e ripetizioni e fa partire il recupero.</p>
+    <div class="sessions">${SESS.filter(s=>!s.lvl&&!s.cl).map(s=>sessCard(s,false)).join('')}</div>
+` : sub==='casa' ? `
+    <div><div class="eyebrow">Sessioni</div><h1 style="font-size:40px;text-transform:uppercase">Senza palestra</h1></div>
     <img class="clcover" src="cl-copertina.webp" alt="Uomo che fa i piegamenti su un tappetino in soggiorno" width="1280" height="714" decoding="async">
     <p class="lead">Allenamento a corpo libero per casa, parco o vacanza. Ti servono solo una sedia, un tavolo robusto, un asciugamano e un gradino.</p>
     <div class="chips" role="group" aria-label="Livello senza palestra">${Object.keys(LIVELLI_CL).map(k=>`<button class="chip" type="button" data-cll="${k}" aria-pressed="${k===clSel}">${LIVELLI_CL[k].name}</button>`).join('')}</div>
     ${Object.keys(LIVELLI_CL).map(k=>`<div class="lvlbox" data-clbox="${k}" ${k===clSel?'':'hidden'}><p class="lead">${esc(LIVELLI_CL[k].info)}</p>
       <div class="sessions">${SESS.filter(s=>s.cl===k).map(s=>sessCard(s,false)).join('')}</div></div>`).join('')}
     <details class="more"><summary>Da dove vengono questi piani</summary>${SCI_CL}</details>
-    <div class="group-title"><h2>Schede pronte</h2><span class="count">${SESS.filter(s=>!s.lvl&&!s.cl).length}</span></div>
-    <p class="lead">Premi Inizia: l'app ti guida esercizio per esercizio, registra peso e ripetizioni e fa partire il recupero.</p>
-    <div class="sessions">${SESS.filter(s=>!s.lvl&&!s.cl).map(s=>sessCard(s,false)).join('')}</div>
+` : `
+    <div><div class="eyebrow">Schede</div><h1 style="font-size:40px;text-transform:uppercase">Sessioni</h1></div>
+    ${runBanner()}
+    <div class="group-title"><h2>Dove ti alleni?</h2></div>
+    <div class="where">
+      <a class="card ccard wc" href="#sessioni-palestra" style="border-left-color:#2f6fd6"><div><b>In palestra</b><span>Piani per livello e schede pronte con macchine e pesi</span><i class="cgo" style="color:#2f6fd6">Apri →</i></div>${(typeof THUMB!=='undefined'&&THUMB['lat-machine'])?`<img src="${THUMB['lat-machine']}" alt="" aria-hidden="true">`:''}</a>
+      <a class="card ccard wc" href="#sessioni-casa" style="border-left-color:#1f8a5b"><div><b>Senza palestra</b><span>A corpo libero, a casa o al parco, 3 livelli</span><i class="cgo" style="color:#1f8a5b">Apri →</i></div><img class="wide" src="cl-copertina.webp" alt="" aria-hidden="true"></a>
+      ${corsaCard()}
+    </div>
+    <div class="group-title"><h2>Le mie schede</h2><span class="count">${S.routines.length}</span></div>
+    <div class="sessions">${S.routines.map(s=>sessCard(s,true)).join('') || '<div class="empty">Crea la tua scheda con gli esercizi che vuoi, oppure premi Personalizza su una scheda pronta qui sotto.</div>'}
+      <a class="btn ghost big" href="#scheda-nuova">+ Nuova scheda</a><a class="btn big" href="#importa">📷 Importa scheda da foto</a></div>
+`;
+  $app.innerHTML = `<section class="view">${body}
     ${audioCardHTML()}</section>`;
-  bindAudioCard(viewSessions);
+  bindAudioCard(()=>viewSessions(sub));
   $app.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>{
     lvlSel=b.dataset.lvl; try{ localStorage.setItem('pf-lvl',lvlSel); }catch(e){}
     $app.querySelectorAll('[data-lvl]').forEach(c=>c.setAttribute('aria-pressed',c.dataset.lvl===lvlSel));
@@ -4412,7 +4426,7 @@ function route(soft){
   stopPacer(); stopAnim(); dispose3D();
   if(explaining){ explaining=false; try{speechSynthesis.cancel()}catch(e){} }
   const h = (location.hash||'#esercizi').slice(1);
-  if(!h.startsWith('allena-')){ clearInterval(tick); if(h!=='sessioni') micStop(); }
+  if(!h.startsWith('allena-')){ clearInterval(tick); if(!h.startsWith('sessioni')) micStop(); }
   const go = ()=>{
     if(h.startsWith('ex-')) return viewExercise(h.slice(3));
     if(h.startsWith('allena-')) return startRun(h.slice(7));
@@ -4420,6 +4434,8 @@ function route(soft){
     if(h==='importa') return viewImport();
     if(h==='corsa') return viewCorsa();
     if(h==='sessioni') return viewSessions();
+    if(h==='sessioni-palestra') return viewSessions('palestra');
+    if(h==='sessioni-casa') return viewSessions('casa');
     if(h==='diario') return viewDiary();
     if(h==='corpo') return viewBody();
     if(h==='dieta') return viewFood();
