@@ -3074,8 +3074,11 @@ function updMap(){ if(!cmap||!cmapReady) return; updKmMarkers(); const pts=(cors
   try{ cmap.getSource('run').setData(lineGJ(pts)); const l=pts[pts.length-1];
     cmap.getSource('me').setData({type:'FeatureCollection',features:l?[{type:'Feature',geometry:{type:'Point',coordinates:[l[1],l[0]]}}]:[]});
     if(l && cmapFollow) cmap.easeTo({center:[l[1],l[0]],duration:600}); }catch(e){} }
-function liveSpeed(W){ if(!W||!W.length) return 0; W=W.slice().sort((a,b)=>a.t-b.t); const l=W[W.length-1]; if(l.v!=null) return l.v*3.6;
-  if(W.length<2) return 0; let d=0; for(let i=1;i<W.length;i++) d+=hav(W[i-1].p,W[i].p); const dt=(l.t-W[0].t)/1000; return dt>=2? d/dt*3.6 : 0; }
+function liveSpeed(W){ if(!W||!W.length) return 0; W=W.slice().sort((a,b)=>a.t-b.t); const l=W[W.length-1]; let v;
+  if(l.v!=null){ const R=W.filter(x=>x.v!=null && l.t-x.t<=3000).map(x=>x.v); v=R.reduce((a,b)=>a+b,0)/R.length*3.6; }
+  else { const S=W.filter(x=>l.t-x.t<=6000); if(S.length<2) return 0; const f=S[0], dt=(l.t-f.t)/1000; if(dt<2) return 0;
+    const d=hav(f.p,l.p); if(d < Math.max(5,(l.a||10)*0.6)) return 0; v=d/dt*3.6; }
+  return v<2 ? 0 : v; }
 function gaugeSVG(v,vmax){ const M=20, f=Math.max(0,Math.min(1,v/M)), A=a=>[100+80*Math.cos(Math.PI*(1-a)),100-80*Math.sin(Math.PI*(1-a))];
   const [x,y]=A(f); const ticks=[0,5,10,15,20].map(t=>{ const [a,b]=A(t/M), [c,d]=[100+66*Math.cos(Math.PI*(1-t/M)),100-66*Math.sin(Math.PI*(1-t/M))]; const [lx,ly]=[100+52*Math.cos(Math.PI*(1-t/M)),100-52*Math.sin(Math.PI*(1-t/M))];
     return `<line x1="${a.toFixed(1)}" y1="${b.toFixed(1)}" x2="${c.toFixed(1)}" y2="${d.toFixed(1)}" stroke="currentColor" stroke-width="2" opacity=".5"/><text x="${lx.toFixed(1)}" y="${(ly+4).toFixed(1)}" font-size="10" text-anchor="middle" fill="currentColor" opacity=".6">${t}</text>`; }).join('');
@@ -3090,10 +3093,11 @@ function onFix(pos){
   const c=pos.coords, p=[+c.latitude.toFixed(6), +c.longitude.toFixed(6)];
   corsa.acc_m = Math.round(c.accuracy); corsaMsg='';
   if(c.accuracy > 35){ corsaPaint(); return; }
-  corsa.win=(corsa.win||[]).filter(x=>x.t<pos.timestamp&&pos.timestamp-x.t<=10000).concat([{p,t:pos.timestamp,v:(c.speed!=null&&c.speed>=0)?c.speed:null}]);
+  corsa.win=(corsa.win||[]).filter(x=>x.t<pos.timestamp&&pos.timestamp-x.t<=10000).concat([{p,t:pos.timestamp,a:c.accuracy,v:(c.speed!=null&&c.speed>=0)?c.speed:null}]);
   corsa.spd=liveSpeed(corsa.win); if(corsa.spd>(corsa.vmax||0) && corsa.spd<25) corsa.vmax=corsa.spd;
   const last = corsa.last;
   if(!last || corsa.gap){ corsa.pts.push(p); corsa.last={p, t:pos.timestamp}; corsa.gap=false; corsaSave(); corsaPaint(); return; }
+  if(c.speed!=null && c.speed>=0 && c.speed<0.5){ corsaPaint(); return; }
   const d = hav(last.p, p), dt=(pos.timestamp-last.t)/1000;
   if(d < Math.max(4, c.accuracy*0.4)) { corsaPaint(); return; }
   if(dt>0 && d/dt > 12) { corsaPaint(); return; }
@@ -3127,7 +3131,7 @@ function corsaPaint(){
   if(view!=='corsa') return; const sec=corsaSec(), m=corsa?corsa.m:0;
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
   set('cT', fmtDur(sec)); set('cKm', kmTxt(m)); set('cP', paceTxt(sec,m)); set('cK', kcalOf(m)); set('cPar', corsa ? fmtDur(sec-(corsa.lapAt||0)) : '0:00');
-  const live = corsa && !corsa.paused && corsa.win && corsa.win.length && (Date.now()-corsa.win[corsa.win.length-1].t<8000) ? corsa.spd||0 : 0;
+  const live = corsa && !corsa.paused && corsa.win && corsa.win.length && (Date.now()-corsa.win[corsa.win.length-1].t<5000) ? corsa.spd||0 : 0;
   set('cV', live.toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1})); set('cVavg', sec>5? (m/sec*3.6).toLocaleString('it-IT',{maximumFractionDigits:1}) : '0'); set('cVmax', ((corsa&&corsa.vmax)||0).toLocaleString('it-IT',{maximumFractionDigits:1}));
   const g=document.getElementById('cGauge'); if(g) g.innerHTML=gaugeSVG(live);
   const cl=document.getElementById('cLaps'), L=corsa?(corsa.laps||[]):[]; if(cl){ cl.hidden=!L.length; cl.innerHTML=`<b>Tempi per chilometro</b>${lapRows(L, corsa&&corsa.kms)}`; }
