@@ -2217,6 +2217,9 @@ const yt = q => 'https://www.youtube.com/results?search_query='+encodeURICompone
 const chev = '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>';
 const fmt = s => { s=Math.max(0,Math.ceil(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 const kgf = n => (Math.round(n*10)/10).toLocaleString('it-IT');
+const setTxt = t => (+t.kg>0) ? `${kgf(+t.kg)} kg × ${t.reps}` : `${t.reps} rip.`;
+const SESSMIN = id => { try{ const x=(typeof SESS!=='undefined'?SESS:[]).find(q=>q.id===id); return x&&x.min; }catch(e){ return null; } };
+const durMin = w => (w.min>0 && w.min<=240) ? w.min : (SESSMIN(w.sid)||Math.min(w.min||0,240));
 const isTime = x => x.e==='cardio' || x.id==='plank';
 const e1rm = (kg,r) => kg>0 && r>0 ? kg*(1+r/30) : 0;
 const df = new Intl.DateTimeFormat('it-IT',{weekday:'short',day:'numeric',month:'short'});
@@ -2530,7 +2533,7 @@ function progressCard(x){
     ${nextTip(x,h)}
     <div class="eyebrow">Massimale stimato, kg</div>
     ${chartSVG(h, G.color)}
-    <div class="hist">${h.slice(-5).reverse().map(s=>`<div><b>${s.sets.map(t=>`${kgf(+t.kg||0)}×${t.reps}`).join(', ')}</b><span>${df.format(new Date(s.at))}</span></div>`).join('')}</div>
+    <div class="hist">${h.slice(-5).reverse().map(s=>`<div><b>${s.sets.map(t=>setTxt(t)).join(', ')}</b><span>${df.format(new Date(s.at))}</span></div>`).join('')}</div>
   </section>`;
 }
 
@@ -2766,7 +2769,7 @@ function drawRun(){
       <div class="remind"><span><b>Intanto:</b> respira lento e profondo, inspira dal naso ed espira dalla bocca.</span></div>`
     : `
       <div class="pips" aria-hidden="true">${Array.from({length:p.sets},(_,k)=>`<i class="${k<run.set-1?'done':k===run.set-1?'now':''}"></i>`).join('')}</div>
-      <div class="prev">Serie <b>${run.set} di ${p.sets}</b> · obiettivo <b>${esc(p.reps)}</b>${!timeEx&&last?` · volta scorsa <b>${last.sets.map(s=>`${kgf(+s.kg||0)}×${s.reps}`).join(', ')}</b>`:''}</div>
+      <div class="prev">Serie <b>${run.set} di ${p.sets}</b> · obiettivo <b>${esc(p.reps)}</b>${!timeEx&&last?` · volta scorsa <b>${last.sets.map(s=>setTxt(s)).join(', ')}</b>`:''}</div>
       ${timeEx ? '' : `<div class="logger">
         <div class="stepper"><label for="kgIn">Peso kg</label><div class="ctl"><button type="button" data-step="kg" data-d="-2.5" aria-label="Meno 2,5 kg">−</button><input id="kgIn" inputmode="decimal" value="${d.kg===''?'':kgf(+d.kg)}" placeholder="0"><button type="button" data-step="kg" data-d="2.5" aria-label="Più 2,5 kg">+</button></div></div>
         <div class="stepper"><label for="repsIn">Ripetizioni</label><div class="ctl"><button type="button" data-step="reps" data-d="-1" aria-label="Una in meno">−</button><input id="repsIn" inputmode="numeric" value="${d.reps}" placeholder="0"><button type="button" data-step="reps" data-d="1" aria-label="Una in più">+</button></div></div>
@@ -2808,6 +2811,7 @@ function drawRun(){
         if(!(reps>0)){ const e=document.getElementById('err'); e.textContent='Scrivi quante ripetizioni hai fatto.'; e.hidden=false; return; }
         rec.kg = kg>0 ? Math.round(kg*100)/100 : 0; rec.reps = reps;
       } else rec.done = true;
+      rec.t = Date.now();
       run.sets.push(rec);
       const lastOfAll = run.set>=p.sets && run.i>=run.plan.length-1;
       if(lastOfAll) return finish();
@@ -2831,7 +2835,9 @@ function endRun(){ clearInterval(tick); run=null; saveRun(); try{wake&&wake.rele
 function finish(){
   clearInterval(tick);
   const before = {}; [...new Set(run.sets.map(s=>s.ex))].forEach(ex=>before[ex]=recordsOf(histFor(ex)));
-  const end = Date.now(), mins = Math.max(1,Math.round((end-run.start)/60000));
+  let end = Date.now(); const lastT = run.sets.reduce((a,x)=>Math.max(a,x.t||0),0);
+  if(lastT && end-lastT > 20*60000) end = lastT + 2*60000;
+  const mins = Math.max(1,Math.min(240,Math.round((end-run.start)/60000)));
   const vol = run.sets.reduce((a,s)=>a+(+s.kg||0)*(+s.reps||0),0);
   const w = {id:'w'+end.toString(36), sid:run.id, name:run.name, at:run.start, end, min:mins, vol:Math.round(vol), sets:run.sets};
   addWorkout(w);
@@ -2994,8 +3000,8 @@ function viewDiary(){
     <h2 style="font-size:22px;text-transform:uppercase;margin-top:8px">Storico</h2>
     ${log.length ? `<div class="log2">${log.slice(0,60).map(w=>{
       const by={}; (w.sets||[]).forEach(s=>{(by[s.ex]=by[s.ex]||[]).push(s)});
-      return `<details class="w"><summary><b>${esc(w.name)}</b><span>${df.format(new Date(w.at))} · ${w.min} min</span></summary>
-        <div class="body">${Object.keys(by).map(ex=>{ const x=EXMAP[ex]; if(!x) return ''; return `<p><b>${esc(x.name)}</b>: ${isTime(x)?by[ex].length+(by[ex].length===1?' volta':' serie'):by[ex].map(s=>`${kgf(+s.kg||0)}×${s.reps}`).join(', ')}</p>`}).join('') || '<p>Nessun dettaglio delle serie.</p>'}
+      return `<details class="w"><summary><b>${esc(w.name)}</b><span>${df.format(new Date(w.at))} · ${durMin(w)} min</span></summary>
+        <div class="body">${Object.keys(by).map(ex=>{ const x=EXMAP[ex]; if(!x) return ''; return `<p><b>${esc(x.name)}</b>: ${isTime(x)?by[ex].length+(by[ex].length===1?' volta':' serie'):by[ex].map(s=>setTxt(s)).join(', ')}</p>`}).join('') || '<p>Nessun dettaglio delle serie.</p>'}
           ${w.vol?`<p class="note">Volume: ${kgf(w.vol)} kg</p>`:''}
           <div class="confirm" data-delwrap="${w.id}"><button class="btn ghost small" type="button" data-del="${w.id}">Elimina</button></div></div></details>`}).join('')}</div>`
       : `<div class="empty">Qui compariranno le sessioni completate.<br><a href="#sessioni">Scegli una sessione e premi Inizia</a> per registrare la prima.</div>`}
