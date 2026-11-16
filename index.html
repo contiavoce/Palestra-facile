@@ -4960,19 +4960,52 @@ const COACH_PH = [
  {id:'t4', t:'Scendi piano, spingi deciso.', k:'tec', w:'gym'},
  {id:'r1', t:'Passo leggero, spalle sciolte.', k:'tec', w:'run'},
  {id:'r2', t:'Un chilometro alla volta.', k:'mot', w:'run'},
- {id:'r3', t:'Braccia morbide, respiro regolare.', k:'tec', w:'run'}
+ {id:'r3', t:'Braccia morbide, respiro regolare.', k:'tec', w:'run'},
+ {id:'m8', t:'Sei qui, ed è già una vittoria.', k:'mot', w:'all'},
+ {id:'m9', t:'Ogni allenamento ti rende più forte.', k:'mot', w:'all'},
+ {id:'m10', t:'Ancora una, la migliore.', k:'mot', w:'gym'},
+ {id:'m11', t:'Fallo per te.', k:'mot', w:'all'},
+ {id:'m12', t:'Hai già fatto cose più difficili.', k:'mot', w:'all'},
+ {id:'m13', t:'Il tuo corpo ti ringrazierà.', k:'mot', w:'all'},
+ {id:'m14', t:'Costanza batte perfezione.', k:'mot', w:'all'},
+ {id:'m15', t:'Forza, la fatica passa, il risultato resta.', k:'mot', w:'all'},
+ {id:'t5', t:'Piedi ben piantati, spingi con i talloni.', k:'tec', w:'gym'},
+ {id:'t6', t:'Petto in fuori, spalle indietro.', k:'tec', w:'gym'},
+ {id:'t7', t:'Espira quando spingi.', k:'tec', w:'gym'},
+ {id:'t8', t:'Ginocchia in linea con le punte.', k:'tec', w:'gym'},
+ {id:'t9', t:'Senti il muscolo che lavora.', k:'tec', w:'gym'},
+ {id:'r4', t:'Corri leggero, come se il suolo scottasse.', k:'tec', w:'run'},
+ {id:'r5', t:'Tieni il ritmo, sei nel tuo passo.', k:'mot', w:'run'},
+ {id:'r6', t:'Guarda avanti, non ai piedi.', k:'tec', w:'run'},
+ {id:'r7', t:'Ancora un pezzo, poi un altro.', k:'mot', w:'run'},
+ {id:'c1', t:'Calma: un respiro lento e riparti.', k:'cal', w:'all'},
+ {id:'c2', t:'Concentrati solo su questa ripetizione.', k:'cal', w:'gym'},
+ {id:'c3', t:'Spalle giù, mascella rilassata.', k:'cal', w:'all'},
+ {id:'c4', t:'Qui e ora: il resto può aspettare.', k:'cal', w:'all'}
 ];
-const COACH_WHY = ['Voglio sentirmi bene nel mio corpo','Voglio più energia durante la giornata','Voglio stare in salute per la mia famiglia','Voglio diventare più forte','Voglio scaricare lo stress'];
+const COACH_WHY = ['Voglio dormire meglio','Voglio sentirmi sicuro di me','Voglio vivere a lungo e in salute','Voglio fare le scale senza fiatone','Voglio un fisico che mi piaccia','Voglio prendermi del tempo per me','Voglio dare il buon esempio ai miei figli','Voglio sentirmi bene nel mio corpo','Voglio più energia durante la giornata','Voglio stare in salute per la mia famiglia','Voglio diventare più forte','Voglio scaricare lo stress'];
 const COACH_IF = [
  ['sono stanco dopo il lavoro','faccio almeno 20 minuti, anche leggeri'],
  ['piove o non posso andare in palestra','faccio una sessione Senza palestra a casa'],
  ['salto il giorno fissato','mi alleno il giorno dopo'],
  ['non ho voglia','mi metto le scarpe e faccio solo 10 minuti'],
- ['la palestra è piena','scambio l\'ordine degli esercizi']
+ ['la palestra è piena','scambio l\'ordine degli esercizi'],
+ ['ho poco tempo','faccio solo i 3 esercizi più importanti'],
+ ['sono in viaggio','faccio la sessione Senza palestra in camera'],
+ ['ho un piccolo dolore','faccio gli esercizi che non lo toccano e chiedo al medico se non passa'],
+ ['torno tardi dal lavoro','mi alleno la mattina dopo prima di uscire'],
+ ['fa troppo caldo per correre','corro la sera tardi o sul tapis roulant'],
+ ['mi sento giù','esco a camminare 15 minuti: dopo sto meglio'],
+ ['ho mangiato tanto','faccio una camminata svelta di 20 minuti'],
+ ['un amico mi propone di uscire','mi alleno prima oppure lo invito ad allenarsi con me']
 ];
 const GG = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'], GGL = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
-const COACH = Object.assign({on:true, why:'', goal:3, days:[], time:'', place:'palestra', plans:[], ph:{m1:1,m2:1,m3:1,m4:1,m6:1,t1:1,t3:1,r1:1,r2:1}, mine:[], created:Date.now()}, store.get('coach',{}));
+const COACH = Object.assign({on:true, why:'', goal:3, days:[], time:'', place:'palestra', places:null, objs:null, plans:[], ph:{m1:1,m2:1,m3:1,m4:1,m6:1,t1:1,t3:1,r1:1,r2:1}, mine:[], created:Date.now()}, store.get('coach',{}));
+if(!Array.isArray(COACH.places)) COACH.places = COACH.place ? [COACH.place] : ['palestra'];
+if(!Array.isArray(COACH.objs)) COACH.objs = COACH.obj ? [COACH.obj] : [];
 const coachSave = ()=>store.set('coach', COACH);
+const PLACES = {palestra:'in palestra', casa:'a casa', corsa:'corsa'};
+const placesTxt = () => (COACH.places||[]).map(k=>PLACES[k]).filter(Boolean).join(', ');
 const coachOn = ()=> COACH.on!==false && !!COACH.ok; // si attiva solo dopo aver letto e accettato le informazioni
 const DAY = 864e5;
 const dayStart = t => { const d=new Date(t); d.setHours(0,0,0,0); return d.getTime(); };
@@ -5072,10 +5105,10 @@ document.addEventListener('click', e=>{ const b=e.target.closest && e.target.clo
   say(COACH.on?'Mental coach attivo. Ci sono io con te.':'Mental coach spento.', true); if(view==='run') drawRun(); else route(true); }, true);
 function coachCardHTML(){
   const st = coachStats(), set = !!(whyTxt() || (COACH.days||[]).length);
-  const head = `<div class="chead2"><b>🧠 Mental coach${coachOn()&&COACH.obj&&OBJ[COACH.obj]?` · ${OBJ[COACH.obj].n}`:''}</b>${coachSwitch()}</div>`;
+  const head = `<div class="chead2"><b>🧠 Mental coach${coachOn()&&objs().length?` · ${objs().map(k=>OBJ[k].n).join(', ')}`:''}</b>${coachSwitch()}</div>`;
   if(!coachOn()) return `<div class="card ccard coachc off"><div>${head}<span>${COACH.ok?"Spento: niente frasi a voce né consigli durante l'allenamento. Tocca l'interruttore per riattivarlo.":"Una voce che ti motiva e consigli basati sugli studi. Tocca l'interruttore: prima ti spiego come funziona."}</span><a class="cgo" href="#coach">Impostazioni del coach →</a></div></div>`;
   const pct = Math.min(100, Math.round(st.week/st.goal*100));
-  const today = st.planned && !st.doneToday ? `Oggi è uno dei tuoi giorni${COACH.time?` · ore ${esc(COACH.time)}`:''}${COACH.place?` · ${COACH.place==='casa'?'a casa':COACH.place==='corsa'?'corsa':'in palestra'}`:''}.` : '';
+  const today = st.planned && !st.doneToday ? `Oggi è uno dei tuoi giorni${COACH.time?` · ore ${esc(COACH.time)}`:''}${placesTxt()?` · ${placesTxt()}`:''}.` : '';
   const wb = coachWelcome(st);
   return `<div class="card ccard coachc"><div>${head}
     ${set ? `<span>${st.week>=st.goal?`Obiettivo della settimana raggiunto: ${st.week} su ${st.goal} 🎉`:`Questa settimana ${st.week} su ${st.goal} allenamenti`}</span>
@@ -5098,7 +5131,7 @@ const SCI_COACH = `<div class="sci">
 
 /* ---------------- COACH: consigli in base al fisico e all'obiettivo ---------------- */
 const OBJ = {
- dim:{n:'Dimagrire', i:'⚖️'}, mus:{n:'Più muscoli', i:'💪'}, for:{n:'Più forza', i:'🏋️'}, res:{n:'Resistenza', i:'🏃'}, sal:{n:'Salute e benessere', i:'❤️'}
+ dim:{n:'Dimagrire', i:'⚖️'}, mus:{n:'Più muscoli', i:'💪'}, for:{n:'Più forza', i:'🏋️'}, res:{n:'Resistenza', i:'🏃'}, ene:{n:'Più energia', i:'⚡'}, son:{n:'Dormire meglio', i:'😴'}, str:{n:'Meno stress', i:'🧘'}, sal:{n:'Salute e benessere', i:'❤️'}
 };
 function bodyNow(){
   const E=(S.body.entries||[]).slice().sort((a,b)=>a.at-b.at), last=k=>{ for(let i=E.length-1;i>=0;i--) if(E[i][k]!=null) return E[i][k]; return null; };
@@ -5122,24 +5155,27 @@ function protRange(b, obj){ if(!b.ref) return null; const old=b.age>=65;
 function lagMuscles(){ const ws=S.workouts.filter(w=>!w.run && w.at>=Date.now()-7*DAY); if(!ws.length) return null;
   const c=zoneSets(ws); return MZ.filter(z=>z[3] && c[z[0]]<10).map(z=>[z[1], Math.round(c[z[0]])]).sort((a,b)=>a[1]-b[1]); }
 const kgs = n => kgf(Math.round(n*10)/10);
+const objs = () => (COACH.objs||[]).filter(k=>OBJ[k]);
 function coachAdvice(){
-  const o=COACH.obj, b=bodyNow(), P=protRange(b,o), A=[], D=[];
-  const it=(k,t,x,c)=>A.push({k,t,x,c});
+  const O=objs(), b=bodyNow(), pk=['mus','for','dim','res','sal','ene','son','str'].find(k=>O.includes(k)), P=protRange(b,pk), A=[], D=[];
+  const isP = t => /proteine/i.test(t) && !/65 anni/.test(t);
+  const it=(k,t,x,c)=>{ if(A.some(a=>a.t===t) || (isP(t) && A.some(a=>isP(a.t)))) return; A.push({k,t,x,c}); };
   // ---- cosa vedo dai tuoi dati
   if(!b.kg || !b.h) D.push({t:'Mancano dei dati', x:`Scrivi peso e altezza nella scheda <a href="#corpo">Corpo</a>${b.waist?'':' (meglio anche il giro vita)'}: così i consigli usano i tuoi numeri.`});
   if(b.bmi) D.push({t:`IMC ${kgs(b.bmi)}`, x: (b.bmi<18.5?'Sotto il normale.':b.bmi<25?'Nella norma.':b.bmi<30?'Sopra il normale.':'Obesità.')+' L\'IMC non distingue muscoli e grasso: chi ha molti muscoli può risultare "sovrappeso". Il giro vita dice di più.'});
   if(b.whtr) D.push(b.whtr>=0.5 ? {t:`Giro vita ${kgs(b.waist)} cm: alto per la tua altezza`, x:`È più della metà dell'altezza (rapporto ${(Math.round(b.whtr*100)/100).toLocaleString('it-IT')}). Indica grasso sulla pancia, legato a più rischio per cuore e diabete. L'obiettivo è stare sotto ${Math.round(b.h/2)} cm. L'attività aerobica riduce il grasso della pancia anche quando il peso cambia poco.`, k:'s', c:'Ashwell e coll., Obes Rev 2012 (meta-analisi) · NICE 2022 · Vissers e coll., PLoS One 2013 (meta-analisi)'}
     : {t:`Giro vita ${kgs(b.waist)} cm: nella norma`, x:`È meno della metà della tua altezza (${Math.round(b.h/2)} cm): un buon segnale per la salute.`, k:'s', c:'Ashwell e coll., Obes Rev 2012 (meta-analisi) · NICE 2022'});
-  if(o==='dim' && b.rate!=null){ const r=b.rate, kgw=b.kg*Math.abs(r)/100;
+  if(O.includes('dim') && b.rate!=null){ const r=b.rate, kgw=b.kg*Math.abs(r)/100;
     D.push(r < -1.05 ? {t:`Stai perdendo ${kgs(kgw)} kg a settimana`, x:'È più dell\'1% del peso a settimana: troppo veloce. Si rischia di perdere anche muscolo e di riprendere peso. Parlane con il tuo nutrizionista.', k:'m', c:'Garthe e coll., Int J Sport Nutr Exerc Metab 2011 · Helms e coll., J Int Soc Sports Nutr 2014'}
       : r <= -0.4 ? {t:`Stai perdendo ${kgs(kgw)} kg a settimana`, x:'Ritmo giusto (tra 0,5 e 1% del peso a settimana): perdi grasso tenendo i muscoli. Continua così!', k:'m', c:'Garthe e coll., Int J Sport Nutr Exerc Metab 2011 · Helms e coll., J Int Soc Sports Nutr 2014'}
       : {t: r>0.15?'Il peso sta salendo':'Il peso è fermo', x:`Nelle ultime ${Math.round(b.weeks)} settimane ${r>0.15?'il peso è salito':'il peso non è sceso'}. È normale che oscilli di giorno in giorno: pesati 2–3 volte a settimana, la mattina. Se resta così per 3 settimane, rivedi il piano con il nutrizionista.`, k:'m', c:'Helms e coll., J Int Soc Sports Nutr 2014'}); }
-  else if(o==='dim' && b.kg) D.push({t:'Andamento del peso', x:'Pesati 2–3 volte a settimana, la mattina a digiuno, nella scheda Corpo: dopo 2 settimane ti dico se stai andando al ritmo giusto.'});
-  if(o==='mus'||o==='for'||o==='sal'){ const L=lagMuscles(); if(L && L.length) D.push({t:'Muscoli rimasti indietro questa settimana', x:L.slice(0,4).map(([n,s])=>`${n} ${s}`).join(', ')+(L.length>4?` e altri ${L.length-4}`:'')+'. Per crescere ne servono almeno 10 a settimana per muscolo. Vedi la mappa nel <a href="#diario">Diario</a>.', k:'s', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi) · Pelland e coll., Sports Med 2025 (meta-analisi)'});
+  else if(O.includes('dim') && b.kg) D.push({t:'Andamento del peso', x:'Pesati 2–3 volte a settimana, la mattina a digiuno, nella scheda Corpo: dopo 2 settimane ti dico se stai andando al ritmo giusto.'});
+  if(['mus','for','sal'].some(k=>O.includes(k))){ const L=lagMuscles(); if(L && L.length) D.push({t:'Muscoli rimasti indietro questa settimana', x:L.slice(0,4).map(([n,s])=>`${n} ${s}`).join(', ')+(L.length>4?` e altri ${L.length-4}`:'')+'. Per crescere ne servono almeno 10 a settimana per muscolo. Vedi la mappa nel <a href="#diario">Diario</a>.', k:'s', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi) · Pelland e coll., Sports Med 2025 (meta-analisi)'});
     else if(L) D.push({t:'Tutti i muscoli principali allenati', x:'Ogni muscolo principale ha almeno 10 serie negli ultimi 7 giorni. Ottimo lavoro!', k:'s', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi)'}); }
   // ---- consigli per l'obiettivo
   const prot = P ? `Per te: circa <b>${P.g[0]}–${P.g[1]} g di proteine al giorno</b> (${String(P.r[0]).replace('.',',')}–${String(P.r[1]).replace('.',',')} g per kg${b.bmi>30?' del peso di riferimento, non di quello totale':''}), divise in 3–4 pasti da circa ${P.meal} g.` : 'Scrivi il tuo peso in Corpo e ti calcolo i grammi.';
   const pc = ' Con malattie dei reni chiedi prima al medico. Il piano dei pasti lo fa il nutrizionista.';
+  O.forEach(o=>{
   if(o==='mus'){
     it('s','Almeno 10 serie a settimana per muscolo','Più serie fanno crescere di più, fino a circa 20 a settimana per muscolo. Sotto le 10 la crescita è minore.','Schoenfeld e coll., J Sports Sci 2017 (meta-analisi) · Pelland e coll., Sports Med 2025 (meta-analisi)');
     it('s','Vicino alla fatica vera','Le ripetizioni possono andare da 6 a 30: conta arrivare vicino al limite, con 1–3 ripetizioni ancora in riserva.','Schoenfeld e coll., J Strength Cond Res 2017 (meta-analisi) · Refalo e coll., Sports Med 2023 (meta-analisi)');
@@ -5164,13 +5200,28 @@ function coachAdvice(){
     it('s','I passi contano','Il rischio di morte scende con i passi fino a circa 8–10 mila al giorno sotto i 60 anni e 6–8 mila sopra i 60.','Paluch e coll., Lancet Public Health 2022 (meta-analisi)');
     it('s','Forza per vivere più a lungo','30–60 minuti di esercizi di forza a settimana sono legati a un rischio di morte più basso del 10–17%.','Momma e coll., Br J Sports Med 2022 (meta-analisi)');
     it('m','Proteine',prot+pc,'OMS/FAO 2007 · Bauer e coll., J Am Med Dir Assoc 2013');
+  } else if(o==='ene'){
+    it('s','Muoversi dà energia','L\'attività fisica regolare riduce la stanchezza e aumenta la sensazione di energia, anche in chi era sedentario.','Puetz, O\'Connor e Dishman, Psychol Bull 2006 (meta-analisi)');
+    it('m','Basta anche poco','Bastano 20 minuti di movimento leggero o moderato 3 volte a settimana: in uno studio, dopo 6 settimane la stanchezza è calata più con l\'esercizio leggero che con quello intenso.','Puetz, Flowers e O\'Connor, Psychother Psychosom 2008');
+    it('m','Dormi almeno 7 ore','Gli adulti hanno bisogno di almeno 7 ore di sonno a notte: dormire meno toglie energia e rende più difficile allenarsi.','Watson e coll., Sleep 2015 (raccomandazioni AASM/SRS)');
+  } else if(o==='son'){
+    it('s','L\'allenamento migliora il sonno','Chi si allena con regolarità dorme meglio: si addormenta prima e si sveglia meno.','Kredlow e coll., J Behav Med 2015 (meta-analisi)');
+    it('m','Anche la sera va bene','Allenarsi la sera non peggiora il sonno. Evita solo sforzi molto intensi nell\'ultima ora prima di dormire.','Stutz, Eiholzer e Spengler, Sports Med 2019 (meta-analisi)');
+    it('m','Anche i pesi aiutano','Gli esercizi di forza migliorano la qualità del sonno, soprattutto quella percepita.','Kovacevic e coll., Sleep Med Rev 2018 (revisione sistematica)');
+    it('m','Dormi almeno 7 ore','Punta ad almeno 7 ore a notte, con orari regolari per andare a letto e svegliarti.','Watson e coll., Sleep 2015 (raccomandazioni AASM/SRS)');
+  } else if(o==='str'){
+    it('s','Il movimento aiuta l\'umore','L\'attività fisica riduce ansia, stress e sintomi di depressione: l\'effetto è simile a quello dei trattamenti abituali nei casi lievi.','Singh e coll., Br J Sports Med 2023 (revisione di 97 meta-analisi)');
+    it('s','Anche con i pesi','Gli esercizi di forza riducono i sintomi di depressione, a qualsiasi età e livello.','Gordon e coll., JAMA Psychiatry 2018 (meta-analisi)');
+    it('m','Respira lento','Respirare lentamente, circa 6 respiri al minuto, calma il corpo: usalo nel recupero o con la visualizzazione del coach.','Zaccaro e coll., Front Hum Neurosci 2018 (revisione sistematica)');
+    it('s','Se ti senti giù a lungo','Se tristezza o ansia durano più di due settimane, parlane con il tuo medico: l\'allenamento aiuta ma non sostituisce le cure.','OMS 2022 · Singh e coll., Br J Sports Med 2023');
   }
+  });
   if(b.age>=65){ it('s','Dopo i 65 anni: equilibrio','Almeno 3 giorni a settimana con esercizi di equilibrio e forza: riducono le cadute.','Bull e coll., OMS, Br J Sports Med 2020 · Sherrington e coll., Cochrane 2019');
-    if(o!=='mus'&&o!=='for') it('m','Dopo i 65 anni: proteine','Ne servono di più che da giovani: almeno 1,0–1,2 g per kg al giorno'+(b.ref?` (per te ${g0(b.ref)}–${g0(b.ref*1.2)} g)`:'')+'.'+pc,'Bauer e coll., J Am Med Dir Assoc 2013 (PROT-AGE)'); }
+    if(!O.includes('mus')&&!O.includes('for')) it('m','Dopo i 65 anni: proteine','Ne servono di più che da giovani: almeno 1,0–1,2 g per kg al giorno'+(b.ref?` (per te ${g0(b.ref)}–${g0(b.ref*1.2)} g)`:'')+'.'+pc,'Bauer e coll., J Am Med Dir Assoc 2013 (PROT-AGE)'); }
   return {A, D, b, P};
 }
 // una frase a voce a fine allenamento, legata all'obiettivo (una diversa ogni volta)
-function coachGoalTip(kind){ const o=COACH.obj; if(!coachOn() || !o) return ''; const {b,P}=coachAdvice(), T=[];
+function coachGoalTip(kind){ const O=objs(); if(!coachOn() || !O.length) return ''; const {b,P}=coachAdvice(), T=[]; O.forEach(o=>{
   if((o==='mus'||o==='for') && P && kind==='gym') T.push(`Nelle prossime ore fai un pasto con circa ${P.meal} grammi di proteine.`);
   if(o==='mus' && kind==='gym'){ const L=lagMuscles(); if(L && L.length) T.push(`Negli ultimi 7 giorni per ${({Petto:'il petto',Dorsali:'i dorsali','Centro schiena':'il centro della schiena','Spalle davanti':'le spalle davanti','Spalle laterali':'le spalle laterali','Spalle dietro':'le spalle dietro',Bicipiti:'i bicipiti',Tricipiti:'i tricipiti',Addominali:'gli addominali',Glutei:'i glutei',Quadricipiti:'i quadricipiti',Femorali:'i femorali',Polpacci:'i polpacci'})[L[0][0]]||L[0][0]} hai fatto ${L[0][1]===0?'zero serie':L[0][1]===1?'una serie':L[0][1]+' serie'}: per crescere ne servono almeno 10.`); }
   if(o==='for' && kind==='gym') T.push('Per la forza ricorda: recupera almeno 2 minuti tra le serie pesanti.');
@@ -5180,14 +5231,18 @@ function coachGoalTip(kind){ const o=COACH.obj; if(!coachOn() || !o) return ''; 
   if(o==='res' && kind==='run') T.push('Ricorda: la maggior parte delle uscite a ritmo facile, in cui riesci a parlare.');
   if(o==='res' && kind==='gym') T.push('La forza rende la tua corsa più economica: ottima scelta.');
   if(o==='sal') T.push('Ogni allenamento ti avvicina ai minuti consigliati per la salute.');
+  if(o==='ene') T.push('Muoversi così ti darà più energia nei prossimi giorni.');
+  if(o==='son') T.push('Allenarti con regolarità ti aiuta a dormire meglio: stanotte punta ad almeno 7 ore.');
+  if(o==='str') T.push('Bel lavoro: il movimento è uno dei modi migliori per scaricare lo stress.');
+  }); const U=[...new Set(T)]; T.length=0; T.push(...U);
   if(!T.length) return ''; const t=fbPick(T, COACH.lastTip); COACH.lastTip=t; coachSave(); return t ? ' '+t : ''; }
 function adviceHTML(){
-  const o=COACH.obj;
-  const chips = Object.keys(OBJ).map(k=>`<button class="chip" type="button" data-obj="${k}" aria-pressed="${o===k}">${OBJ[k].i} ${OBJ[k].n}</button>`).join('');
-  if(!o) return `<section class="card" id="cAdv"><h2>Il tuo obiettivo</h2><p class="note">Scegli cosa vuoi ottenere: ti do consigli con i tuoi numeri, solo quelli provati dagli studi.</p><div class="chips wrapchips">${chips}</div></section>`;
+  const O=objs();
+  const chips = Object.keys(OBJ).map(k=>`<button class="chip" type="button" data-obj="${k}" aria-pressed="${O.includes(k)}">${O.includes(k)?'✓ ':''}${OBJ[k].i} ${OBJ[k].n}</button>`).join('');
+  if(!O.length) return `<section class="card" id="cAdv"><h2>I tuoi obiettivi</h2><p class="note">Scegli cosa vuoi ottenere, anche più di una cosa insieme: ti do consigli con i tuoi numeri, solo quelli provati dagli studi.</p><div class="chips wrapchips">${chips}</div></section>`;
   const {A:A0,D}=coachAdvice(), row=(a,f)=>`<p>${a.k?pill(a.k):''}${f&&fbScore(a.t)>0?'⭐ ':''}<b>${a.t}.</b> ${a.x}${a.c?`<cite>${a.c}</cite>`:''}${f?fbBtns(a.t):''}</p>`;
   const A=A0.filter(a=>fbScore(a.t)>-2).sort((a,b)=>fbScore(b.t)-fbScore(a.t)), H=A0.filter(a=>fbScore(a.t)<=-2);
-  return `<section class="card" id="cAdv"><h2>Il tuo obiettivo</h2><div class="chips wrapchips">${chips}</div>
+  return `<section class="card" id="cAdv"><h2>I tuoi obiettivi</h2><p class="note">Puoi sceglierne più di uno: i consigli si uniscono.</p><div class="chips wrapchips">${chips}</div>
     ${D.length?`<h3 class="subh">Cosa vedo dai tuoi dati</h3><div class="sci">${D.map(row).join('')}</div>`:''}
     <h3 class="subh">I consigli per te</h3><p class="note">Tocca 👍 o 👎: il coach mette in alto e ripete a voce quelli che ti servono.</p><div class="sci">${A.map(a=>row(a,1)).join('')}</div>
     ${H.length?`<details class="more"><summary>Consigli che hai nascosto (${H.length})</summary><div class="sci">${H.map(a=>row(a,1)).join('')}</div></details>`:''}
@@ -5266,8 +5321,9 @@ function viewCoach(){
     <section class="card"><h2>Quando e dove</h2>
       <div class="chips wrapchips" role="group" aria-label="Giorni">${GG.map((g,i)=>`<button class="chip" type="button" data-day="${i}" aria-pressed="${(COACH.days||[]).includes(i)}">${g}</button>`).join('')}</div>
       <div class="crow"><label for="cTime">Ora</label><input id="cTime" type="time" value="${esc(COACH.time||'')}"></div>
-      <div class="chips wrapchips" role="group" aria-label="Dove">${[['palestra','In palestra'],['casa','A casa'],['corsa','Corsa']].map(([k,l])=>`<button class="chip" type="button" data-place="${k}" aria-pressed="${COACH.place===k}">${l}</button>`).join('')}</div>
-      ${(COACH.days||[]).length?`<p class="feel"><b>Il tuo piano:</b> ${COACH.days.slice().sort().map(i=>GGL[i]).join(', ')}${COACH.time?` alle ${esc(COACH.time)}`:''}, ${COACH.place==='casa'?'a casa':COACH.place==='corsa'?'corsa':'in palestra'}.</p>`:''}
+      <div class="chips wrapchips" role="group" aria-label="Dove">${[['palestra','In palestra'],['casa','A casa'],['corsa','Corsa']].map(([k,l])=>`<button class="chip" type="button" data-place="${k}" aria-pressed="${(COACH.places||[]).includes(k)}">${l}</button>`).join('')}</div>
+      ${(COACH.days||[]).length?`<p class="feel"><b>Il tuo piano:</b> ${COACH.days.slice().sort().map(i=>GGL[i]).join(', ')}${COACH.time?` alle ${esc(COACH.time)}`:''}${placesTxt()?', '+placesTxt():''}.</p>`:''}
+      <p class="note">Puoi scegliere più giorni e più posti insieme.</p>
       <h3 class="subh">Piano B: se… allora…</h3>
       <p class="note">Decidi adesso cosa fare se qualcosa va storto. Tocca un esempio per aggiungerlo o scrivi il tuo.</p>
       <div class="cplans">${(COACH.plans||[]).map((p,i)=>`<div class="cplan"><span><b>Se</b> ${esc(p[0])}, <b>allora</b> ${esc(p[1])}.</span><button type="button" class="sg-del" data-pdel="${i}" aria-label="Togli">✕</button></div>`).join('')}</div>
@@ -5279,6 +5335,7 @@ function viewCoach(){
       <p class="note">Il coach le dice durante l'allenamento: all'ultima serie, a metà sessione, ogni tanto nel recupero e ogni 2 km di corsa. Scegli quelle che ti piacciono.</p>
       <h3 class="subh">Per darti la carica</h3><div class="chips wrapchips">${COACH_PH.filter(p=>p.k==='mot'&&p.w!=='run').map(phChip).join('')}</div>
       <h3 class="subh">Per la tecnica</h3><div class="chips wrapchips">${COACH_PH.filter(p=>p.k==='tec'&&p.w==='gym').map(phChip).join('')}</div>
+      <h3 class="subh">Per restare calmo e concentrato</h3><div class="chips wrapchips">${COACH_PH.filter(p=>p.k==='cal').map(phChip).join('')}</div>
       <h3 class="subh">Per la corsa</h3><div class="chips wrapchips">${COACH_PH.filter(p=>p.w==='run').map(phChip).join('')}</div>
       ${(COACH.mine||[]).length?`<h3 class="subh">Le mie</h3><div class="cplans">${COACH.mine.map((t,i)=>`<div class="cplan"><span>${esc(t)}</span><button type="button" class="sg-del" data-mdel="${i}" aria-label="Togli">✕</button></div>`).join('')}</div>`:''}
       <div class="mine"><input id="cMine" placeholder="Scrivi una tua frase, breve, con il tu" maxlength="60"><button class="btn small" type="button" id="cAddMine">Aggiungi</button></div>
@@ -5296,13 +5353,13 @@ function viewCoach(){
   </section>`;
   const redraw = ()=>keepScroll(viewCoach), $ = id=>document.getElementById(id);
   const fr=$('fbReset'); if(fr) fr.onclick=()=>{ if(fr.dataset.sure){ COACH.fb={}; COACH.fbt={}; coachSave(); redraw(); } else { fr.dataset.sure='1'; fr.textContent='Sicuro? Tocca ancora'; } };
-  $app.querySelectorAll('[data-obj]').forEach(b=>b.onclick=()=>{ COACH.obj = COACH.obj===b.dataset.obj ? '' : b.dataset.obj; coachSave(); redraw(); });
+  $app.querySelectorAll('[data-obj]').forEach(b=>b.onclick=()=>{ const k=b.dataset.obj, a=objs(); COACH.objs = a.includes(k)?a.filter(x=>x!==k):a.concat(k); delete COACH.obj; coachSave(); redraw(); });
   $('cWhy').oninput=e=>{ COACH.why=e.target.value; coachSave(); };
   $app.querySelectorAll('[data-why]').forEach(b=>b.onclick=()=>{ COACH.why=COACH_WHY[+b.dataset.why]; coachSave(); $('cWhy').value=COACH.why; });
   $app.querySelectorAll('[data-goal]').forEach(b=>b.onclick=()=>{ COACH.goal=Math.max(1,Math.min(7,(+COACH.goal||3)+(+b.dataset.goal))); coachSave(); redraw(); });
   $app.querySelectorAll('[data-day]').forEach(b=>b.onclick=()=>{ const d=+b.dataset.day, a=COACH.days||[]; COACH.days = a.includes(d)?a.filter(x=>x!==d):a.concat(d); coachSave(); redraw(); });
   $('cTime').onchange=e=>{ COACH.time=e.target.value; coachSave(); redraw(); };
-  $app.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{ COACH.place=b.dataset.place; coachSave(); redraw(); });
+  $app.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{ const k=b.dataset.place, a=COACH.places||[]; COACH.places = a.includes(k)?a.filter(x=>x!==k):a.concat(k); coachSave(); redraw(); });
   $app.querySelectorAll('[data-pif]').forEach(b=>b.onclick=()=>{ COACH.plans=(COACH.plans||[]).concat([COACH_IF[+b.dataset.pif].slice()]); coachSave(); redraw(); });
   $app.querySelectorAll('[data-pdel]').forEach(b=>b.onclick=()=>{ COACH.plans.splice(+b.dataset.pdel,1); coachSave(); redraw(); });
   $('cAddIf').onclick=()=>{ const a=$('cIf').value.trim().replace(/^se\s+/i,''), b=$('cThen').value.trim().replace(/^allora\s+/i,''); if(!a||!b) return; COACH.plans=(COACH.plans||[]).concat([[a,b]]); coachSave(); redraw(); };
