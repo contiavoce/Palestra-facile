@@ -18,27 +18,28 @@
     cmd: function(s){ return s; }
   };
 
-  /* ---------- tasto lingua nella barra in alto ---------- */
-  function addButton(){
-    var top = document.getElementById('topbar'); if (!top) return;
-    if (!top.querySelector('.brand') || document.getElementById('langBtn')) return;
-    var b = document.createElement('button');
-    b.type = 'button'; b.id = 'langBtn'; b.className = 'langbtn';
-    b.setAttribute('aria-label', EN ? 'Language: English. Tap to switch to Italian' : 'Lingua: italiano. Tocca per passare all\'inglese (English)');
-    b.innerHTML = '<span' + (EN ? '' : ' class="on"') + '>IT</span><span' + (EN ? ' class="on"' : '') + '>EN</span>';
-    b.setAttribute('data-noi18n', '');
-    b.onclick = function(){ I18N.set(EN ? 'it' : 'en'); };
-    top.appendChild(b);
+  /* ---------- scelta lingua: riquadro in cima alla prima pagina ---------- */
+  function addRow(){
+    var hero = document.querySelector('#app section.hero');
+    if (!hero || (hero.previousElementSibling && hero.previousElementSibling.id === 'langRow')) return;
+    var old = document.getElementById('langRow'); if (old) old.remove();
+    var r = document.createElement('div');
+    r.id = 'langRow'; r.className = 'langrow'; r.setAttribute('data-noi18n', '');
+    r.innerHTML = '<span class="lt">🌐 ' + (EN ? 'Language' : 'Lingua') + '</span>' +
+      '<button type="button" data-l="it"' + (EN ? '' : ' class="on" aria-pressed="true"') + '>🇮🇹 Italiano</button>' +
+      '<button type="button" data-l="en"' + (EN ? ' class="on" aria-pressed="true"' : '') + '>🇬🇧 English</button>';
+    r.onclick = function(e){ var b = e.target.closest('button'); if (b && b.dataset.l !== lang) I18N.set(b.dataset.l); };
+    hero.parentNode.insertBefore(r, hero);
   }
-  var css = '.langbtn{flex:none;display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:700 12px/1 var(--display,system-ui),sans-serif;letter-spacing:.04em;cursor:pointer;margin-left:4px}' +
-            '.langbtn span{padding:6px 8px;border-radius:999px}.langbtn span.on{background:var(--accent);color:var(--on-accent)}' +
-            '@media (max-width:440px){header.top .brand{font-size:20px;gap:8px}header.top .sync{font-size:0;gap:0}.langbtn span{padding:6px 7px}}' +
-            '@media (max-width:340px){header.top .brand{font-size:17px}}';
+  var css = '.langrow{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:8px 10px;background:var(--surface);border:1px solid var(--line);border-radius:16px}' +
+            '.langrow .lt{font-weight:700;font-size:14px;margin-right:auto;white-space:nowrap}' +
+            '.langrow button{font:600 15px/1 inherit;font-family:inherit;padding:10px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;white-space:nowrap}' +
+            '.langrow button.on{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}';
   function boot(){
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
-    addButton();
-    var top = document.getElementById('topbar');
-    if (top) new MutationObserver(addButton).observe(top, {childList: true});
+    addRow();
+    var app = document.getElementById('app');
+    if (app) new MutationObserver(addRow).observe(app, {childList: true, subtree: true});
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 
