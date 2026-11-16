@@ -415,6 +415,11 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .ccard img{height:130px;width:auto;border-radius:12px;background:#fff;flex:none}
 .cmapgl{display:none;position:relative;height:320px;border-radius:18px;overflow:hidden;margin:0 0 4px}.cmapgl.on{display:block}
 #cCenter{position:absolute;z-index:2;left:10px;top:10px}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rgrid div{background:#8881;border-radius:12px;padding:10px}
+.rgrid span{display:block;font-size:12px;text-transform:uppercase;opacity:.7}.rgrid b{display:block;font-size:22px}.rgrid i{font-style:normal;font-size:12px;opacity:.7}
+.rbars{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;height:90px;align-items:end;margin-top:12px}
+.rbars div{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}.rbars u{display:block;width:100%;background:#d6341e;border-radius:6px 6px 2px 2px;min-height:3px}.rbars small{font-size:10px;height:12px}
+.delalls{display:grid;gap:8px;margin-top:12px}
 .chead{display:flex;justify-content:space-between;align-items:center}.chead img{height:96px;border-radius:12px;background:#fff}
 .clap{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #8883}
 .cstats{display:grid;grid-template-columns:repeat(2,1fr);text-align:center;gap:6px}
@@ -2167,6 +2172,16 @@ function saveRoutines(){ store.set('routines',S.routines); if(DB){ const list=cl
 function saveVideos(){ store.set('video',S.videos); if(DB){ const map=clone(S.videos); serial('videos',()=>DB.doc(BASE+'/videos').set({map})); } }
 function wcol(){ return DB.doc(BASE+'/log').collection('workouts'); }
 function addWorkout(w){ S.workouts.unshift(w); store.set('workouts',S.workouts); if(DB) serial('w'+w.id,()=>wcol().doc(w.id).set(clone(w))); }
+const isRun = w => !!w.run;
+function delAllHTML(kind){ const n=S.workouts.filter(w=>kind==='run'?isRun(w):!isRun(w)).length; if(!n) return '';
+  return `<div class="confirm delall" data-delall="${kind}"><button class="btn ghost small" type="button" data-ask>🗑 ${kind==='run'?`Elimina tutte le corse (${n})`:`Elimina tutti gli allenamenti in palestra (${n})`}</button></div>`; }
+function bindDelAll(rerender){ document.querySelectorAll('[data-delall]').forEach(wrap=>{ const kind=wrap.dataset.delall, b=wrap.querySelector('[data-ask]'); if(!b) return;
+  b.onclick=()=>{ wrap.innerHTML=`<span>${kind==='run'?'Eliminare TUTTE le corse?':'Eliminare TUTTI gli allenamenti in palestra?'} Non si può annullare.</span><button class="btn small" type="button" data-yes>Sì, elimina tutto</button><button class="btn ghost small" type="button" data-no>Annulla</button>`;
+    wrap.querySelector('[data-yes]').onclick=()=>{ S.workouts.filter(w=>kind==='run'?isRun(w):!isRun(w)).map(w=>w.id).forEach(deleteWorkout); rerender(); };
+    wrap.querySelector('[data-no]').onclick=()=>rerender(); }; }); }
+function bindDelOne(rerender){ document.querySelectorAll('[data-delrun]').forEach(b=>b.onclick=()=>{ const id=b.dataset.delrun, wrap=b.parentElement;
+  wrap.innerHTML='<span>Eliminare questa corsa?</span><button class="btn small" type="button" data-yes>Sì, elimina</button><button class="btn ghost small" type="button" data-no>Annulla</button>';
+  wrap.querySelector('[data-yes]').onclick=()=>{ deleteWorkout(id); rerender(); }; wrap.querySelector('[data-no]').onclick=()=>rerender(); }); }
 function deleteWorkout(id){ S.workouts=S.workouts.filter(w=>w.id!==id); store.set('workouts',S.workouts); if(DB) serial('w'+id,()=>wcol().doc(id).delete()); }
 
 async function initDb(){
@@ -3119,15 +3134,35 @@ function viewCorsa(){
       : `<button class="btn ghost big" id="cPau">❚❚ Pausa</button><button class="btn big" id="cEnd">■ Fine e salva</button>`}</div>
     ${corsa?`<button class="btn ghost small" id="cDrop" style="margin-top:6px">Annulla senza salvare</button>`:''}
     <p class="lead" style="margin-top:14px">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>
-    ${past.length?`<div class="group-title"><h2>Ultime corse</h2></div>${past.map(w=>`<div class="card"><b>${df.format(new Date(w.at))}</b> · ${kmTxt(w.run.m)} km · ${fmtDur(w.run.sec)} · passo ${paceTxt(w.run.sec,w.run.m)} · ${w.run.kcal!=null?w.run.kcal:kcalOf(w.run.m)} kcal${pathSVG(w.run.pts,340,160)}</div>`).join('')}`:''}
+    ${runProgress()}
+    ${past.length?`<div class="group-title"><h2>Ultime corse</h2></div>${past.map(w=>`<div class="card"><p style="margin:0 0 4px"><strong>${df.format(new Date(w.at))}</strong></p><p style="margin:0">${kmTxt(w.run.m)} km · ${fmtDur(w.run.sec)} · passo ${paceTxt(w.run.sec,w.run.m)} · ${w.run.kcal!=null?w.run.kcal:kcalOf(w.run.m)} kcal</p>${pathSVG(w.run.pts,340,160)}<div class="confirm"><button class="btn ghost small" type="button" data-delrun="${w.id}">Elimina</button></div></div>`).join('')}${delAllHTML('run')}`:''}
   </section>`;
   const on=(id,f)=>{ const e=document.getElementById(id); if(e) e.onclick=f; };
   on('cGo', ()=>{ if(!('geolocation' in navigator)){ corsaMsg='Questo telefono non dà la posizione al browser.'; corsaPaint(); return; } corsaStart(); });
+  bindDelOne(()=>keepScroll(viewCorsa)); bindDelAll(()=>keepScroll(viewCorsa));
   on('cCenter', ()=>{ cmapFollow=true; document.getElementById('cCenter').hidden=true; updMap(); });
   cmapReady=false; mountMap();
   on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
   on('cDrop', ()=>{ const b=document.getElementById('cDrop'); if(b.dataset.sure){ corsaFinish(false); } else { b.dataset.sure='1'; b.textContent='Sicuro? Premi ancora per annullare'; } });
   corsaPaint();
+}
+function runProgress(){
+  const R=S.workouts.filter(w=>w.run && w.run.m>=200); if(!R.length) return '';
+  const now=new Date(), dow=(now.getDay()+6)%7, mon=new Date(now.getFullYear(),now.getMonth(),now.getDate()-dow).getTime(), m1=new Date(now.getFullYear(),now.getMonth(),1).getTime();
+  const sum=a=>a.reduce((x,w)=>x+w.run.m,0);
+  const wk=R.filter(w=>w.at>=mon), mo=R.filter(w=>w.at>=m1);
+  const longest=R.reduce((a,w)=>w.run.m>a.run.m?w:a), best=R.filter(w=>w.run.m>=1000).reduce((a,w)=>!a||w.run.sec/w.run.m<a.run.sec/a.run.m?w:a,null);
+  // last 8 weeks km bars
+  const weeks=[...Array(8)].map((_,i)=>{ const a=mon-(7-i)*7*864e5, b=a+7*864e5; return {a, km:sum(R.filter(w=>w.at>=a&&w.at<b))/1000}; });
+  const mx=Math.max(1,...weeks.map(x=>x.km));
+  return `<div class="card rprog"><h2 style="font-size:20px;text-transform:uppercase;margin:0 0 8px">I miei progressi</h2>
+    <div class="rgrid"><div><span>Questa settimana</span><b>${kmTxt(sum(wk))} km</b><i>${wk.length} ${wk.length===1?'corsa':'corse'}</i></div>
+    <div><span>Questo mese</span><b>${kmTxt(sum(mo))} km</b><i>${mo.length} ${mo.length===1?'corsa':'corse'}</i></div>
+    <div><span>Corsa più lunga</span><b>${kmTxt(longest.run.m)} km</b><i>${df.format(new Date(longest.at))}</i></div>
+    <div><span>Passo migliore</span><b>${best?paceTxt(best.run.sec,best.run.m)+' /km':'–'}</b><i>${best?df.format(new Date(best.at)):'su almeno 1 km'}</i></div>
+    <div><span>Totale</span><b>${kmTxt(sum(R))} km</b><i>${R.length} corse · ${R.reduce((a,w)=>a+(w.run.kcal!=null?w.run.kcal:kcalOf(w.run.m)),0)} kcal</i></div></div>
+    <div class="rbars" aria-label="Km nelle ultime 8 settimane">${weeks.map((x,i)=>`<div><u style="height:${Math.round(x.km/mx*100)}%"></u><small>${i===7?'ora':''}</small></div>`).join('')}</div>
+    <p class="note" style="margin:4px 0 0">Km per settimana, ultime 8 settimane</p></div>`;
 }
 function runDetail(w){ const r=w.run; return `<p><b>${kmTxt(r.m)} km</b> in <b>${fmtDur(r.sec)}</b> · passo <b>${paceTxt(r.sec,r.m)} /km</b> · <b>${r.kcal!=null?r.kcal:kcalOf(r.m)} kcal</b></p>${(r.laps||[]).length?`<p class="note">${r.laps.map((l,i)=>`Km ${i+1}: ${fmtDur(l)}`).join(' · ')}</p>`:''}${pathSVG(r.pts,340,190)}`; }
 
@@ -3155,6 +3190,7 @@ function viewDiary(){
           ${w.vol?`<p class="note">Volume: ${kgf(w.vol)} kg</p>`:''}
           <div class="confirm" data-delwrap="${w.id}"><button class="btn ghost small" type="button" data-del="${w.id}">Elimina</button></div></div></details>`}).join('')}</div>`
       : `<div class="empty">Qui compariranno le sessioni completate.<br><a href="#sessioni">Scegli una sessione e premi Inizia</a> per registrare la prima.</div>`}
+    ${log.length?`<div class="delalls">${delAllHTML('gym')}${delAllHTML('run')}</div>`:''}
     <p class="fine">${DB?'I dati sono salvati sul tuo account: li ritrovi anche da un altro dispositivo aprendo questa app.':'Aperta fuori da Claude, l\'app salva i dati solo su questo dispositivo.'}</p>
   </section>`;
   $app.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
@@ -3163,6 +3199,7 @@ function viewDiary(){
     wrap.querySelector('[data-yes]').onclick=()=>{ deleteWorkout(id); keepScroll(viewDiary); };
     wrap.querySelector('[data-no]').onclick=()=>keepScroll(viewDiary);
   });
+  bindDelAll(()=>keepScroll(viewDiary));
 }
 
 /* ---------------- CORPO ---------------- */
