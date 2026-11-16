@@ -3454,7 +3454,7 @@ function say(text, force){
   mic.said = String(text); mic.saidAt = Date.now();
   try{ speechSynthesis.cancel(); duck(true);
     const parts = String(text).split(/(?<=[.;!?])\s+/).filter(Boolean);
-    parts.forEach((t,k)=>{ const u=new SpeechSynthesisUtterance(t); u.lang='it-IT'; if(itVoice) u.voice=itVoice; u.rate=1.02;
+    parts.forEach((t,k)=>{ const u=new SpeechSynthesisUtterance(t); u.lang='it-IT'; if(itVoice) u.voice=itVoice; u.rate=1.02; u.volume = AU.vvol!=null ? AU.vvol : 1;
       if(k===parts.length-1) u.onend=()=>{ duck(false); mic.quietUntil=Date.now()+2500; }; u.onerror=()=>duck(false); speechSynthesis.speak(u); });
   }catch(e){}
 }
@@ -3587,8 +3587,26 @@ function micNorm(t){
   s = s.split(/\s+/).map(w=>{ const c=w.replace(/[^a-z0-9.,]/g,''); return c in NUMW ? String(NUMW[c]) : c; }).filter(Boolean).join(' ');
   return s.replace(/(\d+)[.,](\d+)/g,'$1.$2').replace(/(\d+) virgola (\d+)/g,'$1.$2').replace(/(\d+) e mezzo/g,'$1.5').replace(/(\d+)(kg|rip)\b/g,'$1 $2');
 }
+function micAsk(s){ // domande al coach: tornano una chiave, oppure ''
+  const has = re=>re.test(s);
+  if(has(/\b(volume|alza\w*|abbass\w*|piu alt[ao]|piu bass[ao]|piu forte|piu piano)\b/) && has(/\b(volume|musica|voce|alza\w*|abbass\w*)\b/)){
+    const up = has(/\b(alza\w*|piu alt[ao]|piu forte|aument\w*)\b/), dn = has(/\b(abbass\w*|piu bass[ao]|piu piano|diminuisc\w*|riduc\w*)\b/);
+    if(up||dn) return 'vol:'+(has(/\bmusica\b/)?'m':has(/\bvoce\b/)?'v':'a')+':'+(up?1:-1); }
+  if(has(/\b(che ore|che ora|ore sono|ora e)\b/)) return 'time';
+  if(has(/\b(obiettivo|voglio (fare|correre)|faccio|arrivo a)\b.*\d+(\.\d+)? ?(km|chilometr\w*)/)) return 'goal';
+  if(has(/\bquant\w*( \w+)? (manca|mancano|resta|restano|rimane|rimangono)\b/) || has(/^(manca|mancano) (ancora )?(molto|tanto)\b/)) return 'left';
+  if(has(/\b(velocita|veloce sto|veloce vado|che passo|il passo|a che ritmo|quanto vado|vado veloce|sto andando veloce)\b/)) return 'speed';
+  if(has(/\b(come (sto andando|procedo|va|sto|vado|stiamo andando)|sto andando bene)\b/)) return 'how';
+  if(has(/\b(quant\w* (km|chilometri|strada|metri) (ho|abbiamo) fatt\w*|distanza|quanta strada)\b/)) return 'dist';
+  if(has(/\b(da quanto|quanto tempo|tempo trascorso|quanti minuti)\b/)) return 'elapsed';
+  if(has(/\bcalorie\b/)) return 'kcal';
+  if(has(/\b(quanto peso|che peso|peso consigliato|quanti chili (metto|devo))\b/)) return 'weight';
+  if(has(/\b(cosa (viene|c e|ce) dopo|e dopo)\b/)) return 'next';
+  return '';
+}
 function micParse(raw){
   const s = micNorm(raw), has = re=>re.test(s), a = {};
+  const q = micAsk(s); if(q){ a.ask = q; if(q==='goal'){ const g=s.match(/(\d+(?:\.\d+)?) ?(?:km|chilometr\w*)/); a.goalM = g ? Math.round(parseFloat(g[1])*1000) : 0; } return a; }
   const kg = s.match(/(\d+(?:\.\d+)?) ?(?:kg|chil\w*|kil\w*)\b/) || s.match(/\b(?:peso|chili|kg) (\d+(?:\.\d+)?)/);
   const rp = s.match(/(\d+) ?(?:ripetizion\w*|rip|volte|reps?)\b/) || s.match(/\bripetizion\w* (\d+)/);
   if(kg) a.kg = parseFloat(kg[1]);
@@ -3626,7 +3644,8 @@ function onHeard(alts){
     if(/\b(inizi\w*|comincia\w*|cominciamo|parti\w*|partiamo|via|vai|start)\b/.test(t)){ const id=mic.pick; mic.pick=''; location.hash='allena-'+id; }
     return;
   }
-  if(!run || view!=='run') return;
+  const inCorsa = view==='corsa' && corsa;
+  if(!inCorsa && (!run || view!=='run')) return;
   let a=null, txt=alts[0]||'';
   for(const t of alts){ a = micParse(t); if(a){ txt=t; break; } }
   mic.heard = txt.trim(); paintMic();
@@ -3636,6 +3655,7 @@ function onHeard(alts){
   if(key===mic.lastKey && now-mic.lastAt < 4000) return;
   if(now-mic.lastAt < 1500 && !(a.kg!=null||a.reps!=null)) return;
   mic.lastKey = key; mic.lastAt = now;
+  if(inCorsa) return corsaDo(a);
   micDo(a);
 }
 function micSetVal(id, v){ const el=document.getElementById(id); if(el){ el.value = id==='kgIn' ? kgf(v) : v; el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),700); } return !!el; }
@@ -3650,8 +3670,9 @@ function micDo(a){
   const tap = id=>{ const b=document.getElementById(id); if(b){ b.click(); return true; } return false; };
   try{ navigator.vibrate && navigator.vibrate(30); }catch(e){}
   if(a.off){ AU.mic=false; saveAU(); micStop(); say('Comandi a voce spenti.', true); return paintMic(); }
-  if(a.help) return say("Puoi dire: fatta. Dodici ripetizioni. Quaranta chili. Salta. Pausa. Riprendi. Altri quindici secondi. Salta esercizio. Ripeti. Battito. Musica. Fine.", true);
+  if(a.help) return say(ASK.helpGym, true);
   if(a.hr) return say(hrSpoken(), true);
+  if(a.ask) return say(gymAnswer(a.ask, a), true);
   if(a.repeat){ lastSaid=''; return drawRun(); }
   if(a.music){ if(!music.list.length) return say('Non hai canzoni salvate.', true); if(a.music==='next' && typeof mNext==='function') return mNext(); return mToggle(); }
   if(a.end){ mic.endAsk = Date.now(); tap('endRun'); return say("Vuoi chiudere l'allenamento? Di' sì per confermare, o no per continuare.", true); }
@@ -3687,7 +3708,116 @@ function micDo(a){
   if(a.go && !parts.length) return say("Per saltare l'esercizio di' salta esercizio. Quando finisci la serie di' fatta.", true);
   if(parts.length) say(parts.join(', ')+'.', true);
 }
-function micWanted(){ return !!(canListen && AU.mic && document.visibilityState!=='hidden' && ((run && view==='run' && location.hash==='#allena-'+run.id) || (view==='sessions' && mic.pick))); }
+
+/* ---------------- DOMANDE AL COACH (risposte a voce) ----------------
+   Frasi corte, una idea per frase: così en.js le traduce frase per frase. */
+const nSay = (n,d=1) => (Math.round(n*10**d)/10**d).toLocaleString('it-IT',{maximumFractionDigits:d,useGrouping:false}).replace(',',' virgola ');
+const minSay = s => { s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=Math.floor(s%3600/60), x=s%60;
+  if(h) return h===1 ? (m?'un\'ora e '+m+' minuti':'un\'ora') : (m?h+' ore e '+m+' minuti':h+' ore');
+  if(m) return m===1 ? (x&&m<10?'un minuto e '+x+' secondi':'un minuto') : (x&&m<10?m+' minuti e '+x+' secondi':m+' minuti');
+  return x+' secondi'; };
+const paceSay = sp => { sp=Math.round(sp); return Math.floor(sp/60)+' minuti e '+(sp%60)+' secondi al chilometro'; };
+const ASK = {
+  time: d => d.getMinutes() ? 'Sono le '+d.getHours()+' e '+d.getMinutes()+'.' : 'Sono le '+d.getHours()+' in punto.',
+  helpGym: "Puoi dire: fatta, 12 ripetizioni, 40 chili, salta, pausa, riprendi, salta esercizio, fine. Puoi chiedere: quanto manca? Come sto andando? Che peso metto? Cosa viene dopo? Che ore sono? Battito. Alza o abbassa il volume.",
+  helpRun: "Puoi chiedere: quanto manca? A che velocità vado? Come sto andando? Quanti chilometri ho fatto? Da quanto corro? Che ore sono? Battito. Calorie. Puoi dire: pausa, riprendi, fine, obiettivo 5 chilometri, musica, alza o abbassa il volume.",
+  listGym: ['<b>«Quanto manca?»</b> · <b>«Come sto andando?»</b> · <b>«Che peso metto?»</b> · <b>«Cosa viene dopo?»</b> · <b>«Che ore sono?»</b> · <b>«Battito»</b>','<b>«Alza il volume»</b> · <b>«Abbassa la musica»</b> · <b>«Alza la voce»</b>'],
+  listRun: ['<b>«Quanto manca?»</b>: km o minuti che restano','<b>«A che velocità vado?»</b> · <b>«Come sto andando?»</b>','<b>«Quanti chilometri ho fatto?»</b> · <b>«Da quanto corro?»</b> · <b>«Calorie»</b>','<b>«Che ore sono?»</b> · <b>«Battito»</b> (con la fascia)','<b>«Obiettivo 5 chilometri»</b>: poi «quanto manca» ti dice i km che restano','<b>«Pausa»</b> · <b>«Riprendi»</b> · <b>«Fine»</b>, poi «Sì»','<b>«Musica»</b> · <b>«Alza il volume»</b> · <b>«Abbassa la musica»</b> · <b>«Alza la voce»</b>'],
+  note: '<p style="margin:6px 0 0;opacity:.8">Serve internet e il permesso del microfono. Il volume che cambio è quello della musica e della voce dell\'app: il volume generale del telefono si cambia solo con i tasti.</p>',
+  volDone: (w, v) => (w==='m'?'Volume della musica':w==='v'?'Volume della voce':'Volume')+': '+Math.round(v*100)+' per cento.',
+  volMax: "È già al massimo. Per alzare ancora usa i tasti del volume del telefono.",
+  volMin: "È già al minimo."
+};
+function setVolume(w, dir){
+  const cl=v=>Math.round(Math.max(0.1,Math.min(1,v))*10)/10, gm=()=>AU.mvol!=null?AU.mvol:1, gv=()=>AU.vvol!=null?AU.vvol:1;
+  const m0=gm(), v0=gv(), m1 = w!=='v' ? cl(m0+dir*0.2) : m0, v1 = w!=='m' ? cl(v0+dir*0.2) : v0;
+  if(m1===m0 && v1===v0) return dir>0 ? ASK.volMax : ASK.volMin;
+  AU.mvol=m1; AU.vvol=v1; VOL=m1; if(music.el && !music.el.paused) music.el.volume=VOL*DUCK; saveAU();
+  return ASK.volDone(w, w==='m'?m1:w==='v'?v1:Math.max(m1,v1));
+}
+function setsLeftInfo(){
+  let sets=0, secs=0; const now=Date.now();
+  run.plan.forEach((q,i)=>{ if(i<run.i) return; const n = i===run.i ? q.sets-run.set+1 : q.sets; sets+=n; secs += n*45 + Math.max(0, n-(i===run.plan.length-1?1:0))*(q.rest||0); });
+  if(run.restEnd>now) secs += (run.restEnd-now)/1000;
+  return {sets, ex: run.plan.length-run.i, secs};
+}
+function gymAnswer(k){
+  const p=run.plan[run.i], x=EXMAP[p.ex], now=Date.now(), total=run.plan.reduce((t,q)=>t+q.sets,0), L=setsLeftInfo();
+  if(k==='time') return ASK.time(new Date());
+  if(/^vol:/.test(k)){ const [,w,d]=k.split(':'); return setVolume(w,+d); }
+  if(k==='elapsed') return 'Ti alleni da '+minSay((now-run.start)/1000)+'.';
+  if(k==='left'){ let t=''; if(run.restEnd>now) t+='Recupero: ancora '+spokenRest(Math.ceil((run.restEnd-now)/1000))+'. ';
+    return t+(L.sets===1?'Manca 1 serie.':'Mancano '+L.sets+' serie.')+(L.ex>1?' Esercizi rimasti: '+L.ex+'.':'')+' Circa '+minSay(Math.max(60,L.secs))+'.'; }
+  if(k==='how'){ const vol=run.sets.reduce((t,z)=>t+(+z.kg||0)*(+z.reps||0),0), pct=run.sets.length/total;
+    let t='Hai fatto '+run.sets.length+' serie su '+total+'. Ti alleni da '+minSay((now-run.start)/1000)+'.';
+    if(vol) t+=' Hai sollevato '+nSay(vol,0)+' chili in tutto.';
+    return t+(pct>=0.75 ? ' Sei quasi alla fine, ultimo sforzo!' : pct>=0.5 ? ' Sei oltre la metà, continua così.' : pct>0 ? ' Buon ritmo, avanti così.' : ' Si comincia, forza!'); }
+  if(k==='weight'){ if(isTime(x)) return 'Questo esercizio si fa a tempo, senza pesi.'; const d=defaults(p, run.set);
+    return d.kg!=='' && +d.kg>0 ? 'Ti consiglio '+nSay(+d.kg)+' chili per '+d.reps+' ripetizioni.' : 'Non ho ancora i tuoi dati per questo esercizio. Parti leggero: devono restarti due o tre ripetizioni di riserva.'; }
+  if(k==='next'){ const nx=run.plan[run.i+1]; return run.set<p.sets ? 'Poi la serie '+(run.set+1)+' di '+p.sets+'.' : nx ? 'Dopo: '+EXMAP[nx.ex].name+'.' : 'È l\'ultimo esercizio della sessione.'; }
+  return 'Questa domanda vale per la corsa. In palestra chiedimi quanto manca o come sto andando.';
+}
+function runAnswer(k, a){
+  const sec=corsaSec(), m=corsa.m||0, p=corsa.plan, q=p?rpPos():null, km=nSay(m/1000,2);
+  const live = corsa.win && corsa.win.length && (Date.now()-corsa.win[corsa.win.length-1].t<5000) ? corsa.spd||0 : 0;
+  const avg = sec>5 && m>50 ? m/sec*3.6 : 0, pace = m>=200 ? sec/(m/1000) : 0, TM = p && p.tm;
+  if(k==='time') return ASK.time(new Date());
+  if(/^vol:/.test(k)){ const [,w,d]=k.split(':'); return setVolume(w,+d); }
+  if(k==='goal'){ if(!a || !a.goalM || a.goalM<200) return 'Dimmi per esempio: obiettivo 5 chilometri.'; corsa.goalM=a.goalM; corsaSave();
+    return 'Obiettivo '+nSay(a.goalM/1000)+' chilometri.'+(m<a.goalM?' Ne mancano '+nSay((a.goalM-m)/1000,2)+'.':' Lo hai già raggiunto!'); }
+  if(k==='elapsed') return 'Corri da '+minSay(sec)+'.';
+  if(k==='kcal') return 'Hai bruciato circa '+kcalOf(m)+' calorie.';
+  if(k==='dist') return TM && !m ? 'Sul tapis roulant i chilometri li vedi sul display.' : 'Hai fatto '+km+' chilometri in '+minSay(sec)+'.';
+  if(k==='speed'){
+    if(TM){ const sg=q&&!q.end?p.segs[q.i]:null, v=sg?tmSpeed(sg[0],p.vf):''; return v ? 'Per questa parte la velocità consigliata è circa '+v.replace(',5',' e mezzo')+' chilometri orari.' : 'Sul tapis roulant la velocità la vedi sul display.'; }
+    let t = corsa.paused ? 'Sei in pausa.' : live ? 'Stai andando a '+nSay(live)+' chilometri orari.' : 'In questo momento sei quasi fermo.';
+    if(pace) t += ' Media '+nSay(avg)+' chilometri orari. Passo medio '+paceSay(pace)+'.';
+    return t; }
+  if(k==='left'){
+    if(q && q.end) return 'Hai finito la seduta! Quando vuoi di\' fine.';
+    if(q){ const sg=p.segs[q.i], nx=p.segs[q.i+1];
+      if(sg[2]) return 'Mancano '+nSay(q.mLeft/1000,2)+' chilometri a questa parte.'+(nx?'':' Poi hai finito.');
+      const left=Math.max(0,rpTot(p)-q.t);
+      let t='Questa parte: ancora '+minSay(q.left)+'.';
+      if(nx){ t+=' Alla fine della seduta mancano '+minSay(left)+'.'; if(avg>3 && !TM) t+=' Al tuo ritmo sono circa '+nSay(left/3600*avg)+' chilometri.'; } else t+=' Poi hai finito.';
+      return t; }
+    if(corsa.goalM){ const r=corsa.goalM-m; if(r<=0) return 'Obiettivo raggiunto!';
+      return 'Al tuo obiettivo mancano '+nSay(r/1000,2)+' chilometri.'+(pace?' A questo passo circa '+minSay(r/1000*pace)+'.':''); }
+    return 'Corsa libera, senza traguardo. Hai fatto '+km+' chilometri. Se vuoi dimmi per esempio: obiettivo 5 chilometri.'; }
+  if(k==='how'){
+    let t = TM && !m ? 'Corri da '+minSay(sec)+'.' : 'Hai fatto '+km+' chilometri in '+minSay(sec)+'.'+(pace?' Passo medio '+paceSay(pace)+'.':'');
+    const h=motHist();
+    if(pace && h.med && m>=500){ const d=Math.round(pace-h.med);
+      t += d<-5 ? ' Sei più veloce del tuo solito di '+(-d)+' secondi al chilometro. Ottimo!' : d>5 ? ' Sei un po\' più lento del solito: va benissimo, conta arrivare in fondo.' : ' Sei in linea con il tuo solito, bravo.'; }
+    if(q && !q.end){ if(!p.segs.some(x=>x[2])) t += ' Hai fatto il '+Math.min(99,Math.round(q.t/rpTot(p)*100))+' per cento della seduta.';
+      const T=RSEG[p.segs[q.i][0]], mx=hrMax();
+      if(T.z && mx && hrLive()){ const b=hr.bpm; t += ' Battito '+b+'.'+(b>T.z[1]*mx+3 ? ' Sei sopra la zona giusta, rallenta un po\'.' : b<T.z[0]*mx-3 && ['int','sog'].includes(p.segs[q.i][0]) ? ' Puoi spingere un po\' di più.' : ' Sei nella zona giusta.'); } }
+    else if(hrLive()) t += ' '+hrSpoken();
+    if(corsa.goalM && m<corsa.goalM) t += ' Al tuo obiettivo mancano '+nSay((corsa.goalM-m)/1000,2)+' chilometri.';
+    return t; }
+  if(k==='next' && q && !q.end) return p.segs[q.i+1] ? 'Dopo questa parte: '+RSEG[p.segs[q.i+1][0]].n.toLowerCase()+'.' : 'È l\'ultima parte.';
+  return 'Durante la corsa chiedimi quanto manca, la velocità o come sto andando.';
+}
+function corsaDo(a){
+  try{ navigator.vibrate && navigator.vibrate(30); }catch(e){}
+  if(a.off){ AU.mic=false; saveAU(); micStop(); say('Comandi a voce spenti.', true); return paintMic(); }
+  if(a.help) return say(ASK.helpRun, true);
+  if(a.end){ mic.endAsk=Date.now(); paintMic(); return say("Vuoi finire e salvare la corsa? Di' sì per confermare, o no per continuare.", true); }
+  if(mic.endAsk && Date.now()-mic.endAsk < 30000){
+    if(a.yes){ mic.endAsk=0; micStop(); return corsaFinish(true); }
+    if(a.no){ mic.endAsk=0; paintMic(); return say('Ok, continuiamo.', true); }
+    return;
+  }
+  mic.endAsk=0;
+  if(a.ask) return say(runAnswer(a.ask, a), true);
+  if(a.hr) return say(hrSpoken(), true);
+  if(a.pause) return corsa.paused ? say("Sei già in pausa. Di' riprendi per ripartire.", true) : corsaPause();
+  if(a.resume || (a.go && corsa.paused)) return corsa.paused ? corsaResume() : say('Stai già correndo.', true);
+  if(a.music){ if(!music.list.length) return say('Non hai canzoni salvate.', true); if(a.music==='next') return mNext(); return mToggle(); }
+  if(a.repeat && corsa.plan){ const q=rpPos(); if(q && !q.end) return say(rpCue(corsa.plan,q.i), true); }
+  if(a.repeat || a.done) return say(runAnswer('how'), true);
+}
+function micWanted(){ return !!(canListen && AU.mic && document.visibilityState!=='hidden' && ((run && view==='run' && location.hash==='#allena-'+run.id) || (view==='sessions' && mic.pick) || (view==='corsa' && corsa))); }
 function pickSess(id){
   const s=getSess(id); if(!s) return;
   mic.pick=id; mic.heard=''; markPick();
@@ -3737,6 +3867,12 @@ function paintMic(){
   }
   if(!AU.mic && !mic.msg){ b.hidden=true; return; }
   b.hidden=false;
+  if(view==='corsa'){
+    b.innerHTML = (AU.mic ? `<b>${mic.on?'<span class="live" aria-hidden="true"></span>Ti ascolto':'🎙 Accendo il microfono…'}</b> · ${mic.endAsk?"di' «sì» per chiudere o «no»":"chiedi «quanto manca?», «come sto andando?»"}` : '')
+      + (mic.msg?`<span class="heard" style="color:var(--red)">${esc(mic.msg)}</span>`:'') + (mic.heard&&AU.mic?`<span class="heard">Ho sentito: «${esc(mic.heard)}»</span>`:'')
+      + (AU.mic?`<details><summary>Cosa posso chiedere</summary><ul>${ASK.listRun.map(x=>`<li>${x}</li>`).join('')}</ul>${ASK.note}</details>`:'');
+    return;
+  }
   const resting = run && (run.restEnd > Date.now() || run.pauseLeft!=null);
   b.innerHTML = (AU.mic ? `<b>${mic.on?'<span class="live" aria-hidden="true"></span>Ti ascolto':'🎙 Accendo il microfono…'}</b> · ${mic.hold&&!resting?"<b>in pausa</b>, di' «riprendi»":resting?"di' «salta», «pausa» o «altri 15 secondi»":"di' per esempio «12 ripetizioni, 40 chili, fatta»"}` : '')
     + (mic.msg?`<span class="heard" style="color:var(--red)">${esc(mic.msg)}</span>`:'')
@@ -3749,6 +3885,7 @@ function paintMic(){
       <li><b>«Altri 15 secondi»</b> / <b>«Meno tempo»</b></li>
       <li><b>«Ripeti»</b>: ti ridico a che punto sei · <b>«Musica»</b></li>
       <li><b>«Fine»</b>: chiude la sessione, poi <b>«Sì»</b> per confermare o <b>«No»</b> · <b>«Spegni microfono»</b></li>
+      ${ASK.listGym.map(x=>`<li>${x}</li>`).join('')}
       </ul><p style="margin:6px 0 0;opacity:.8">Serve internet e il permesso del microfono. Funziona meglio con Chrome su Android. Lo schermo deve restare acceso.</p></details>`:'');
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') micStart(); else micStop(); });
@@ -3762,7 +3899,7 @@ const mdb = {
 };
 const music = { list: store.get('songs',[]), i:0, el:null, url:null, loaded:false };
 const saveSongs = ()=>store.set('songs', music.list);
-const VOL = 1, DUCK = .3;
+let VOL = AU.mvol!=null ? AU.mvol : 1; const DUCK = .3;
 function mEl(){ if(!music.el){ const a=new Audio(); a.preload='auto'; a.onended=()=>mNext(); a.onplay=a.onpause=()=>paintMbar(); music.el=a; } return music.el; }
 async function mLoad(i){ const s=music.list[i]; if(!s) return false; const blob=await mdb.get(s.id); if(!blob) return false;
   if(music.url) URL.revokeObjectURL(music.url); music.url=URL.createObjectURL(blob); const a=mEl(); a.src=music.url; music.i=i; music.loaded=true;
@@ -4077,7 +4214,7 @@ function corsaFinish(save){
     addWorkout({id:'w'+end.toString(36), sid:'corsa', name: pl ? 'Corsa · '+RUNPLANS[pl.lv].name+' sett. '+(pl.w+1)+' giorno '+(pl.d+1)+(pl.tm?' (tapis roulant)':'') : 'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10}, ...(hs?{hr:hs}:{})});
     say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`+motEnd(m,sec)+coachEndTxt()+coachGoalTip('run'), true);
   }
-  gpsOff(); clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
+  gpsOff(); micStop(); mic.endAsk=0; clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
   corsa=null; store.del('corsa'); location.hash = save ? 'diario' : 'sessioni'; if(!save) viewCorsa();
 }
 function corsaLoop(){ clearInterval(corsaTick); corsaTick=setInterval(()=>{ rpTick(); if(view==='corsa') corsaPaint(); }, 500); }
@@ -4118,6 +4255,7 @@ function viewCorsa(){
     <div class="card cmap" id="cMap" ${TM?'hidden':''}></div>
     <div class="card" id="cLaps" hidden></div>
     <p class="note" id="cGps"></p><p class="err" id="cMsg"></p>
+    ${corsa&&canListen?`<div class="chips wrapchips qa" role="group" aria-label="Comandi a voce"><button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button></div><div class="micbar" id="micBar" hidden></div>`:''}
     <div class="cbtns">${!corsa ? `<button class="btn big" id="cGo">▶ Inizia la corsa</button>`
       : corsa.paused ? `<button class="btn big" id="cRes">▶ Riprendi</button><button class="btn ghost big" id="cEnd">■ Fine e salva</button>`
       : `<button class="btn ghost big" id="cPau">❚❚ Pausa</button><button class="btn big" id="cEnd">■ Fine e salva</button>`}</div>
@@ -4134,6 +4272,9 @@ function viewCorsa(){
   on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
   on('cDrop', ()=>{ const b=document.getElementById('cDrop'); if(b.dataset.sure){ corsaFinish(false); } else { b.dataset.sure='1'; b.textContent='Sicuro? Premi ancora per annullare'; } });
   rpBind(); corsaPaint(); hrPaint();
+  const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; saveAU(); mic.msg='';
+    if(AU.mic){ say("Comandi a voce attivi. Chiedimi per esempio: quanto manca?", true); micStart(); } else { micStop(); say('Comandi a voce spenti.', true); } paintMic(); };
+  paintMic(); if(micWanted()) micStart(); else micStop();
 }
 /* ---------------- PIANI DI CORSA PER LIVELLO (guida a tempo con voce) ----------------
    Segmenti: [tipo, secondi]. Zone in % della FC max (Tanaka). 80/20 (Seiler), 4x4 (Helgerud 2007),
@@ -5787,7 +5928,7 @@ function route(soft){
   stopPacer(); stopAnim(); dispose3D(); imgStop();
   if(explaining){ explaining=false; try{speechSynthesis.cancel()}catch(e){} }
   const h = (location.hash||'#esercizi').slice(1);
-  if(!h.startsWith('allena-')){ clearInterval(tick); if(!h.startsWith('sessioni')) micStop(); }
+  if(!h.startsWith('allena-')){ clearInterval(tick); if(!h.startsWith('sessioni') && h!=='corsa') micStop(); }
   if(mobTick && !h.startsWith('mob-')){ if(mob && mob.left==null) mob.left=Math.max(0,mob.end-Date.now()); mobStop(); }
   const go = ()=>{
     if(h.startsWith('ex-')) return viewExercise(h.slice(3));

@@ -271,6 +271,21 @@
     return s;
   }
   var RULES = [
+    // domande al coach e volume (prima delle altre regole)
+    [/\bwhat time is it\b|\bwhat'?s the time\b|\btell me the time\b/g, ' che ore sono '],
+    [/\bturn ([a-z ]{0,20}?) ?up\b/g, ' alza $1 '], [/\bturn ([a-z ]{0,20}?) ?down\b/g, ' abbassa $1 '],
+    [/\b(volume|music|voice) up\b/g, ' alza $1 '], [/\b(volume|music|voice) down\b/g, ' abbassa $1 '],
+    [/\b(turn up|raise|increase|louder)\b/g, ' alza '], [/\b(turn down|lower|decrease|quieter|softer)\b/g, ' abbassa '],
+    [/\bvoice\b/g, ' voce '],
+    [/\b(goal|target|i want to (run|do))\s*(\d+(?:\.\d+)?)\s*(k|km|kms|kilometers?|kilometres?)\b/g, ' obiettivo $3 km '],
+    [/\bhow (far|many (km|kilometers|kilometres)) (have i|did i) (run|gone|done|go)\b|\b(my )?distance\b/g, ' distanza '],
+    [/\bhow (far|much|long)( is it| is)?( still)? (left|to go|remaining|longer|further)\b|\bhow (far|much|long) (left|to go)\b|\bhow many (sets|exercises|km|kilometers|kilometres|minutes) (are )?(left|to go|remaining)\b|\bhow far to go\b/g, ' quanto manca '],
+    [/\bhow (fast|quick)\b|\bwhat'?s? (is )?my (speed|pace)\b|\b(my )?(speed|pace)\b/g, ' velocita '],
+    [/\bhow (am i|are we) (doing|going)\b|\bhow'?s it going\b|\bam i doing (ok|okay|well|good)\b/g, ' come sto andando '],
+    [/\bhow long have i been\b|\btime so far\b|\belapsed\b/g, ' da quanto '],
+    [/\bcalories\b/g, ' calorie '],
+    [/\b(what|which|how much) weight\b/g, ' che peso '],
+    [/\bwhat'?s? (is |comes )?next\b|\bwhat comes next\b/g, ' cosa viene dopo '],
     [/(\d+) point (\d+)/g, '$1.$2'], [/(\d+) and a half/g, '$1.5'], [/\bhalf\b/g, '.5'],
     [/\b(turn off|switch off|disable|stop)( the)? (microphone|mic|voice commands|listening)\b|\bmic off\b/g, ' spegni microfono '],
     [/\b(end|finish|stop|close)( the)? (workout|session|training)\b|\bthat'?s it for today\b/g, ' fine allenamento '],
