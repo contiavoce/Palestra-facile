@@ -556,6 +556,17 @@ body.noscroll{overflow:hidden}
 .crow{display:flex;align-items:center;gap:10px}.crow input{border:1px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--bg);color:var(--fg);font:inherit;font-size:16px}
 .cplans{display:grid;gap:8px}.cplan{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--sunk);border-radius:10px;padding:6px 6px 6px 12px;font-size:15px}
 .coachl{border-left:4px solid #7a3fb0}
+.cagree{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:16px;padding:12px;background:var(--sunk);border-radius:12px}.cagree input{width:22px;height:22px;flex:none;margin-top:2px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.coachc{position:relative}.coachc.off{border-left-color:var(--line);opacity:.95}.coachc a.cgo{text-decoration:none}
+.chead2,.conoff{display:flex;align-items:center;justify-content:space-between;gap:10px}.conoff>div{display:grid;gap:2px}.conoff{border-left:6px solid #7a3fb0}
+.cswitch{flex:none;display:inline-flex;align-items:center;gap:8px;border:0;background:none;cursor:pointer;font:inherit;font-weight:700;font-size:14px;color:var(--fg);padding:6px 4px}
+.cswitch i{width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;transition:background .2s}
+.cswitch i::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0004;transition:left .2s}
+.cswitch[aria-checked="true"] i{background:#7a3fb0}.cswitch[aria-checked="true"] i::after{left:21px}
+.fb{display:inline-flex;align-items:center;gap:4px;margin-left:6px;vertical-align:middle;flex-wrap:wrap}.fb button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 9px;font-size:15px;cursor:pointer;line-height:1.4}
+.fb button[aria-pressed="true"]{background:#7a3fb0;border-color:#7a3fb0}.fbmsg{font-style:normal;font-size:12px;color:var(--muted)}
+.sci p .fb{display:flex;margin:6px 0 0}
 .chip[data-img][aria-pressed="true"],.btn[data-img][aria-pressed="true"]{outline:3px solid #7a3fb0}
 </style>
 
@@ -2753,6 +2764,7 @@ function viewList(){
   const hadFocus = document.activeElement && document.activeElement.id==='q';
   $app.innerHTML = `<section class="view">
     ${runBanner()}
+    ${bkReminder()}
     ${heroHTML()}
     ${coachCardHTML()}
     ${corsaCard()}
@@ -3289,7 +3301,7 @@ function drawRun(){
       <div class="rest"><div class="eyebrow">${run.pauseLeft!=null?'Recupero in pausa':'Recupero'}</div><div class="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="90"/><circle class="arc" id="arc" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="${ringOff()}"/></svg><div class="clock" id="clock">${fmt((run.restEnd-Date.now())/1000)}</div></div>
         <div class="next">${run.set>1?`Prossima: serie ${run.set} di ${esc(x.name)}`:`Prossimo esercizio: ${esc(x.name)}`}</div>
         <div class="links"><button class="btn ghost small" id="minus" type="button">−15"</button><button class="btn ghost small" id="plus" type="button">+15"</button><button class="btn ghost small" id="pauseRest" type="button">${run.pauseLeft!=null?'▶ Riprendi':'❚❚ Pausa'}</button><button class="btn small" id="skip" type="button">Salta recupero</button></div></div>
-      ${run.cMsg&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cMsg)}</span></div>`:''}
+      ${run.cMsg&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cMsg)}</span>${run.cMsg===run.cLast?fbBtns(run.cMsg):''}</div>`:''}
       <div class="remind"><span><b>Intanto:</b> respira lento e profondo, inspira dal naso ed espira dalla bocca.</span></div>`
     : `
       <div class="pips" aria-hidden="true">${Array.from({length:p.sets},(_,k)=>`<i class="${k<run.set-1?'done':k===run.set-1?'now':''}"></i>`).join('')}</div>
@@ -3300,6 +3312,7 @@ function drawRun(){
         <div class="stepper"><label for="kgIn">Peso kg</label><div class="ctl"><button type="button" data-step="kg" data-d="-2.5" aria-label="Meno 2,5 kg">−</button><input id="kgIn" inputmode="decimal" value="${d.kg===''?'':kgf(+d.kg)}" placeholder="0"><button type="button" data-step="kg" data-d="2.5" aria-label="Più 2,5 kg">+</button></div></div>
         <div class="stepper"><label for="repsIn">Ripetizioni</label><div class="ctl"><button type="button" data-step="reps" data-d="-1" aria-label="Una in meno">−</button><input id="repsIn" inputmode="numeric" value="${d.reps}" placeholder="0"><button type="button" data-step="reps" data-d="1" aria-label="Una in più">+</button></div></div>
       </div>`}
+      ${run.cLast&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cLast)}</span>${fbBtns(run.cLast)}</div>`:''}
       <div class="remind"><span><b>Inspira</b> ${esc(x.br.in.toLowerCase())} <b>Espira</b> ${esc(x.br.out.toLowerCase())}</span></div>
       <p class="err" id="err" hidden></p>
       <button class="btn big" id="doneSet" type="button">${timeEx?'Fatto ✓':'Serie fatta ✓'}${p.rest>0 && !(run.set>=p.sets && run.i>=run.plan.length-1) ? ` <span style="font-weight:500;opacity:.75">· parte il recupero ${fmt(p.rest)}</span>` : ''}</button>
@@ -3353,7 +3366,7 @@ function drawRun(){
   }
   const qv=document.getElementById('qVoice'); if(qv) qv.onclick=()=>{ AU.voice=!AU.voice; saveAU(); qv.setAttribute('aria-pressed',String(AU.voice)); qv.textContent=AU.voice?'🔊 Voce':'🔇 Voce'; if(AU.voice) say('Voce attiva.'); else try{speechSynthesis.cancel()}catch(e){} };
   const qm=document.getElementById('qMusic'); if(qm) qm.onclick=mToggle;
-  const qc=document.getElementById('qCoach'); if(qc) qc.onclick=()=>{ COACH.on=!coachOn(); coachSave(); qc.setAttribute('aria-pressed',String(coachOn())); qc.textContent=coachOn()?'🧠 Coach':'🧠 Coach: spento'; say(coachOn()?'Coach attivo.':'Coach spento.'); };
+  const qc=document.getElementById('qCoach'); if(qc) qc.onclick=()=>{ if(!COACH.ok){ location.hash='coach-info'; return; } COACH.on=!coachOn(); coachSave(); qc.setAttribute('aria-pressed',String(coachOn())); qc.textContent=coachOn()?'🧠 Coach':'🧠 Coach: spento'; say(coachOn()?'Coach attivo.':'Coach spento.'); };
   $app.querySelectorAll('[data-img]').forEach(b=>b.onclick=()=>imgPlay(b.dataset.img, b));
   const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; saveAU(); mic.msg='';
     if(AU.mic){ say("Comandi a voce attivi. Quando finisci la serie di' fatta."); micStart(); } else { micStop(); say('Comandi a voce spenti.'); } paintMic(); };
@@ -3387,15 +3400,15 @@ function finish(){
     else if(a.vol>b.vol) prs.push([EXMAP[ex].name,`volume ${kgf(a.vol)} kg`]);
   });
   const name = run.name, nsets = run.sets.length, mk = 'post-'+mobKind(run.plan.map(q=>q.ex));
-  endRun(); view='done'; lastSaid='';
-  beep('done'); say('Allenamento completato. '+nsets+' serie in '+mins+' minuti.'+(hs?' Battito medio '+hs.avg+'.':'')+' Ottimo lavoro!'+(prs.length&&coachOn()?` Hai battuto ${prs.length===1?'un record':prs.length+' record'}!`:'')+coachEndTxt());
+  endRun(); view='done'; lastSaid=''; const cTip=coachGoalTip('gym');
+  beep('done'); say('Allenamento completato. '+nsets+' serie in '+(mins===1?'un minuto':mins+' minuti')+'.'+(hs?' Battito medio '+hs.avg+'.':'')+' Ottimo lavoro!'+(prs.length&&coachOn()?` Hai battuto ${prs.length===1?'un record':prs.length+' record'}!`:'')+coachEndTxt()+cTip);
   try{ history.replaceState(null,'','#fatto'); }catch(e){}
   backBar('Sessioni','#sessioni');
   $app.innerHTML = `<section class="rest" style="margin-top:24px"><div class="eyebrow">Fatto</div>
     <h2 style="font-size:30px;text-transform:uppercase">${esc(name)} completata</h2>
     <div class="stats"><div><b>${mins}'</b><span>Durata</span></div><div><b>${nsets}</b><span>Serie</span></div><div><b>${kgf(vol)}</b><span>Kg sollevati</span></div>${hs?`<div><b>${hs.avg}</b><span>Battito medio</span></div>`:''}</div>${hs?hrDetail(hs):''}
     ${prs.length?`<div class="prs"><div class="eyebrow">Nuovi record</div>${prs.map(p=>`<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`:''}
-    ${coachOn()?`<p class="next coachl"><b>🧠 Coach:</b> ${esc(coachEndTxt().trim())}</p>`:''}
+    ${coachOn()?`<p class="next coachl"><b>🧠 Coach:</b> ${esc((coachEndTxt()+cTip).trim())}</p>${cTip?`<p class="note fbq">Ti è utile questo consiglio? ${fbBtns(cTip)}</p>`:''}`:''}
     <p class="next">Salvata nel diario. Bevi acqua e, se hai qualche minuto, sciogliti con lo stretching guidato.</p>
     <div class="links"><a class="btn" href="#mob-${mk}">🧘 Stretching guidato · ${mobMin(MOBRMAP[mk])}'</a><a class="btn ghost" href="#diario">Vai al diario</a><a class="btn ghost" href="#sessioni">Altre sessioni</a></div></section>`;
 }
@@ -4047,7 +4060,7 @@ function corsaFinish(save){
     const end=Date.now(), hs=hrSummary(corsa.start, end);
     const pl=corsa.plan; if(pl && (pl.fin || corsaSec()>=rpTot(pl)*0.8)){ rplan.done[rpKey(pl.lv,pl.w,pl.d)]=end; rpSave(); }
     addWorkout({id:'w'+end.toString(36), sid:'corsa', name: pl ? 'Corsa · '+RUNPLANS[pl.lv].name+' sett. '+(pl.w+1)+' giorno '+(pl.d+1)+(pl.tm?' (tapis roulant)':'') : 'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10}, ...(hs?{hr:hs}:{})});
-    say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`+motEnd(m,sec)+coachEndTxt(), true);
+    say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`+motEnd(m,sec)+coachEndTxt()+coachGoalTip('run'), true);
   }
   gpsOff(); clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
   corsa=null; store.del('corsa'); location.hash = save ? 'diario' : 'sessioni'; if(!save) viewCorsa();
@@ -4346,6 +4359,7 @@ function viewDiary(){
   $app.innerHTML = `<section class="view">
     <div><div class="eyebrow">Questa settimana</div><h1 style="font-size:40px;text-transform:uppercase">${thisWeek.length} ${thisWeek.length===1?'allenamento':'allenamenti'}</h1></div>
     ${runBanner()}
+    ${bkReminder()}
     <div class="week">${days.map(d=>`<div><i class="${d.on?'on':''} ${d.today?'today':''}"></i>${d.l}</div>`).join('')}</div>
     <div class="stats"><div><b>${wSets}</b><span>Serie</span></div><div><b>${kgf(wVol)}</b><span>Kg sollevati</span></div><div><b>${log.length}</b><span>Totale sessioni</span></div></div>
     ${muscleMap(log.filter(w=>w.at>=Date.now()-7*864e5))}
@@ -4569,39 +4583,147 @@ function openPhoto(list, i){
 }
 
 /* ---------------- BACKUP ---------------- */
+/* Il backup è un file salvato sul telefono (cartella Download). Nessun server, nessun account. */
+const BK_SKIP = k => k==='pf-run' || k==='pf-corsa' || k.startsWith('pf-up-') || k==='pf-bklast' || k==='pf-bksnooze';
+const bkGet = k => { try{ return +localStorage.getItem(k)||0; }catch(e){ return 0; } };
+const bkSetT = (k,v) => { try{ localStorage.setItem(k,String(v)); }catch(e){} };
+const blobToURL = b => new Promise(res=>{ try{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>res(null); r.readAsDataURL(b); }catch(e){ res(null); } });
+const urlToBlob = async u => { try{ return await (await fetch(u)).blob(); }catch(e){ return null; } };
+async function bkBuild(){
+  const ls = {};
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.startsWith('pf-') && !BK_SKIP(k)) ls[k]=localStorage.getItem(k); } }catch(e){}
+  let photos = [];
+  try{ for(const p of await dietPhotos()){ if(!p || !p.blob) continue; const u = typeof p.blob==='string' ? p.blob : await blobToURL(p.blob); if(u) photos.push({id:p.id, at:p.at, img:u}); } }catch(e){}
+  return {app:'palestra-facile', v:2, at:Date.now(), ls, photos};
+}
+const bkName = () => { const d=new Date(), p=n=>String(n).padStart(2,'0'); return `PalestraFacile-backup-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}.json`; };
+async function bkSave(){
+  const data = await bkBuild();
+  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = bkName(); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  bkSetT('pf-bklast', Date.now());
+  return data;
+}
+async function bkShare(){
+  const data = await bkBuild();
+  const file = new File([JSON.stringify(data)], bkName(), {type:'application/json'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Backup Palestra Facile'}); bkSetT('pf-bklast', Date.now()); return true; }
+  return false;
+}
+/* unisce senza cancellare niente: aggiunge ciò che manca, le liste con id vengono unite */
+function bkMerge(cur, add){
+  if(cur===undefined || cur===null || cur==='') return add;
+  if(Array.isArray(cur) && Array.isArray(add)){
+    if(add.every(x=>x && typeof x==='object' && 'id' in x) && cur.every(x=>x && typeof x==='object' && 'id' in x)){
+      const ids = new Set(cur.map(x=>x.id)); return cur.concat(add.filter(x=>!ids.has(x.id)));
+    }
+    return cur.length ? cur : add;
+  }
+  if(typeof cur==='object' && typeof add==='object' && add && !Array.isArray(cur) && !Array.isArray(add)){
+    const out = Object.assign({}, cur); Object.keys(add).forEach(k=>{ out[k] = bkMerge(cur[k], add[k]); }); return out;
+  }
+  return cur;
+}
+async function bkRestore(d){
+  if(!d || d.app!=='palestra-facile') return 'Questo file non è un backup di Palestra Facile.';
+  let before = S.workouts.length;
+  if(d.ls){
+    Object.keys(d.ls).forEach(k=>{ if(!k.startsWith('pf-') || BK_SKIP(k)) return;
+      let cur=null, add=null; try{ cur = localStorage.getItem(k); }catch(e){}
+      if(cur===null){ try{ localStorage.setItem(k, d.ls[k]); }catch(e){} return; }
+      try{ cur = JSON.parse(cur); add = JSON.parse(d.ls[k]); }catch(e){ return; }
+      let m = bkMerge(cur, add); if(k==='pf-workouts' && Array.isArray(m)) m = m.slice().sort((a,b)=>(b.at||0)-(a.at||0));
+      try{ localStorage.setItem(k, JSON.stringify(m)); }catch(e){}
+    });
+    if(Array.isArray(d.photos) && d.photos.length){
+      try{ const list = await dietPhotos(), ids = new Set(list.map(p=>p.id));
+        for(const p of d.photos){ if(p && p.id && !ids.has(p.id) && p.img){ const b = await urlToBlob(p.img); if(b) list.push({id:p.id, at:p.at, blob:b}); } }
+        await vdb.set(photoKey, list); }catch(e){}
+    }
+    let after = before; try{ after = (JSON.parse(localStorage.getItem('pf-workouts'))||[]).length; }catch(e){}
+    bkSetT('pf-bklast', Date.now());
+    return {ok:true, n:after-before};
+  }
+  /* vecchio backup copiato come testo (versione 1) */
+  let nw=0; const have = new Set(S.workouts.map(w=>w.id));
+  (d.workouts||[]).forEach(w=>{ if(w && w.id && !have.has(w.id)){ addWorkout(w); nw++; } });
+  S.workouts.sort((a,b)=>b.at-a.at); store.set('workouts',S.workouts);
+  const rids = new Set(S.routines.map(r=>r.id)); (d.routines||[]).forEach(r=>{ if(r && r.id && !rids.has(r.id)) S.routines.push(r); }); saveRoutines();
+  Object.assign(S.videos, d.videos||{}); saveVideos();
+  if(d.coach && !whyTxt() && !(COACH.days||[]).length){ Object.assign(COACH, d.coach); coachSave(); }
+  if(d.body){ const ids=new Set((S.body.entries||[]).map(e=>e.id)); S.body.entries=(S.body.entries||[]).concat((d.body.entries||[]).filter(e=>e&&!ids.has(e.id)));
+    ['height','goal','age'].forEach(k=>{ if(!S.body[k] && d.body[k]) S.body[k]=d.body[k]; }); saveBody(); }
+  if(d.food && !Object.keys(S.food.days||{}).length && !S.food.notes){ S.food=Object.assign({days:{},pro:{},notes:'',water:{}}, d.food); saveFood(); }
+  return {ok:true, n:nw};
+}
+function bkAgo(){ const t=bkGet('pf-bklast'); if(!t) return 'Non hai ancora fatto nessun backup.';
+  const g=Math.floor((Date.now()-t)/864e5); return 'Ultimo backup: '+(g<1?'oggi':g===1?'ieri':g+' giorni fa')+'.'; }
 function backupHTML(){
-  return `<section class="card"><h2>Backup dei dati</h2>
-    <p class="note">Copia il backup e incollalo in un posto sicuro (una nota o un messaggio a te stesso). Se cambi telefono, lo incolli qui sotto e ritrovi tutto. I video caricati non sono inclusi.</p>
-    <div class="links"><button class="btn ghost small" type="button" id="bkCopy">Copia backup</button></div>
-    <textarea id="bkText" rows="3" placeholder="Incolla qui un backup per ripristinarlo"></textarea>
-    <div class="links"><button class="btn small" type="button" id="bkLoad">Ripristina dal backup</button></div>
+  return `<section class="card" id="backup"><h2>Backup dei dati</h2>
+    <p class="note">Il backup è un file che resta <b>sul tuo telefono</b>, nella cartella <b>Download</b>. Non va su internet e non costa niente. Dentro ci sono allenamenti, corse, battiti, misure del corpo, schede, alimentazione e mental coach. I video e le canzoni caricati non sono inclusi.</p>
+    <p class="note" id="bkAgo"><b>${bkAgo()}</b></p>
+    <div class="links"><button class="btn" type="button" id="bkSave">⬇ Salva backup sul telefono</button></div>
+    <div class="links"><button class="btn ghost small" type="button" id="bkShare">Invialo a te stesso (WhatsApp, email, Drive)</button></div>
+    <div class="links" style="margin-top:6px"><button class="btn ghost" type="button" id="bkOpen">↺ Ripristina da un file di backup</button>
+      <input type="file" id="bkFile" hidden></div>
     <p class="note" id="bkMsg" aria-live="polite"></p>
+    <details><summary class="note">Hai un vecchio backup copiato come testo?</summary>
+      <textarea id="bkText" rows="3" placeholder="Incolla qui il testo del backup"></textarea>
+      <div class="links"><button class="btn small" type="button" id="bkLoad">Ripristina dal testo</button></div></details>
   </section>`;
+}
+function bkDone(r){
+  const m=document.getElementById('bkMsg');
+  if(typeof r==='string'){ if(m) m.textContent=r; return; }
+  try{ sessionStorage.setItem('pf-bkmsg', `Ripristino fatto: ${r.n} ${r.n===1?'allenamento aggiunto':'allenamenti aggiunti'}. Niente di quello che avevi è stato cancellato.`); }catch(e){}
+  location.hash='corpo'; location.reload();
 }
 function bindBackup(){
   const msg = t => { const m=document.getElementById('bkMsg'); if(m) m.textContent=t; };
-  document.getElementById('bkCopy').onclick = ()=>{
-    const txt = JSON.stringify({app:'palestra-facile', v:1, at:Date.now(), routines:S.routines, videos:S.videos, workouts:S.workouts, body:S.body, food:S.food, coach:COACH});
-    const ta = document.getElementById('bkText');
-    const fallback = ()=>{ ta.value = txt; ta.focus(); ta.select(); msg('Il testo del backup è nel riquadro ed è selezionato: copialo a mano.'); };
-    try{ navigator.clipboard.writeText(txt).then(()=>msg('Backup copiato. Incollalo in una nota per conservarlo.'), fallback); }catch(e){ fallback(); }
+  try{ const t=sessionStorage.getItem('pf-bkmsg'); if(t){ sessionStorage.removeItem('pf-bkmsg'); msg(t); } }catch(e){}
+  document.getElementById('bkSave').onclick = async ()=>{
+    msg('Preparo il file…');
+    try{ await bkSave(); msg(`Fatto. Il file "${bkName()}" è nella cartella Download del telefono. Tienilo: serve se cambi telefono o cancelli i dati.`);
+      const a=document.getElementById('bkAgo'); if(a) a.innerHTML='<b>'+bkAgo()+'</b>'; }
+    catch(e){ msg('Non sono riuscito a salvare il file. Prova con "Invialo a te stesso".'); }
   };
-  document.getElementById('bkLoad').onclick = ()=>{
+  document.getElementById('bkShare').onclick = async ()=>{
+    try{ if(await bkShare()){ msg('Backup inviato.'); const a=document.getElementById('bkAgo'); if(a) a.innerHTML='<b>'+bkAgo()+'</b>'; }
+      else msg('Questo telefono non permette di inviare file da qui. Usa "Salva backup sul telefono".'); }
+    catch(e){ if(e && e.name!=='AbortError') msg('Invio non riuscito. Usa "Salva backup sul telefono".'); }
+  };
+  const inp = document.getElementById('bkFile');
+  document.getElementById('bkOpen').onclick = ()=>{ inp.value=''; inp.click(); };
+  inp.onchange = async ()=>{
+    const f = inp.files && inp.files[0]; if(!f) return;
+    msg('Leggo il backup…');
+    let d=null; try{ d = JSON.parse(await f.text()); }catch(e){}
+    bkDone(await bkRestore(d));
+  };
+  document.getElementById('bkLoad').onclick = async ()=>{
     let d; try{ d = JSON.parse(document.getElementById('bkText').value.trim()); }catch(e){ d=null; }
     if(!d || d.app!=='palestra-facile'){ msg('Questo testo non è un backup di Palestra Facile. Incolla tutto il testo copiato.'); return; }
-    let nw=0;
-    const have = new Set(S.workouts.map(w=>w.id));
-    (d.workouts||[]).forEach(w=>{ if(w && w.id && !have.has(w.id)){ addWorkout(w); nw++; } });
-    S.workouts.sort((a,b)=>b.at-a.at); store.set('workouts',S.workouts);
-    const rids = new Set(S.routines.map(r=>r.id)); (d.routines||[]).forEach(r=>{ if(r && r.id && !rids.has(r.id)) S.routines.push(r); }); saveRoutines();
-    Object.assign(S.videos, d.videos||{}); saveVideos();
-    if(d.coach && !whyTxt() && !(COACH.days||[]).length){ Object.assign(COACH, d.coach); coachSave(); }
-    if(d.body){ const ids=new Set((S.body.entries||[]).map(e=>e.id)); S.body.entries=(S.body.entries||[]).concat((d.body.entries||[]).filter(e=>e&&!ids.has(e.id)));
-      ['height','goal','age'].forEach(k=>{ if(!S.body[k] && d.body[k]) S.body[k]=d.body[k]; }); saveBody(); }
-    if(d.food && !Object.keys(S.food.days||{}).length && !S.food.notes){ S.food=Object.assign({days:{},pro:{},notes:'',water:{}}, d.food); saveFood(); }
-    keepScroll(viewBody); const m=document.getElementById('bkMsg'); if(m) m.textContent = `Ripristino fatto: ${nw} allenamenti aggiunti.`;
+    bkDone(await bkRestore(d));
   };
 }
+/* promemoria gentile: ogni 2 settimane, solo se ci sono dati da salvare */
+function bkReminder(){
+  const n = S.workouts.length + ((S.body&&S.body.entries)||[]).length; if(n<2) return '';
+  const now=Date.now(), last=bkGet('pf-bklast'), snooze=bkGet('pf-bksnooze');
+  if(now<snooze) return '';
+  if(last && now-last < 14*864e5) return '';
+  return `<div class="banner" id="bkBanner"><span><b>Fai un backup dei tuoi dati</b><br>${last?'L\'ultimo è di più di 2 settimane fa.':'Così non li perdi se cambi telefono.'} Resta sul tuo telefono.</span>
+    <span class="minor links"><button class="btn small" type="button" data-bksave>Salva ora</button><button class="btn ghost small" type="button" data-bklater>Più tardi</button></span></div>`;
+}
+document.addEventListener('click', async e=>{
+  const b = e.target.closest && e.target.closest('[data-bksave],[data-bklater]'); if(!b) return;
+  const ban = document.getElementById('bkBanner');
+  if(b.hasAttribute('data-bklater')){ bkSetT('pf-bksnooze', Date.now()+7*864e5); if(ban) ban.remove(); return; }
+  try{ await bkSave(); if(ban) ban.innerHTML='<span><b>Backup salvato</b><br>Il file è nella cartella Download del telefono.</span>'; setTimeout(()=>{ const x=document.getElementById('bkBanner'); if(x) x.remove(); }, 6000); }
+  catch(err){ location.hash='corpo'; }
+});
 
 /* ---------------- NAVIGAZIONE ---------------- */
 let explaining=false;
@@ -4851,7 +4973,7 @@ const COACH_IF = [
 const GG = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'], GGL = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
 const COACH = Object.assign({on:true, why:'', goal:3, days:[], time:'', place:'palestra', plans:[], ph:{m1:1,m2:1,m3:1,m4:1,m6:1,t1:1,t3:1,r1:1,r2:1}, mine:[], created:Date.now()}, store.get('coach',{}));
 const coachSave = ()=>store.set('coach', COACH);
-const coachOn = ()=> COACH.on!==false;
+const coachOn = ()=> COACH.on!==false && !!COACH.ok; // si attiva solo dopo aver letto e accettato le informazioni
 const DAY = 864e5;
 const dayStart = t => { const d=new Date(t); d.setHours(0,0,0,0); return d.getTime(); };
 const monday = t => { const d=new Date(dayStart(t)); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.getTime(); };
@@ -4874,7 +4996,21 @@ function coachStats(){
 }
 const coachPicked = w => COACH_PH.filter(p=>COACH.ph[p.id] && (p.w==='all'||p.w===w)).map(p=>p.t).concat((COACH.mine||[]).filter(Boolean));
 let coachLastPh = '';
-function coachPhrase(w){ const a = coachPicked(w).filter(t=>t!==coachLastPh); if(!a.length) return coachLastPh||''; const t=a[Math.floor(Math.random()*a.length)]; coachLastPh=t; return t; }
+/* il coach impara da te: 👍/👎 su frasi e consigli. Punteggio da −3 a +3 per ogni testo, salvato in COACH.fb (anche nel backup).
+   Le frasi con 👍 escono più spesso (peso doppio per ogni punto), con 2 👎 non vengono più usate. */
+const fbKey = t => { let h=0; const x=String(t).trim(); for(let i=0;i<x.length;i++) h=(h*31+x.charCodeAt(i))|0; return 'k'+(h>>>0).toString(36); };
+const fbScore = t => ((COACH.fb||{})[fbKey(t)]||0);
+function fbPick(list, avoid){ let a=list.filter(t=>fbScore(t)>-2); if(!a.length) a=list.slice(); if(a.length>1 && avoid) a=a.filter(t=>t!==avoid)||a;
+  if(!a.length) return ''; const w=a.map(t=>Math.pow(2, Math.max(-1,Math.min(2,fbScore(t))))), tot=w.reduce((x,y)=>x+y,0); let r=Math.random()*tot;
+  for(let i=0;i<a.length;i++){ r-=w[i]; if(r<=0) return a[i]; } return a[a.length-1]; }
+function fbBtns(t){ if(!t) return ''; const k=fbKey(t), v=fbScore(t);
+  return `<span class="fb" data-fbk="${k}" data-fbt="${esc(String(t).trim())}"><button type="button" data-fb="1" aria-pressed="${v>0}" aria-label="Mi piace">👍</button><button type="button" data-fb="-1" aria-pressed="${v<0}" aria-label="Non mi piace">👎</button><em class="fbmsg" aria-live="polite"></em></span>`; }
+document.addEventListener('click', e=>{ const b=e.target.closest && e.target.closest('[data-fb]'); if(!b) return; const w=b.closest('[data-fbk]'); if(!w) return;
+  e.preventDefault(); e.stopPropagation(); COACH.fb=COACH.fb||{}; const k=w.dataset.fbk, d=+b.dataset.fb, v=Math.max(-3,Math.min(3,(COACH.fb[k]||0)+d));
+  if(v) COACH.fb[k]=v; else delete COACH.fb[k]; COACH.fbt=COACH.fbt||{}; COACH.fbt[k]=w.dataset.fbt; coachSave();
+  w.querySelector('[data-fb="1"]').setAttribute('aria-pressed',String(v>0)); w.querySelector('[data-fb="-1"]').setAttribute('aria-pressed',String(v<0));
+  const m=w.querySelector('.fbmsg'); if(m) m.textContent = d>0 ? 'Ok, lo userò di più' : v<=-2 ? 'Ok, non lo userò più' : 'Ok, lo userò meno'; if(view==='coach') setTimeout(()=>{ if(view==='coach') keepScroll(viewCoach); }, 1200); }, true);
+function coachPhrase(w){ const t=fbPick(coachPicked(w), coachLastPh); if(!t) return coachLastPh||''; coachLastPh=t; if(run) run.cLast=t; return t; }
 const whyTxt = () => { const t=String(COACH.why||'').trim().replace(/[.!]+$/,''); return t ? t[0].toLowerCase()+t.slice(1) : ''; };
 function coachWelcome(st){ if(st.gap<5) return '';
   return st.gap>=14 ? 'Bentornato! È passato un po\' di tempo, ed è normale: conta che sei qui. Oggi riparti con calma, anche con pesi più leggeri.'
@@ -4905,7 +5041,7 @@ function coachRestTxt(rec){ if(!coachOn() || !run) return '';
   const x=EXMAP[rec.ex]; if(x && !isTime(x) && rec.reps){ const h=histFor(rec.ex), last=h[h.length-1];
     const k = run.sets.filter(s=>s.ex===rec.ex).length-1, prev = last && (last.sets[k]||null);
     run.cBet = run.cBet||{};
-    if(prev && !run.cBet[rec.ex] && ((rec.kg||0)>(prev.kg||0) || ((rec.kg||0)===(prev.kg||0) && rec.reps>prev.reps))){ run.cBet[rec.ex]=1; return 'Meglio della volta scorsa, stai migliorando!'; } }
+    if(prev && !run.cBet[rec.ex] && ((rec.kg||0)>(prev.kg||0) || ((rec.kg||0)===(prev.kg||0) && rec.reps>prev.reps))){ run.cBet[rec.ex]=1; run.cLast=''; return 'Meglio della volta scorsa, stai migliorando!'; } }
   run.cN=(run.cN||0)+1; if(run.cN%3===0) return coachPhrase('gym');
   return ''; }
 
@@ -4929,30 +5065,173 @@ function imgPlay(kind, btn){ if(imgOn===kind){ imgStop(); return; } imgStop(); i
   let at=0; IMG_SCRIPT[kind](whyTxt()).forEach(([t,p],i,a)=>{ imgT.push(setTimeout(()=>{ if(imgOn!==kind) return; say(t,true); if(i===a.length-1){ imgOn=''; imgT.push(setTimeout(()=>{ if(btn) btn.setAttribute('aria-pressed','false'); }, 3500)); } }, at)); at += t.length*68 + 900 + p*1000; });
 }
 
+function coachSwitch(){ const on=coachOn(); return `<button class="cswitch" type="button" role="switch" aria-checked="${on}" data-coachsw><i aria-hidden="true"></i><span>${on?'Attivo':'Spento'}</span></button>`; }
+document.addEventListener('click', e=>{ const b=e.target.closest && e.target.closest('[data-coachsw]'); if(!b) return; e.preventDefault(); e.stopPropagation();
+  if(!coachOn() && !COACH.ok){ location.hash='coach-info'; return; }
+  COACH.on=!coachOn(); coachSave(); if(!COACH.on){ imgStop(); try{speechSynthesis.cancel()}catch(e){} }
+  say(COACH.on?'Mental coach attivo. Ci sono io con te.':'Mental coach spento.', true); if(view==='run') drawRun(); else route(true); }, true);
 function coachCardHTML(){
   const st = coachStats(), set = !!(whyTxt() || (COACH.days||[]).length);
-  if(!coachOn()) return '';
+  const head = `<div class="chead2"><b>🧠 Mental coach${coachOn()&&COACH.obj&&OBJ[COACH.obj]?` · ${OBJ[COACH.obj].n}`:''}</b>${coachSwitch()}</div>`;
+  if(!coachOn()) return `<div class="card ccard coachc off"><div>${head}<span>${COACH.ok?"Spento: niente frasi a voce né consigli durante l'allenamento. Tocca l'interruttore per riattivarlo.":"Una voce che ti motiva e consigli basati sugli studi. Tocca l'interruttore: prima ti spiego come funziona."}</span><a class="cgo" href="#coach">Impostazioni del coach →</a></div></div>`;
   const pct = Math.min(100, Math.round(st.week/st.goal*100));
   const today = st.planned && !st.doneToday ? `Oggi è uno dei tuoi giorni${COACH.time?` · ore ${esc(COACH.time)}`:''}${COACH.place?` · ${COACH.place==='casa'?'a casa':COACH.place==='corsa'?'corsa':'in palestra'}`:''}.` : '';
   const wb = coachWelcome(st);
-  return `<a class="card ccard coachc" href="#coach"><div><b>🧠 Mental coach</b>
+  return `<div class="card ccard coachc"><div>${head}
     ${set ? `<span>${st.week>=st.goal?`Obiettivo della settimana raggiunto: ${st.week} su ${st.goal} 🎉`:`Questa settimana ${st.week} su ${st.goal} allenamenti`}</span>
       <i class="cbar" aria-hidden="true"><u style="width:${pct}%"></u></i>
       ${wb?`<span class="cwb">${esc(wb)}</span>`:today?`<span class="cwb">${today}</span>`:''}`
     : `<span>Scegli il tuo perché, l'obiettivo della settimana e le frasi che ti caricano.</span>`}
-    <i class="cgo">${set?'Apri il coach':'Prepara il coach'} →</i></div></a>`;
+    <a class="cgo" href="#coach">${set?'Apri il coach':'Prepara il coach'} →</a></div></div>`;
 }
 
 const SCI_COACH = `<div class="sci">
   <p>${pill('s')}<b>Le frasi che ti dici funzionano.</b> In 32 studi il dialogo interiore ha migliorato la prestazione sportiva. Le frasi di carica aiutano negli sforzi di forza e resistenza, quelle sulla tecnica nei movimenti precisi. In un esperimento i ciclisti allenati a dirsi frasi motivanti hanno resistito il 18% in più.<cite>Hatzigeorgiadis e coll., Perspect Psychol Sci 2011 (meta-analisi) · Blanchfield e coll., Med Sci Sports Exerc 2014</cite></p>
-  <p>${pill('s')}<b>Piani "se… allora…".</b> Decidere prima quando, dove e cosa fare se c'è un ostacolo aiuta a passare dall'intenzione ai fatti, anche per l'attività fisica.<cite>Gollwitzer e Sheeran, Adv Exp Soc Psychol 2006 (meta-analisi di 94 studi) · Bélanger-Gravel e coll., Health Psychol Rev 2013 (meta-analisi)</cite></p>
+  <p>${pill('s')}<b>Piani "se… allora…".</b> Decidere prima quando, dove e cosa fare se c'è un ostacolo aiuta a passare dall'intenzione ai fatti, anche per l'attività fisica. Immaginare per qualche secondo il momento in cui metti in pratica il piano lo rende ancora più efficace.<cite>Gollwitzer e Sheeran, Adv Exp Soc Psychol 2006 (meta-analisi di 94 studi) · Bélanger-Gravel e coll., Health Psychol Rev 2013 (meta-analisi) · Divine e coll., Br J Health Psychol 2025</cite></p>
   <p>${pill('m')}<b>Obiettivi piccoli e misurabili.</b> Un numero preciso di allenamenti a settimana, con il controllo dei progressi, aumenta l'attività fisica più di un generico "farò del mio meglio".<cite>McEwan e coll., Health Psychol Rev 2016 (meta-analisi) · Michie e coll., Health Psychol 2009</cite></p>
-  <p>${pill('m')}<b>66 giorni per un'abitudine.</b> In media servono circa 66 giorni perché un comportamento diventi automatico, ma va da 18 a 254 giorni. Saltare una volta non cambia il risultato. Nei nuovi iscritti in palestra l'abitudine si formava dopo circa 6 settimane con almeno 4 allenamenti a settimana.<cite>Lally e coll., Eur J Soc Psychol 2010 · Kaushal e Rhodes, J Behav Med 2015</cite></p>
+  <p>${pill('m')}<b>Circa 2 mesi per un'abitudine.</b> Gli studi più recenti confermano: la metà delle persone ci mette 59–66 giorni, ma c'è chi ne impiega molti di più (fino a 335). Allenarsi alla stessa ora e nello stesso posto aiuta. Saltare una volta non cambia il risultato. Nei nuovi iscritti in palestra l'abitudine si formava dopo circa 6 settimane con almeno 4 allenamenti a settimana.<cite>Singh e coll., Healthcare 2024 (revisione sistematica e meta-analisi) · Lally e coll., Eur J Soc Psychol 2010 · Kaushal e Rhodes, J Behav Med 2015</cite></p>
   <p>${pill('m')}<b>Visualizzazione.</b> Immaginare il movimento prima di farlo migliora la prestazione e un po' anche la forza, soprattutto insieme all'allenamento vero.<cite>Simonsmeier e coll., Sport Exerc Perform Psychol 2021 (meta-analisi) · Slimani e coll., J Hum Kinet 2016</cite></p>
   <p>${pill('m')}<b>Gentilezza dopo uno stop.</b> Chi si tratta con comprensione dopo un errore riprende più facilmente le buone abitudini; sgridarsi non aiuta.<cite>Sirois, Kitner e Hirsch, Health Psychol 2015 (meta-analisi)</cite></p>
+  <p>${pill('m')}<b>Il coach impara da te.</b> Quando dai 👍 o 👎 il coach usa di più le frasi e i consigli che senti tuoi. Sentire di poter scegliere aumenta la motivazione e la costanza nell'attività fisica.<cite>Ntoumanis e coll., Health Psychol Rev 2021 (meta-analisi) · Teixeira e coll., Int J Behav Nutr Phys Act 2012</cite></p>
   <p>${pill('w')}<b>Dirsi "tu".</b> Parlarsi in seconda persona ("ce la fai") sembra aiutare un po' più di "ce la faccio": per questo le frasi del coach usano il tu.<cite>Kross e coll., J Pers Soc Psychol 2014 · Dolcos e Albarracín, Eur J Soc Psychol 2014</cite></p>
 </div>`;
 
+/* ---------------- COACH: consigli in base al fisico e all'obiettivo ---------------- */
+const OBJ = {
+ dim:{n:'Dimagrire', i:'⚖️'}, mus:{n:'Più muscoli', i:'💪'}, for:{n:'Più forza', i:'🏋️'}, res:{n:'Resistenza', i:'🏃'}, sal:{n:'Salute e benessere', i:'❤️'}
+};
+function bodyNow(){
+  const E=(S.body.entries||[]).slice().sort((a,b)=>a.at-b.at), last=k=>{ for(let i=E.length-1;i>=0;i--) if(E[i][k]!=null) return E[i][k]; return null; };
+  const kg=last('weight'), h=num(S.body.height), age=num(S.body.age), waist=last('waist');
+  const bmi = kg&&h ? kg/((h/100)**2) : 0;
+  // per le persone con IMC sopra 30 le proteine si calcolano su un peso di riferimento (IMC 25), non sul peso totale
+  const ref = kg ? (bmi>30 && h ? 25*(h/100)**2 : kg) : 0;
+  // andamento del peso: media dell'ultima settimana contro le pesate di 2–5 settimane prima
+  const W=E.filter(e=>e.weight!=null), now=Date.now(); let rate=null, weeks=0;
+  const rec=W.filter(e=>e.at>=now-8*DAY), old=W.filter(e=>e.at<now-13*DAY && e.at>=now-36*DAY);
+  if(rec.length && old.length){ const a=rec.reduce((s,e)=>s+e.weight,0)/rec.length, b=old.reduce((s,e)=>s+e.weight,0)/old.length;
+    const ta=rec.reduce((s,e)=>s+e.at,0)/rec.length, tb=old.reduce((s,e)=>s+e.at,0)/old.length; weeks=(ta-tb)/(7*DAY);
+    if(weeks>=1.5) rate=(a-b)/b*100/weeks; }
+  return {kg, h, age, waist, bmi, ref, rate, weeks, whtr: waist&&h ? waist/h : 0};
+}
+const g0 = n => Math.round(n/5)*5;
+function protRange(b, obj){ if(!b.ref) return null; const old=b.age>=65;
+  const r = obj==='mus'||obj==='for' ? [1.6,2.2] : obj==='dim' ? [1.2,1.6] : obj==='res' ? [1.2,1.6] : old ? [1.0,1.2] : [0.8,1.0];
+  return {r, g:[g0(b.ref*r[0]), g0(b.ref*r[1])], meal: Math.max(20, Math.min(45, g0(b.ref*0.4)))}; }
+// muscoli principali sotto le 10 serie negli ultimi 7 giorni
+function lagMuscles(){ const ws=S.workouts.filter(w=>!w.run && w.at>=Date.now()-7*DAY); if(!ws.length) return null;
+  const c=zoneSets(ws); return MZ.filter(z=>z[3] && c[z[0]]<10).map(z=>[z[1], Math.round(c[z[0]])]).sort((a,b)=>a[1]-b[1]); }
+const kgs = n => kgf(Math.round(n*10)/10);
+function coachAdvice(){
+  const o=COACH.obj, b=bodyNow(), P=protRange(b,o), A=[], D=[];
+  const it=(k,t,x,c)=>A.push({k,t,x,c});
+  // ---- cosa vedo dai tuoi dati
+  if(!b.kg || !b.h) D.push({t:'Mancano dei dati', x:`Scrivi peso e altezza nella scheda <a href="#corpo">Corpo</a>${b.waist?'':' (meglio anche il giro vita)'}: così i consigli usano i tuoi numeri.`});
+  if(b.bmi) D.push({t:`IMC ${kgs(b.bmi)}`, x: (b.bmi<18.5?'Sotto il normale.':b.bmi<25?'Nella norma.':b.bmi<30?'Sopra il normale.':'Obesità.')+' L\'IMC non distingue muscoli e grasso: chi ha molti muscoli può risultare "sovrappeso". Il giro vita dice di più.'});
+  if(b.whtr) D.push(b.whtr>=0.5 ? {t:`Giro vita ${kgs(b.waist)} cm: alto per la tua altezza`, x:`È più della metà dell'altezza (rapporto ${(Math.round(b.whtr*100)/100).toLocaleString('it-IT')}). Indica grasso sulla pancia, legato a più rischio per cuore e diabete. L'obiettivo è stare sotto ${Math.round(b.h/2)} cm. L'attività aerobica riduce il grasso della pancia anche quando il peso cambia poco.`, k:'s', c:'Ashwell e coll., Obes Rev 2012 (meta-analisi) · NICE 2022 · Vissers e coll., PLoS One 2013 (meta-analisi)'}
+    : {t:`Giro vita ${kgs(b.waist)} cm: nella norma`, x:`È meno della metà della tua altezza (${Math.round(b.h/2)} cm): un buon segnale per la salute.`, k:'s', c:'Ashwell e coll., Obes Rev 2012 (meta-analisi) · NICE 2022'});
+  if(o==='dim' && b.rate!=null){ const r=b.rate, kgw=b.kg*Math.abs(r)/100;
+    D.push(r < -1.05 ? {t:`Stai perdendo ${kgs(kgw)} kg a settimana`, x:'È più dell\'1% del peso a settimana: troppo veloce. Si rischia di perdere anche muscolo e di riprendere peso. Parlane con il tuo nutrizionista.', k:'m', c:'Garthe e coll., Int J Sport Nutr Exerc Metab 2011 · Helms e coll., J Int Soc Sports Nutr 2014'}
+      : r <= -0.4 ? {t:`Stai perdendo ${kgs(kgw)} kg a settimana`, x:'Ritmo giusto (tra 0,5 e 1% del peso a settimana): perdi grasso tenendo i muscoli. Continua così!', k:'m', c:'Garthe e coll., Int J Sport Nutr Exerc Metab 2011 · Helms e coll., J Int Soc Sports Nutr 2014'}
+      : {t: r>0.15?'Il peso sta salendo':'Il peso è fermo', x:`Nelle ultime ${Math.round(b.weeks)} settimane ${r>0.15?'il peso è salito':'il peso non è sceso'}. È normale che oscilli di giorno in giorno: pesati 2–3 volte a settimana, la mattina. Se resta così per 3 settimane, rivedi il piano con il nutrizionista.`, k:'m', c:'Helms e coll., J Int Soc Sports Nutr 2014'}); }
+  else if(o==='dim' && b.kg) D.push({t:'Andamento del peso', x:'Pesati 2–3 volte a settimana, la mattina a digiuno, nella scheda Corpo: dopo 2 settimane ti dico se stai andando al ritmo giusto.'});
+  if(o==='mus'||o==='for'||o==='sal'){ const L=lagMuscles(); if(L && L.length) D.push({t:'Muscoli rimasti indietro questa settimana', x:L.slice(0,4).map(([n,s])=>`${n} ${s}`).join(', ')+(L.length>4?` e altri ${L.length-4}`:'')+'. Per crescere ne servono almeno 10 a settimana per muscolo. Vedi la mappa nel <a href="#diario">Diario</a>.', k:'s', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi) · Pelland e coll., Sports Med 2025 (meta-analisi)'});
+    else if(L) D.push({t:'Tutti i muscoli principali allenati', x:'Ogni muscolo principale ha almeno 10 serie negli ultimi 7 giorni. Ottimo lavoro!', k:'s', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi)'}); }
+  // ---- consigli per l'obiettivo
+  const prot = P ? `Per te: circa <b>${P.g[0]}–${P.g[1]} g di proteine al giorno</b> (${String(P.r[0]).replace('.',',')}–${String(P.r[1]).replace('.',',')} g per kg${b.bmi>30?' del peso di riferimento, non di quello totale':''}), divise in 3–4 pasti da circa ${P.meal} g.` : 'Scrivi il tuo peso in Corpo e ti calcolo i grammi.';
+  const pc = ' Con malattie dei reni chiedi prima al medico. Il piano dei pasti lo fa il nutrizionista.';
+  if(o==='mus'){
+    it('s','Almeno 10 serie a settimana per muscolo','Più serie fanno crescere di più, fino a circa 20 a settimana per muscolo. Sotto le 10 la crescita è minore.','Schoenfeld e coll., J Sports Sci 2017 (meta-analisi) · Pelland e coll., Sports Med 2025 (meta-analisi)');
+    it('s','Vicino alla fatica vera','Le ripetizioni possono andare da 6 a 30: conta arrivare vicino al limite, con 1–3 ripetizioni ancora in riserva.','Schoenfeld e coll., J Strength Cond Res 2017 (meta-analisi) · Refalo e coll., Sports Med 2023 (meta-analisi)');
+    it('m','Ogni muscolo 2 volte a settimana','Dividere le serie di un muscolo in almeno 2 giorni aiuta a farne abbastanza senza sedute lunghissime. A parità di serie totali il risultato è simile: scegli come ti viene comodo.','Schoenfeld e coll., Sports Med 2016 (meta-analisi) · Schoenfeld e coll., J Sports Sci 2019');
+    it('s','Proteine',prot+pc,'Morton e coll., Br J Sports Med 2018 (meta-analisi di 49 studi) · Schoenfeld e Aragon, J Int Soc Sports Nutr 2018');
+  } else if(o==='for'){
+    it('s','Carichi pesanti','Per la forza massima servono carichi pesanti, oltre l\'80% del massimale: da 1 a 6 ripetizioni. Anche i carichi leggeri fanno crescere il muscolo, ma meno la forza.','Schoenfeld e coll., J Strength Cond Res 2017 (meta-analisi) · Lopez e coll., Med Sci Sports Exerc 2021 (meta-analisi)');
+    it('m','Recupero lungo','Tra le serie pesanti recupera 2–3 minuti o più: con recuperi brevi la forza cresce meno.','Schoenfeld e coll., J Strength Cond Res 2016 · Grgic e coll., Eur J Sport Sci 2017');
+    it('m','Ripeti gli esercizi principali','Fai gli esercizi in cui vuoi diventare forte 2–3 volte a settimana e aumenta il peso poco alla volta.','Grgic e coll., Sports Med 2018 (meta-analisi) · ACSM, Med Sci Sports Exerc 2009');
+    it('s','Proteine',prot+pc,'Morton e coll., Br J Sports Med 2018 (meta-analisi)');
+  } else if(o==='dim'){
+    it('m','Perdere piano','Punta a perdere dallo 0,5 all\'1% del peso a settimana'+(b.kg?` (per te ${kgs(b.kg*0.005)}–${kgs(b.kg*0.01)} kg)`:'')+'. Più veloce si perde anche muscolo.','Garthe e coll., Int J Sport Nutr Exerc Metab 2011 · Helms e coll., J Int Soc Sports Nutr 2014');
+    it('s','I pesi non vanno saltati','Allenarsi con i pesi 2–3 volte a settimana mentre si mangia meno aiuta a tenere i muscoli: si perde soprattutto grasso.','Sardeli e coll., Nutrients 2018 (meta-analisi) · Cava e coll., Adv Nutr 2017');
+    it('m','Il movimento da solo fa perdere poco','Con meno di 150 minuti a settimana il peso cambia poco. Per perdere peso conta soprattutto l\'alimentazione; per non riprenderlo aiutano 200–300 minuti di movimento a settimana.','Donnelly e coll., ACSM, Med Sci Sports Exerc 2009');
+    it('s','Più proteine mentre dimagrisci',prot+pc,'Wycherley e coll., Am J Clin Nutr 2012 (meta-analisi) · Morton e coll., Br J Sports Med 2018');
+  } else if(o==='res'){
+    it('s','80% piano, 20% forte','La maggior parte delle uscite a ritmo facile (riesci a parlare) e poche dure: migliora il fiato più che fare tutto a ritmo medio. I piani di corsa dell\'app seguono questa regola.','Seiler e Kjerland, Scand J Med Sci Sports 2006 · Rosenblat e coll., J Strength Cond Res 2019 (meta-analisi)');
+    it('m','Anche i pesi','2 sedute di forza a settimana rendono la corsa più economica: a parità di velocità fai meno fatica.','Blagrove e coll., Sports Med 2018 (meta-analisi)');
+    it('m','Proteine',prot+pc,'Thomas e coll., ACSM/AND/DC, Med Sci Sports Exerc 2016');
+  } else if(o==='sal'){
+    it('s','150–300 minuti a settimana','Di movimento moderato (camminata svelta) oppure 75–150 minuti intenso, più 2 giorni di esercizi di forza. Anche poco è meglio di niente.','Bull e coll., OMS, Br J Sports Med 2020');
+    it('s','I passi contano','Il rischio di morte scende con i passi fino a circa 8–10 mila al giorno sotto i 60 anni e 6–8 mila sopra i 60.','Paluch e coll., Lancet Public Health 2022 (meta-analisi)');
+    it('s','Forza per vivere più a lungo','30–60 minuti di esercizi di forza a settimana sono legati a un rischio di morte più basso del 10–17%.','Momma e coll., Br J Sports Med 2022 (meta-analisi)');
+    it('m','Proteine',prot+pc,'OMS/FAO 2007 · Bauer e coll., J Am Med Dir Assoc 2013');
+  }
+  if(b.age>=65){ it('s','Dopo i 65 anni: equilibrio','Almeno 3 giorni a settimana con esercizi di equilibrio e forza: riducono le cadute.','Bull e coll., OMS, Br J Sports Med 2020 · Sherrington e coll., Cochrane 2019');
+    if(o!=='mus'&&o!=='for') it('m','Dopo i 65 anni: proteine','Ne servono di più che da giovani: almeno 1,0–1,2 g per kg al giorno'+(b.ref?` (per te ${g0(b.ref)}–${g0(b.ref*1.2)} g)`:'')+'.'+pc,'Bauer e coll., J Am Med Dir Assoc 2013 (PROT-AGE)'); }
+  return {A, D, b, P};
+}
+// una frase a voce a fine allenamento, legata all'obiettivo (una diversa ogni volta)
+function coachGoalTip(kind){ const o=COACH.obj; if(!coachOn() || !o) return ''; const {b,P}=coachAdvice(), T=[];
+  if((o==='mus'||o==='for') && P && kind==='gym') T.push(`Nelle prossime ore fai un pasto con circa ${P.meal} grammi di proteine.`);
+  if(o==='mus' && kind==='gym'){ const L=lagMuscles(); if(L && L.length) T.push(`Negli ultimi 7 giorni per ${({Petto:'il petto',Dorsali:'i dorsali','Centro schiena':'il centro della schiena','Spalle davanti':'le spalle davanti','Spalle laterali':'le spalle laterali','Spalle dietro':'le spalle dietro',Bicipiti:'i bicipiti',Tricipiti:'i tricipiti',Addominali:'gli addominali',Glutei:'i glutei',Quadricipiti:'i quadricipiti',Femorali:'i femorali',Polpacci:'i polpacci'})[L[0][0]]||L[0][0]} hai fatto ${L[0][1]===0?'zero serie':L[0][1]===1?'una serie':L[0][1]+' serie'}: per crescere ne servono almeno 10.`); }
+  if(o==='for' && kind==='gym') T.push('Per la forza ricorda: recupera almeno 2 minuti tra le serie pesanti.');
+  if(o==='dim'){ if(b.rate!=null && b.rate<-1.05) T.push('Stai perdendo peso troppo in fretta: parlane con il nutrizionista per non perdere muscolo.');
+    else if(b.rate!=null && b.rate<=-0.4) T.push('Il peso scende al ritmo giusto, continua così.');
+    else T.push(kind==='gym'?'I pesi ti aiutano a perdere grasso e a tenere i muscoli.':'Ogni minuto di movimento conta per il tuo obiettivo.'); }
+  if(o==='res' && kind==='run') T.push('Ricorda: la maggior parte delle uscite a ritmo facile, in cui riesci a parlare.');
+  if(o==='res' && kind==='gym') T.push('La forza rende la tua corsa più economica: ottima scelta.');
+  if(o==='sal') T.push('Ogni allenamento ti avvicina ai minuti consigliati per la salute.');
+  if(!T.length) return ''; const t=fbPick(T, COACH.lastTip); COACH.lastTip=t; coachSave(); return t ? ' '+t : ''; }
+function adviceHTML(){
+  const o=COACH.obj;
+  const chips = Object.keys(OBJ).map(k=>`<button class="chip" type="button" data-obj="${k}" aria-pressed="${o===k}">${OBJ[k].i} ${OBJ[k].n}</button>`).join('');
+  if(!o) return `<section class="card" id="cAdv"><h2>Il tuo obiettivo</h2><p class="note">Scegli cosa vuoi ottenere: ti do consigli con i tuoi numeri, solo quelli provati dagli studi.</p><div class="chips wrapchips">${chips}</div></section>`;
+  const {A:A0,D}=coachAdvice(), row=(a,f)=>`<p>${a.k?pill(a.k):''}${f&&fbScore(a.t)>0?'⭐ ':''}<b>${a.t}.</b> ${a.x}${a.c?`<cite>${a.c}</cite>`:''}${f?fbBtns(a.t):''}</p>`;
+  const A=A0.filter(a=>fbScore(a.t)>-2).sort((a,b)=>fbScore(b.t)-fbScore(a.t)), H=A0.filter(a=>fbScore(a.t)<=-2);
+  return `<section class="card" id="cAdv"><h2>Il tuo obiettivo</h2><div class="chips wrapchips">${chips}</div>
+    ${D.length?`<h3 class="subh">Cosa vedo dai tuoi dati</h3><div class="sci">${D.map(row).join('')}</div>`:''}
+    <h3 class="subh">I consigli per te</h3><p class="note">Tocca 👍 o 👎: il coach mette in alto e ripete a voce quelli che ti servono.</p><div class="sci">${A.map(a=>row(a,1)).join('')}</div>
+    ${H.length?`<details class="more"><summary>Consigli che hai nascosto (${H.length})</summary><div class="sci">${H.map(a=>row(a,1)).join('')}</div></details>`:''}
+    <p class="note">Solo consigli con studi solidi: <i class="pill s">Dimostrato</i> molti studi concordano, <i class="pill m">Prove medie</i> buoni studi ma meno numerosi. Non sostituiscono medico e nutrizionista.</p></section>`;
+}
+
+function learnHTML(){ const F=COACH.fb||{}, T=COACH.fbt||{}, ks=Object.keys(F); if(!ks.length) return '';
+  const up=ks.filter(k=>F[k]>0).sort((a,b)=>F[b]-F[a]).map(k=>T[k]).filter(Boolean), dn=ks.filter(k=>F[k]<0).map(k=>T[k]).filter(Boolean);
+  return `<section class="card"><h2>Cosa ho imparato da te</h2>
+    ${up.length?`<p><b>👍 Ti piacciono, li uso di più:</b> ${up.slice(0,6).map(t=>'«'+esc(t)+'»').join(', ')}</p>`:''}
+    ${dn.length?`<p><b>👎 Li uso meno o per niente:</b> ${dn.slice(0,6).map(t=>'«'+esc(t)+'»').join(', ')}</p>`:''}
+    <p class="note">Dai 👍 o 👎 alle frasi durante l'allenamento e ai consigli: il coach si adatta a te. Resta tutto sul tuo telefono.</p>
+    <div class="links"><button class="btn ghost small" type="button" id="fbReset">Ricomincia da zero</button></div></section>`; }
+function viewCoachInfo(){
+  view='coachinfo'; backBar('Indietro','#coach'); setTab('');
+  $app.innerHTML = `<section class="view coach">
+    <div><div class="eyebrow">Prima di attivarlo</div><h1 style="font-size:36px;text-transform:uppercase">Come funziona il mental coach</h1></div>
+    <section class="card"><h2>Da dove prende i dati</h2>
+      <p><b>Dagli studi scientifici.</b> Frasi, consigli e numeri vengono da ricerche pubblicate su riviste scientifiche e da linee guida ufficiali (per esempio Organizzazione Mondiale della Sanità, ACSM, NICE). Sotto ogni consiglio trovi gli autori, la rivista e l'anno, così puoi controllare.</p>
+      <p><b>Dai tuoi dati.</b> Usa solo quello che scrivi tu nell'app: peso, altezza, età e misure in Corpo, gli allenamenti e le corse nel Diario, le tue frasi e i tuoi 👍/👎. Tutto resta salvato <b>solo su questo telefono</b>: non viene mandato a nessuno.</p>
+      <p><b>Come decide.</b> Segue regole fisse prese dagli studi (per esempio "almeno 10 serie a settimana per muscolo"). Non è un medico e non è un'intelligenza artificiale: fa calcoli semplici sui tuoi numeri.</p>
+    </section>
+    <section class="card"><h2>Quanto sono affidabili</h2>
+      <p>Ogni consiglio ha un'etichetta:</p>
+      <p>${pill('s')} molti studi di buona qualità dicono la stessa cosa.</p>
+      <p>${pill('m')} buoni studi, ma meno numerosi o con risultati meno netti.</p>
+      <p>${pill('w')} indicazione ragionevole, ma con poche prove: prendila come uno spunto.</p>
+      <p>Gli studi descrivono <b>la media delle persone</b>: tu puoi rispondere in modo diverso. I numeri (come i grammi di proteine o i chili a settimana) sono stime, non misure precise. I risultati non sono garantiti.</p>
+    </section>
+    <section class="warn" role="note"><h2>Avvertenze</h2>
+      <p>Il mental coach dà <b>informazioni generali</b> per motivarti e orientarti. <b>Non sostituisce</b> il medico, il nutrizionista o un allenatore qualificato e non fa diagnosi.</p>
+      <p><b>Prima di iniziare</b> un programma di allenamento o di cambiare alimentazione, parla con il tuo medico, soprattutto se hai problemi di cuore, pressione, diabete, reni, dolori, se sei in gravidanza o se non ti alleni da tanto.</p>
+      <p>Fermati e chiedi aiuto se senti dolore al petto, giramenti di testa, fiato molto corto o dolore che non passa.</p>
+      <p>Usi l'app e segui i consigli <b>sotto la tua responsabilità</b>: chi ha realizzato l'app non risponde di danni, infortuni o problemi di salute legati al suo uso.</p>
+    </section>
+    ${COACH.ok ? `<p class="note">Hai accettato queste condizioni il ${df.format(new Date(COACH.ok))}.</p><a class="btn big" href="#coach">Torna al coach</a>`
+      : `<label class="cagree"><input type="checkbox" id="cAgree"> Ho letto e accetto queste informazioni e le avvertenze</label>
+      <button class="btn big" type="button" id="cAccept" disabled>Attiva il mental coach</button>
+      <a class="btn ghost big" href="#coach">Non ora</a>`}
+  </section>`;
+  const ag=document.getElementById('cAgree'), ac=document.getElementById('cAccept');
+  if(ag) ag.onchange=()=>{ ac.disabled=!ag.checked; };
+  if(ac) ac.onclick=()=>{ if(!ag.checked) return; COACH.ok=Date.now(); COACH.on=true; coachSave(); say('Mental coach attivo. Ci sono io con te.', true); location.hash='coach'; };
+}
 function viewCoach(){
   view='coach'; backBar('Indietro','#esercizi'); setTab('');
   const st = coachStats(), wb = coachWelcome(st);
@@ -4961,7 +5240,8 @@ function viewCoach(){
   $app.innerHTML = `<section class="view coach">
     <div><div class="eyebrow">La tua testa allenata</div><h1 style="font-size:40px;text-transform:uppercase">Mental coach</h1></div>
     <p class="lead">Una voce che ti incoraggia in palestra, a casa e nella corsa, festeggia i progressi e ti aiuta a non mollare. Tutto basato sugli studi di psicologia dello sport.</p>
-    <div class="chips"><button class="chip" type="button" id="cOn" aria-pressed="${coachOn()}">${coachOn()?'✓ Coach attivo':'Coach spento: tocca per attivarlo'}</button></div>
+    <div class="card conoff"><div><b>Mental coach ${coachOn()?'attivo':'spento'}</b><span class="note">${coachOn()?'Ti parla durante allenamenti e corse. Spegnilo quando vuoi.':'Nessuna frase e nessun consiglio a voce. Riaccendilo quando vuoi.'}</span></div>${coachSwitch()}</div>
+    ${learnHTML()}
 
     <section class="card"><h2>Come stai andando</h2>
       ${wb?`<p class="feel">${esc(wb)}</p>`:''}
@@ -4969,6 +5249,8 @@ function viewCoach(){
       <div><div class="note">Verso l'abitudine (66 giorni)</div><i class="cbar big" aria-hidden="true"><u style="width:${hp}%"></u></i></div>
       <p class="note">${st.hday>66?'Complimenti: ormai allenarti fa parte della tua vita.':st.hday?'Il conteggio riparte solo se ti fermi per più di due settimane. Un giorno saltato non conta.':'Il conteggio parte dal tuo prossimo allenamento.'}</p>
     </section>
+
+    ${adviceHTML()}
 
     <section class="card"><h2>Il tuo perché</h2>
       <p class="note">Una frase vera, tua. Il coach te la ricorda all'inizio di ogni allenamento.</p>
@@ -5010,9 +5292,11 @@ function viewCoach(){
     </section>
 
     <details class="more"><summary>Su cosa si basa il coach</summary>${SCI_COACH}</details>
+    <a class="btn ghost small" href="#coach-info">Da dove vengono i dati e avvertenze</a>
   </section>`;
   const redraw = ()=>keepScroll(viewCoach), $ = id=>document.getElementById(id);
-  $('cOn').onclick=()=>{ COACH.on=!coachOn(); coachSave(); if(COACH.on) say('Coach attivo. Ci sono io con te.', true); redraw(); };
+  const fr=$('fbReset'); if(fr) fr.onclick=()=>{ if(fr.dataset.sure){ COACH.fb={}; COACH.fbt={}; coachSave(); redraw(); } else { fr.dataset.sure='1'; fr.textContent='Sicuro? Tocca ancora'; } };
+  $app.querySelectorAll('[data-obj]').forEach(b=>b.onclick=()=>{ COACH.obj = COACH.obj===b.dataset.obj ? '' : b.dataset.obj; coachSave(); redraw(); });
   $('cWhy').oninput=e=>{ COACH.why=e.target.value; coachSave(); };
   $app.querySelectorAll('[data-why]').forEach(b=>b.onclick=()=>{ COACH.why=COACH_WHY[+b.dataset.why]; coachSave(); $('cWhy').value=COACH.why; });
   $app.querySelectorAll('[data-goal]').forEach(b=>b.onclick=()=>{ COACH.goal=Math.max(1,Math.min(7,(+COACH.goal||3)+(+b.dataset.goal))); coachSave(); redraw(); });
@@ -5276,6 +5560,7 @@ function route(soft){
     if(h==='coach') return viewCoach();
     if(h==='mobilita') return viewMob();
     if(h.startsWith('mob-')) return startMob(h.slice(4));
+    if(h==='coach-info') return viewCoachInfo();
     if(h==='dieta') return viewFood();
     viewList();
   };
