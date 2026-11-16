@@ -570,7 +570,7 @@ body.noscroll{overflow:hidden}
 .crow{display:flex;align-items:center;gap:10px}.crow input{border:1px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--bg);color:var(--fg);font:inherit;font-size:16px}
 .cplans{display:grid;gap:8px}.cplan{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--sunk);border-radius:10px;padding:6px 6px 6px 12px;font-size:15px}
 .coachl{border-left:4px solid #7a3fb0}
-.silrow{display:grid;grid-template-columns:repeat(9,1fr);gap:3px}.silb{border:2px solid transparent;background:var(--sunk);border-radius:10px;padding:4px 1px 2px;cursor:pointer;display:grid;justify-items:center;gap:1px;color:var(--muted);min-width:0}.silb b{font-size:12px;color:var(--fg)}.silb svg{width:100%;height:auto;max-height:84px}.silb[aria-pressed="true"]{border-color:#7a3fb0;color:#7a3fb0;background:color-mix(in srgb,#7a3fb0 12%,var(--surface))}
+.silrow{display:grid;grid-template-columns:repeat(9,1fr);gap:3px}.silrow.big{grid-template-columns:repeat(9,68px);overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity}.silrow.big .silimg{max-height:none}.silb{border:2px solid transparent;background:var(--sunk);border-radius:10px;padding:4px 1px 2px;cursor:pointer;display:grid;justify-items:center;gap:1px;color:var(--muted);min-width:0}.silb b{font-size:12px;color:var(--fg)}.silb svg{width:100%;height:auto;max-height:84px}.silimg{display:block;width:100%;aspect-ratio:142/360;max-height:110px;background-size:900% 100%;background-repeat:no-repeat;border-radius:6px;mix-blend-mode:multiply}.silb[aria-pressed="true"]{border-color:#7a3fb0;color:#7a3fb0;background:color-mix(in srgb,#7a3fb0 12%,var(--surface))}
 .cagree{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:16px;padding:12px;background:var(--sunk);border-radius:12px}.cagree input{width:22px;height:22px;flex:none;margin-top:2px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .coachc{position:relative}.coachc.off{border-left-color:var(--line);opacity:.95}.coachc a.cgo{text-decoration:none}
@@ -5531,6 +5531,8 @@ function adviceHTML(){
    Corrispondenza figura → IMC medio: stima da Bulik e coll., Int J Obes 2001 (adulti; le figure seguono l'IMC con buona correlazione). */
 // scala: 1 molto magro, 2 magro, 3 snello, 4 nella media, 5 atletico muscoloso, 6 robusto, 7 leggero sovrappeso, 8 sovrappeso, 9 obeso
 const SIL_NAME = ['','Molto magro','Magro','Snello','Nella media','Atletico','Robusto','Leggero sovrappeso','Sovrappeso','Obeso'];
+// figure fatte con Gemini da Ale: una striscia con 9 figure affiancate (una per riquadro)
+const SIL_IMG = {m:'sil-m.webp'};
 const SIL_BMI = [17, 19, 21, 23.5, 25, 27, 28.5, 32, 37];
 // grasso relativo (la 5 è muscolosa: grasso come la 3–4)
 const SIL_FAT = [0, 1, 2, 3, 4, 3.5, 5, 6, 7, 8];
@@ -5573,7 +5575,7 @@ function silAdvice(){ const s=COACH.sil||{}, b=bodyNow(), out=[]; if(!s.now) ret
   if(lose>=2 && s.want<=2 && !high && !bellyHi && b.bmi) out.push({k:'s', t:'Attenzione a non esagerare', x:'Vorresti una sagoma molto più magra, ma il tuo peso è già nella norma. Diete drastiche possono far male: se il pensiero del peso ti pesa, parlane con il medico.', c:'NICE 2017 (disturbi alimentari) · OMS'});
   return out; }
 function silHTML(){ const s=COACH.sil||{}, sex=s.sex||'m', A=silAdvice();
-  const row=(key,label)=>`<h3 class="subh">${label}</h3><div class="silrow" role="group" aria-label="${label}">${[1,2,3,4,5,6,7,8,9].map(i=>`<button type="button" class="silb" data-sil="${key}" data-n="${i}" aria-pressed="${s[key]===i}" aria-label="Figura ${i}: ${SIL_NAME[i]}">${silSVG(i,sex)}<b>${i}</b></button>`).join('')}</div>${s[key]?`<p class="note">Hai scelto la ${s[key]}: <b>${SIL_NAME[s[key]]}</b></p>`:''}`;
+  const row=(key,label)=>`<h3 class="subh">${label}</h3><div class="silrow${SIL_IMG[sex]?' big':''}" role="group" aria-label="${label}">${[1,2,3,4,5,6,7,8,9].map(i=>`<button type="button" class="silb" data-sil="${key}" data-n="${i}" aria-pressed="${s[key]===i}" aria-label="Figura ${i}: ${SIL_NAME[i]}">${SIL_IMG[sex]?`<span class="silimg" style="background-image:url(${SIL_IMG[sex]});background-position:${(i-1)*12.5}% 0"></span>`:silSVG(i,sex)}<b>${i}</b></button>`).join('')}</div>${s[key]?`<p class="note">Hai scelto la ${s[key]}: <b>${SIL_NAME[s[key]]}</b></p>`:''}`;
   return `<section class="card" id="cSil"><h2>La tua sagoma</h2>
     <p class="note">Facoltativo. Tocca la figura più simile a te oggi e quella che vorresti. Nessuna foto: scegli tu, e resta solo sul telefono. Il coach la unisce a peso, altezza e giro vita.</p>
     <div class="chips" role="group" aria-label="Figure"><button class="chip" type="button" data-silsex="m" aria-pressed="${sex==='m'}">Figure uomo</button><button class="chip" type="button" data-silsex="f" aria-pressed="${sex==='f'}">Figure donna</button></div>
