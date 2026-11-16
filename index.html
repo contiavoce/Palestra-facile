@@ -3253,15 +3253,15 @@ function finish(){
     else if(a.vol>b.vol) prs.push([EXMAP[ex].name,`volume ${kgf(a.vol)} kg`]);
   });
   const name = run.name, nsets = run.sets.length;
-  endRun(); view='done'; lastSaid='';
-  beep('done'); say('Allenamento completato. '+nsets+' serie in '+mins+' minuti.'+(hs?' Battito medio '+hs.avg+'.':'')+' Ottimo lavoro!'+(prs.length&&coachOn()?` Hai battuto ${prs.length===1?'un record':prs.length+' record'}!`:'')+coachEndTxt());
+  endRun(); view='done'; lastSaid=''; const cTip=coachGoalTip('gym');
+  beep('done'); say('Allenamento completato. '+nsets+' serie in '+(mins===1?'un minuto':mins+' minuti')+'.'+(hs?' Battito medio '+hs.avg+'.':'')+' Ottimo lavoro!'+(prs.length&&coachOn()?` Hai battuto ${prs.length===1?'un record':prs.length+' record'}!`:'')+coachEndTxt()+cTip);
   try{ history.replaceState(null,'','#fatto'); }catch(e){}
   backBar('Sessioni','#sessioni');
   $app.innerHTML = `<section class="rest" style="margin-top:24px"><div class="eyebrow">Fatto</div>
     <h2 style="font-size:30px;text-transform:uppercase">${esc(name)} completata</h2>
     <div class="stats"><div><b>${mins}'</b><span>Durata</span></div><div><b>${nsets}</b><span>Serie</span></div><div><b>${kgf(vol)}</b><span>Kg sollevati</span></div>${hs?`<div><b>${hs.avg}</b><span>Battito medio</span></div>`:''}</div>${hs?hrDetail(hs):''}
     ${prs.length?`<div class="prs"><div class="eyebrow">Nuovi record</div>${prs.map(p=>`<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`:''}
-    ${coachOn()?`<p class="next coachl"><b>🧠 Coach:</b> ${esc(coachEndTxt().trim())}</p>`:''}
+    ${coachOn()?`<p class="next coachl"><b>🧠 Coach:</b> ${esc((coachEndTxt()+cTip).trim())}</p>`:''}
     <p class="next">Salvata nel diario. Bevi acqua e fai qualche minuto di allungamento.</p>
     <div class="links"><a class="btn" href="#diario">Vai al diario</a><a class="btn ghost" href="#sessioni">Altre sessioni</a></div></section>`;
 }
@@ -3913,7 +3913,7 @@ function corsaFinish(save){
     const end=Date.now(), hs=hrSummary(corsa.start, end);
     const pl=corsa.plan; if(pl && (pl.fin || corsaSec()>=rpTot(pl)*0.8)){ rplan.done[rpKey(pl.lv,pl.w,pl.d)]=end; rpSave(); }
     addWorkout({id:'w'+end.toString(36), sid:'corsa', name: pl ? 'Corsa · '+RUNPLANS[pl.lv].name+' sett. '+(pl.w+1)+' giorno '+(pl.d+1)+(pl.tm?' (tapis roulant)':'') : 'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10}, ...(hs?{hr:hs}:{})});
-    say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`+motEnd(m,sec)+coachEndTxt(), true);
+    say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`+motEnd(m,sec)+coachEndTxt()+coachGoalTip('run'), true);
   }
   gpsOff(); clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
   corsa=null; store.del('corsa'); location.hash = save ? 'diario' : 'sessioni'; if(!save) viewCorsa();
@@ -4801,7 +4801,7 @@ function coachCardHTML(){
   const pct = Math.min(100, Math.round(st.week/st.goal*100));
   const today = st.planned && !st.doneToday ? `Oggi è uno dei tuoi giorni${COACH.time?` · ore ${esc(COACH.time)}`:''}${COACH.place?` · ${COACH.place==='casa'?'a casa':COACH.place==='corsa'?'corsa':'in palestra'}`:''}.` : '';
   const wb = coachWelcome(st);
-  return `<a class="card ccard coachc" href="#coach"><div><b>🧠 Mental coach</b>
+  return `<a class="card ccard coachc" href="#coach"><div><b>🧠 Mental coach${COACH.obj&&OBJ[COACH.obj]?` · ${OBJ[COACH.obj].n}`:''}</b>
     ${set ? `<span>${st.week>=st.goal?`Obiettivo della settimana raggiunto: ${st.week} su ${st.goal} 🎉`:`Questa settimana ${st.week} su ${st.goal} allenamenti`}</span>
       <i class="cbar" aria-hidden="true"><u style="width:${pct}%"></u></i>
       ${wb?`<span class="cwb">${esc(wb)}</span>`:today?`<span class="cwb">${today}</span>`:''}`
@@ -4819,6 +4819,102 @@ const SCI_COACH = `<div class="sci">
   <p>${pill('w')}<b>Dirsi "tu".</b> Parlarsi in seconda persona ("ce la fai") sembra aiutare un po' più di "ce la faccio": per questo le frasi del coach usano il tu.<cite>Kross e coll., J Pers Soc Psychol 2014 · Dolcos e Albarracín, Eur J Soc Psychol 2014</cite></p>
 </div>`;
 
+/* ---------------- COACH: consigli in base al fisico e all'obiettivo ---------------- */
+const OBJ = {
+ dim:{n:'Dimagrire', i:'⚖️'}, mus:{n:'Più muscoli', i:'💪'}, for:{n:'Più forza', i:'🏋️'}, res:{n:'Resistenza', i:'🏃'}, sal:{n:'Salute e benessere', i:'❤️'}
+};
+function bodyNow(){
+  const E=(S.body.entries||[]).slice().sort((a,b)=>a.at-b.at), last=k=>{ for(let i=E.length-1;i>=0;i--) if(E[i][k]!=null) return E[i][k]; return null; };
+  const kg=last('weight'), h=num(S.body.height), age=num(S.body.age), waist=last('waist');
+  const bmi = kg&&h ? kg/((h/100)**2) : 0;
+  // per le persone con IMC sopra 30 le proteine si calcolano su un peso di riferimento (IMC 25), non sul peso totale
+  const ref = kg ? (bmi>30 && h ? 25*(h/100)**2 : kg) : 0;
+  // andamento del peso: media dell'ultima settimana contro le pesate di 2–5 settimane prima
+  const W=E.filter(e=>e.weight!=null), now=Date.now(); let rate=null, weeks=0;
+  const rec=W.filter(e=>e.at>=now-8*DAY), old=W.filter(e=>e.at<now-13*DAY && e.at>=now-36*DAY);
+  if(rec.length && old.length){ const a=rec.reduce((s,e)=>s+e.weight,0)/rec.length, b=old.reduce((s,e)=>s+e.weight,0)/old.length;
+    const ta=rec.reduce((s,e)=>s+e.at,0)/rec.length, tb=old.reduce((s,e)=>s+e.at,0)/old.length; weeks=(ta-tb)/(7*DAY);
+    if(weeks>=1.5) rate=(a-b)/b*100/weeks; }
+  return {kg, h, age, waist, bmi, ref, rate, weeks, whtr: waist&&h ? waist/h : 0};
+}
+const g0 = n => Math.round(n/5)*5;
+function protRange(b, obj){ if(!b.ref) return null; const old=b.age>=65;
+  const r = obj==='mus'||obj==='for' ? [1.6,2.2] : obj==='dim' ? [1.2,1.6] : obj==='res' ? [1.2,1.6] : old ? [1.0,1.2] : [0.8,1.0];
+  return {r, g:[g0(b.ref*r[0]), g0(b.ref*r[1])], meal: Math.max(20, Math.min(45, g0(b.ref*0.4)))}; }
+// muscoli principali sotto le 10 serie negli ultimi 7 giorni
+function lagMuscles(){ const ws=S.workouts.filter(w=>!w.run && w.at>=Date.now()-7*DAY); if(!ws.length) return null;
+  const c=zoneSets(ws); return MZ.filter(z=>z[3] && c[z[0]]<10).map(z=>[z[1], Math.round(c[z[0]])]).sort((a,b)=>a[1]-b[1]); }
+const kgs = n => kgf(Math.round(n*10)/10);
+function coachAdvice(){
+  const o=COACH.obj, b=bodyNow(), P=protRange(b,o), A=[], D=[];
+  const it=(k,t,x,c)=>A.push({k,t,x,c});
+  // ---- cosa vedo dai tuoi dati
+  if(!b.kg || !b.h) D.push({t:'Mancano dei dati', x:`Scrivi peso e altezza nella scheda <a href="#corpo">Corpo</a>${b.waist?'':' (meglio anche il giro vita)'}: così i consigli usano i tuoi numeri.`});
+  if(b.bmi) D.push({t:`IMC ${kgs(b.bmi)}`, x: (b.bmi<18.5?'Sotto il normale.':b.bmi<25?'Nella norma.':b.bmi<30?'Sopra il normale.':'Obesità.')+' L\'IMC non distingue muscoli e grasso: chi ha molti muscoli può risultare "sovrappeso". Il giro vita dice di più.'});
+  if(b.whtr) D.push(b.whtr>=0.5 ? {t:`Giro vita ${kgs(b.waist)} cm: alto per la tua altezza`, x:`È più della metà dell'altezza (rapporto ${(Math.round(b.whtr*100)/100).toLocaleString('it-IT')}). Indica grasso sulla pancia, legato a più rischio per cuore e diabete. L'obiettivo è stare sotto ${Math.round(b.h/2)} cm. L'attività aerobica riduce il grasso della pancia anche quando il peso cambia poco.`, k:'s', c:'Ashwell e coll., Obes Rev 2012 (meta-analisi) · NICE 2022 · Vissers e coll., PLoS One 2013 (meta-analisi)'}
+    : {t:`Giro vita ${kgs(b.waist)} cm: nella norma`, x:`È meno della metà della tua altezza (${Math.round(b.h/2)} cm): un buon segnale per la salute.`, k:'s', c:'Ashwell e coll., Obes Rev 2012 (meta-analisi) · NICE 2022'});
+  if(o==='dim' && b.rate!=null){ const r=b.rate, kgw=b.kg*Math.abs(r)/100;
+    D.push(r < -1.05 ? {t:`Stai perdendo ${kgs(kgw)} kg a settimana`, x:'È più dell\'1% del peso a settimana: troppo veloce. Si rischia di perdere anche muscolo e di riprendere peso. Parlane con il tuo nutrizionista.', k:'m', c:'Garthe e coll., Int J Sport Nutr Exerc Metab 2011 · Helms e coll., J Int Soc Sports Nutr 2014'}
+      : r <= -0.4 ? {t:`Stai perdendo ${kgs(kgw)} kg a settimana`, x:'Ritmo giusto (tra 0,5 e 1% del peso a settimana): perdi grasso tenendo i muscoli. Continua così!', k:'m', c:'Garthe e coll., Int J Sport Nutr Exerc Metab 2011 · Helms e coll., J Int Soc Sports Nutr 2014'}
+      : {t: r>0.15?'Il peso sta salendo':'Il peso è fermo', x:`Nelle ultime ${Math.round(b.weeks)} settimane ${r>0.15?'il peso è salito':'il peso non è sceso'}. È normale che oscilli di giorno in giorno: pesati 2–3 volte a settimana, la mattina. Se resta così per 3 settimane, rivedi il piano con il nutrizionista.`, k:'m', c:'Helms e coll., J Int Soc Sports Nutr 2014'}); }
+  else if(o==='dim' && b.kg) D.push({t:'Andamento del peso', x:'Pesati 2–3 volte a settimana, la mattina a digiuno, nella scheda Corpo: dopo 2 settimane ti dico se stai andando al ritmo giusto.'});
+  if(o==='mus'||o==='for'||o==='sal'){ const L=lagMuscles(); if(L && L.length) D.push({t:'Muscoli rimasti indietro questa settimana', x:L.slice(0,4).map(([n,s])=>`${n} ${s}`).join(', ')+(L.length>4?` e altri ${L.length-4}`:'')+'. Per crescere ne servono almeno 10 a settimana per muscolo. Vedi la mappa nel <a href="#diario">Diario</a>.', k:'s', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi) · Pelland e coll., Sports Med 2025 (meta-analisi)'});
+    else if(L) D.push({t:'Tutti i muscoli principali allenati', x:'Ogni muscolo principale ha almeno 10 serie negli ultimi 7 giorni. Ottimo lavoro!', k:'s', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi)'}); }
+  // ---- consigli per l'obiettivo
+  const prot = P ? `Per te: circa <b>${P.g[0]}–${P.g[1]} g di proteine al giorno</b> (${String(P.r[0]).replace('.',',')}–${String(P.r[1]).replace('.',',')} g per kg${b.bmi>30?' del peso di riferimento, non di quello totale':''}), divise in 3–4 pasti da circa ${P.meal} g.` : 'Scrivi il tuo peso in Corpo e ti calcolo i grammi.';
+  const pc = ' Con malattie dei reni chiedi prima al medico. Il piano dei pasti lo fa il nutrizionista.';
+  if(o==='mus'){
+    it('s','Almeno 10 serie a settimana per muscolo','Più serie fanno crescere di più, fino a circa 20 a settimana per muscolo. Sotto le 10 la crescita è minore.','Schoenfeld e coll., J Sports Sci 2017 (meta-analisi) · Pelland e coll., Sports Med 2025 (meta-analisi)');
+    it('s','Vicino alla fatica vera','Le ripetizioni possono andare da 6 a 30: conta arrivare vicino al limite, con 1–3 ripetizioni ancora in riserva.','Schoenfeld e coll., J Strength Cond Res 2017 (meta-analisi) · Refalo e coll., Sports Med 2023 (meta-analisi)');
+    it('m','Ogni muscolo 2 volte a settimana','Dividere le serie di un muscolo in almeno 2 giorni aiuta a farne abbastanza senza sedute lunghissime. A parità di serie totali il risultato è simile: scegli come ti viene comodo.','Schoenfeld e coll., Sports Med 2016 (meta-analisi) · Schoenfeld e coll., J Sports Sci 2019');
+    it('s','Proteine',prot+pc,'Morton e coll., Br J Sports Med 2018 (meta-analisi di 49 studi) · Schoenfeld e Aragon, J Int Soc Sports Nutr 2018');
+  } else if(o==='for'){
+    it('s','Carichi pesanti','Per la forza massima servono carichi pesanti, oltre l\'80% del massimale: da 1 a 6 ripetizioni. Anche i carichi leggeri fanno crescere il muscolo, ma meno la forza.','Schoenfeld e coll., J Strength Cond Res 2017 (meta-analisi) · Lopez e coll., Med Sci Sports Exerc 2021 (meta-analisi)');
+    it('m','Recupero lungo','Tra le serie pesanti recupera 2–3 minuti o più: con recuperi brevi la forza cresce meno.','Schoenfeld e coll., J Strength Cond Res 2016 · Grgic e coll., Eur J Sport Sci 2017');
+    it('m','Ripeti gli esercizi principali','Fai gli esercizi in cui vuoi diventare forte 2–3 volte a settimana e aumenta il peso poco alla volta.','Grgic e coll., Sports Med 2018 (meta-analisi) · ACSM, Med Sci Sports Exerc 2009');
+    it('s','Proteine',prot+pc,'Morton e coll., Br J Sports Med 2018 (meta-analisi)');
+  } else if(o==='dim'){
+    it('m','Perdere piano','Punta a perdere dallo 0,5 all\'1% del peso a settimana'+(b.kg?` (per te ${kgs(b.kg*0.005)}–${kgs(b.kg*0.01)} kg)`:'')+'. Più veloce si perde anche muscolo.','Garthe e coll., Int J Sport Nutr Exerc Metab 2011 · Helms e coll., J Int Soc Sports Nutr 2014');
+    it('s','I pesi non vanno saltati','Allenarsi con i pesi 2–3 volte a settimana mentre si mangia meno aiuta a tenere i muscoli: si perde soprattutto grasso.','Sardeli e coll., Nutrients 2018 (meta-analisi) · Cava e coll., Adv Nutr 2017');
+    it('m','Il movimento da solo fa perdere poco','Con meno di 150 minuti a settimana il peso cambia poco. Per perdere peso conta soprattutto l\'alimentazione; per non riprenderlo aiutano 200–300 minuti di movimento a settimana.','Donnelly e coll., ACSM, Med Sci Sports Exerc 2009');
+    it('s','Più proteine mentre dimagrisci',prot+pc,'Wycherley e coll., Am J Clin Nutr 2012 (meta-analisi) · Morton e coll., Br J Sports Med 2018');
+  } else if(o==='res'){
+    it('s','80% piano, 20% forte','La maggior parte delle uscite a ritmo facile (riesci a parlare) e poche dure: migliora il fiato più che fare tutto a ritmo medio. I piani di corsa dell\'app seguono questa regola.','Seiler e Kjerland, Scand J Med Sci Sports 2006 · Rosenblat e coll., J Strength Cond Res 2019 (meta-analisi)');
+    it('m','Anche i pesi','2 sedute di forza a settimana rendono la corsa più economica: a parità di velocità fai meno fatica.','Blagrove e coll., Sports Med 2018 (meta-analisi)');
+    it('m','Proteine',prot+pc,'Thomas e coll., ACSM/AND/DC, Med Sci Sports Exerc 2016');
+  } else if(o==='sal'){
+    it('s','150–300 minuti a settimana','Di movimento moderato (camminata svelta) oppure 75–150 minuti intenso, più 2 giorni di esercizi di forza. Anche poco è meglio di niente.','Bull e coll., OMS, Br J Sports Med 2020');
+    it('s','I passi contano','Il rischio di morte scende con i passi fino a circa 8–10 mila al giorno sotto i 60 anni e 6–8 mila sopra i 60.','Paluch e coll., Lancet Public Health 2022 (meta-analisi)');
+    it('s','Forza per vivere più a lungo','30–60 minuti di esercizi di forza a settimana sono legati a un rischio di morte più basso del 10–17%.','Momma e coll., Br J Sports Med 2022 (meta-analisi)');
+    it('m','Proteine',prot+pc,'OMS/FAO 2007 · Bauer e coll., J Am Med Dir Assoc 2013');
+  }
+  if(b.age>=65){ it('s','Dopo i 65 anni: equilibrio','Almeno 3 giorni a settimana con esercizi di equilibrio e forza: riducono le cadute.','Bull e coll., OMS, Br J Sports Med 2020 · Sherrington e coll., Cochrane 2019');
+    if(o!=='mus'&&o!=='for') it('m','Dopo i 65 anni: proteine','Ne servono di più che da giovani: almeno 1,0–1,2 g per kg al giorno'+(b.ref?` (per te ${g0(b.ref)}–${g0(b.ref*1.2)} g)`:'')+'.'+pc,'Bauer e coll., J Am Med Dir Assoc 2013 (PROT-AGE)'); }
+  return {A, D, b, P};
+}
+// una frase a voce a fine allenamento, legata all'obiettivo (una diversa ogni volta)
+function coachGoalTip(kind){ const o=COACH.obj; if(!coachOn() || !o) return ''; const {b,P}=coachAdvice(), T=[];
+  if((o==='mus'||o==='for') && P && kind==='gym') T.push(`Nelle prossime ore fai un pasto con circa ${P.meal} grammi di proteine.`);
+  if(o==='mus' && kind==='gym'){ const L=lagMuscles(); if(L && L.length) T.push(`Negli ultimi 7 giorni per ${({Petto:'il petto',Dorsali:'i dorsali','Centro schiena':'il centro della schiena','Spalle davanti':'le spalle davanti','Spalle laterali':'le spalle laterali','Spalle dietro':'le spalle dietro',Bicipiti:'i bicipiti',Tricipiti:'i tricipiti',Addominali:'gli addominali',Glutei:'i glutei',Quadricipiti:'i quadricipiti',Femorali:'i femorali',Polpacci:'i polpacci'})[L[0][0]]||L[0][0]} hai fatto ${L[0][1]===0?'zero serie':L[0][1]===1?'una serie':L[0][1]+' serie'}: per crescere ne servono almeno 10.`); }
+  if(o==='for' && kind==='gym') T.push('Per la forza ricorda: recupera almeno 2 minuti tra le serie pesanti.');
+  if(o==='dim'){ if(b.rate!=null && b.rate<-1.05) T.push('Stai perdendo peso troppo in fretta: parlane con il nutrizionista per non perdere muscolo.');
+    else if(b.rate!=null && b.rate<=-0.4) T.push('Il peso scende al ritmo giusto, continua così.');
+    else T.push(kind==='gym'?'I pesi ti aiutano a perdere grasso e a tenere i muscoli.':'Ogni minuto di movimento conta per il tuo obiettivo.'); }
+  if(o==='res' && kind==='run') T.push('Ricorda: la maggior parte delle uscite a ritmo facile, in cui riesci a parlare.');
+  if(o==='res' && kind==='gym') T.push('La forza rende la tua corsa più economica: ottima scelta.');
+  if(o==='sal') T.push('Ogni allenamento ti avvicina ai minuti consigliati per la salute.');
+  if(!T.length) return ''; COACH.tipN=(COACH.tipN||0)+1; coachSave(); return ' '+T[COACH.tipN%T.length]; }
+function adviceHTML(){
+  const o=COACH.obj;
+  const chips = Object.keys(OBJ).map(k=>`<button class="chip" type="button" data-obj="${k}" aria-pressed="${o===k}">${OBJ[k].i} ${OBJ[k].n}</button>`).join('');
+  if(!o) return `<section class="card" id="cAdv"><h2>Il tuo obiettivo</h2><p class="note">Scegli cosa vuoi ottenere: ti do consigli con i tuoi numeri, solo quelli provati dagli studi.</p><div class="chips wrapchips">${chips}</div></section>`;
+  const {A,D}=coachAdvice(), row=a=>`<p>${a.k?pill(a.k):''}<b>${a.t}.</b> ${a.x}${a.c?`<cite>${a.c}</cite>`:''}</p>`;
+  return `<section class="card" id="cAdv"><h2>Il tuo obiettivo</h2><div class="chips wrapchips">${chips}</div>
+    ${D.length?`<h3 class="subh">Cosa vedo dai tuoi dati</h3><div class="sci">${D.map(row).join('')}</div>`:''}
+    <h3 class="subh">I consigli per te</h3><div class="sci">${A.map(row).join('')}</div>
+    <p class="note">Solo consigli con studi solidi: <i class="pill s">Dimostrato</i> molti studi concordano, <i class="pill m">Prove medie</i> buoni studi ma meno numerosi. Non sostituiscono medico e nutrizionista.</p></section>`;
+}
+
 function viewCoach(){
   view='coach'; backBar('Indietro','#esercizi'); setTab('');
   const st = coachStats(), wb = coachWelcome(st);
@@ -4835,6 +4931,8 @@ function viewCoach(){
       <div><div class="note">Verso l'abitudine (66 giorni)</div><i class="cbar big" aria-hidden="true"><u style="width:${hp}%"></u></i></div>
       <p class="note">${st.hday>66?'Complimenti: ormai allenarti fa parte della tua vita.':st.hday?'Il conteggio riparte solo se ti fermi per più di due settimane. Un giorno saltato non conta.':'Il conteggio parte dal tuo prossimo allenamento.'}</p>
     </section>
+
+    ${adviceHTML()}
 
     <section class="card"><h2>Il tuo perché</h2>
       <p class="note">Una frase vera, tua. Il coach te la ricorda all'inizio di ogni allenamento.</p>
@@ -4879,6 +4977,7 @@ function viewCoach(){
   </section>`;
   const redraw = ()=>keepScroll(viewCoach), $ = id=>document.getElementById(id);
   $('cOn').onclick=()=>{ COACH.on=!coachOn(); coachSave(); if(COACH.on) say('Coach attivo. Ci sono io con te.', true); redraw(); };
+  $app.querySelectorAll('[data-obj]').forEach(b=>b.onclick=()=>{ COACH.obj = COACH.obj===b.dataset.obj ? '' : b.dataset.obj; coachSave(); redraw(); });
   $('cWhy').oninput=e=>{ COACH.why=e.target.value; coachSave(); };
   $app.querySelectorAll('[data-why]').forEach(b=>b.onclick=()=>{ COACH.why=COACH_WHY[+b.dataset.why]; coachSave(); $('cWhy').value=COACH.why; });
   $app.querySelectorAll('[data-goal]').forEach(b=>b.onclick=()=>{ COACH.goal=Math.max(1,Math.min(7,(+COACH.goal||3)+(+b.dataset.goal))); coachSave(); redraw(); });
