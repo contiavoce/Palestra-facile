@@ -421,8 +421,11 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .rbars{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;height:90px;align-items:end;margin-top:12px}
 .rbars div{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}.rbars u{display:block;width:100%;background:#d6341e;border-radius:6px 6px 2px 2px;min-height:3px}.rbars small{font-size:10px;height:12px}
 .delalls{display:grid;gap:8px;margin-top:12px}
+.kmdot{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #d6341e;color:#1d2a44;font:700 12px/18px system-ui,sans-serif;text-align:center;box-shadow:0 1px 4px #0005}
+.cpar{grid-column:1/-1;background:#d6341e14;border-radius:12px;padding:6px}
+.clap i{font-style:normal;font-size:12px;opacity:.65;margin-left:auto;padding-left:12px}.clap b{margin-left:12px}
 .chead{display:flex;justify-content:space-between;align-items:center}.chead img{height:96px;border-radius:12px;background:#fff}
-.clap{display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid #8883}
+.clap{display:flex;justify-content:flex-start;padding:6px 0;border-top:1px solid #8883}
 .cstats{display:grid;grid-template-columns:repeat(2,1fr);text-align:center;gap:6px}
 .cstats span{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
 .cstats b{font-size:30px;font-variant-numeric:tabular-nums}
@@ -3032,14 +3035,16 @@ const corsaCard = () => `<a class="card ccard" href="#corsa"><div><b>Corsa all'a
 const myKg = () => { const E=(S.body.entries||[]).filter(e=>e.weight!=null).sort((a,b)=>a.at-b.at); const w=E.length?+E[E.length-1].weight:0; return w>30&&w<250 ? w : 0; };
 const kcalOf = m => Math.round((myKg()||75) * m/1000 * 1.0);
 const corsaSec = () => !corsa ? 0 : (corsa.acc + (corsa.paused ? 0 : Date.now()-corsa.t0))/1000;
-function pathSVG(pts, w=340, h=230){
+function pathSVG(pts, w=340, h=230, kms){
   const P0 = (pts||[]).filter(Boolean);
   if(P0.length<2) return '<div class="cempty">Il percorso comparirà qui mentre corri.</div>';
   const k=Math.cos(P0[0][0]*Math.PI/180), xs=P0.map(p=>p[1]*k), ys=P0.map(p=>-p[0]);
   const mnx=Math.min(...xs), mxx=Math.max(...xs), mny=Math.min(...ys), mxy=Math.max(...ys);
   const sc=Math.min((w-28)/((mxx-mnx)||1e-9),(h-28)/((mxy-mny)||1e-9)), ox=(w-(mxx-mnx)*sc)/2, oy=(h-(mxy-mny)*sc)/2;
   const P=xs.map((x,i)=>[(ox+(x-mnx)*sc).toFixed(1),(oy+(ys[i]-mny)*sc).toFixed(1)]);
-  return `<svg viewBox="0 0 ${w} ${h}" class="cpath" role="img" aria-label="Percorso"><polyline points="${P.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#d6341e" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${P[0][0]}" cy="${P[0][1]}" r="7" fill="#2a9d4b"/><circle cx="${P[P.length-1][0]}" cy="${P[P.length-1][1]}" r="7" fill="#1d2a44" stroke="#fff" stroke-width="2"/></svg>`;
+  const toXY=q=>[(ox+(q[1]*k-mnx)*sc).toFixed(1),(oy+(-q[0]-mny)*sc).toFixed(1)];
+  const KM=(kms||[]).map(o=>{ const [x,y]=toXY(o.p); return `<circle cx="${x}" cy="${y}" r="10" fill="#fff" stroke="#d6341e" stroke-width="3"/><text x="${x}" y="${(+y+4).toFixed(1)}" text-anchor="middle" font-size="11" font-weight="700" fill="#1d2a44">${o.k}</text>`; }).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" class="cpath" role="img" aria-label="Percorso"><polyline points="${P.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#d6341e" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${P[0][0]}" cy="${P[0][1]}" r="7" fill="#2a9d4b"/><circle cx="${P[P.length-1][0]}" cy="${P[P.length-1][1]}" r="7" fill="#1d2a44" stroke="#fff" stroke-width="2"/>${KM}</svg>`;
 }
 let cmap=null, cmapReady=false, cmapFollow=true, mlP=null;
 function loadML(){ if(window.maplibregl) return Promise.resolve(); if(mlP) return mlP;
@@ -3050,7 +3055,7 @@ async function mountMap(){
   const box=document.getElementById('cMapGL'); if(!box || !navigator.onLine) return;
   try{ await loadML(); }catch(e){ return; }
   if(!document.getElementById('cMapGL')) return;
-  try{ if(cmap){ cmap.remove(); } }catch(e){}
+  try{ if(cmap){ cmap.remove(); } }catch(e){} kmMk=[];
   cmapReady=false; cmapFollow=true;
   const pts=(corsa&&corsa.pts)||[], last=pts[pts.length-1];
   cmap=new maplibregl.Map({container:'cMapGL', style:'https://tiles.openfreemap.org/styles/liberty', center:last?[last[1],last[0]]:[12.49,41.89], zoom:last?16:5, attributionControl:{compact:true}});
@@ -3060,7 +3065,9 @@ async function mountMap(){
     cmapReady=true; document.getElementById('cMapGL').classList.add('on'); const sv=document.getElementById('cMap'); if(sv) sv.hidden=true; updMap(); });
   if(!corsa || !corsa.last) navigator.geolocation && navigator.geolocation.getCurrentPosition(p=>{ if(cmap && !(corsa&&corsa.last)) cmap.jumpTo({center:[p.coords.longitude,p.coords.latitude],zoom:16}); },()=>{}, {enableHighAccuracy:true,timeout:15000});
 }
-function updMap(){ if(!cmap||!cmapReady) return; const pts=(corsa&&corsa.pts)||[];
+let kmMk=[];
+function updKmMarkers(){ const K=(corsa&&corsa.kms)||[]; if(!cmap) return; while(kmMk.length<K.length){ const o=K[kmMk.length], el=document.createElement('div'); el.className='kmdot'; el.textContent=o.k; kmMk.push(new maplibregl.Marker({element:el}).setLngLat([o.p[1],o.p[0]]).addTo(cmap)); } }
+function updMap(){ if(!cmap||!cmapReady) return; updKmMarkers(); const pts=(corsa&&corsa.pts)||[];
   try{ cmap.getSource('run').setData(lineGJ(pts)); const l=pts[pts.length-1];
     cmap.getSource('me').setData({type:'FeatureCollection',features:l?[{type:'Feature',geometry:{type:'Point',coordinates:[l[1],l[0]]}}]:[]});
     if(l && cmapFollow) cmap.easeTo({center:[l[1],l[0]],duration:600}); }catch(e){} }
@@ -3080,14 +3087,14 @@ function onFix(pos){
   const before = Math.floor(corsa.m/1000);
   corsa.m += d; corsa.pts.push(p); corsa.last={p, t:pos.timestamp};
   const now = Math.floor(corsa.m/1000);
-  if(now>before){ const s=corsaSec(), lap=s-(corsa.lapAt||0); corsa.lapAt=s; corsa.laps=(corsa.laps||[]).concat([Math.round(lap)]);
+  if(now>before){ const s=corsaSec(), lap=s-(corsa.lapAt||0); corsa.lapAt=s; corsa.laps=(corsa.laps||[]).concat([Math.round(lap)]); corsa.kms=(corsa.kms||[]).concat([{k:now,p,s:Math.round(s)}]);
     say(`${now} ${now===1?'chilometro':'chilometri'}. Tempo ${Math.floor(s/60)} minuti. Ultimo chilometro in ${Math.floor(lap/60)} minuti e ${Math.round(lap%60)} secondi. Calorie bruciate circa ${kcalOf(corsa.m)}.`, true); }
   corsaSave(); corsaPaint();
 }
 function onGpsErr(e){ corsaMsg = e && e.code===1 ? 'Il telefono non dà il permesso alla posizione. Attivalo per questo sito nelle impostazioni di Chrome (Impostazioni sito → Posizione).' : 'Sto cercando il segnale GPS… meglio all\'aperto, lontano da palazzi alti.'; corsaPaint(); }
 function gpsOn(){ if(gpsWatch!=null || !('geolocation' in navigator)) return; gpsWatch = navigator.geolocation.watchPosition(onFix, onGpsErr, {enableHighAccuracy:true, maximumAge:1000, timeout:20000}); }
 function gpsOff(){ if(gpsWatch!=null){ try{ navigator.geolocation.clearWatch(gpsWatch); }catch(e){} gpsWatch=null; } }
-function corsaStart(){ corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn(); say('Corsa iniziata. Buona corsa!', true); corsaLoop(); viewCorsa(); }
+function corsaStart(){ corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0, kms:[]}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn(); say('Corsa iniziata. Buona corsa!', true); corsaLoop(); viewCorsa(); }
 function corsaPause(){ if(!corsa||corsa.paused) return; corsa.acc += Date.now()-corsa.t0; corsa.paused=true; corsa.gap=true; corsaSave(); say('Pausa.', true); viewCorsa(); }
 function corsaResume(){ if(!corsa||!corsa.paused) return; corsa.t0=Date.now(); corsa.paused=false; corsaSave(); gpsOn(); corsaWakeOn(); say('Si riparte.', true); viewCorsa(); }
 function corsaFinish(save){
@@ -3096,7 +3103,7 @@ function corsaFinish(save){
     const pts=[]; corsa.pts.forEach(p=>{ if(!pts.length || hav(pts[pts.length-1],p)>=8) pts.push(p); });
     const step=Math.ceil(pts.length/1200)||1, small=pts.filter((p,i)=>i%step===0||i===pts.length-1);
     const end=Date.now();
-    addWorkout({id:'w'+end.toString(36), sid:'corsa', name:'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], pts:small, kcal:kcalOf(m)}});
+    addWorkout({id:'w'+end.toString(36), sid:'corsa', name:'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m)}});
     say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`, true);
   }
   gpsOff(); clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
@@ -3106,11 +3113,11 @@ function corsaLoop(){ clearInterval(corsaTick); corsaTick=setInterval(()=>{ if(v
 function corsaPaint(){
   if(view!=='corsa') return; const sec=corsaSec(), m=corsa?corsa.m:0;
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
-  set('cT', fmtDur(sec)); set('cKm', kmTxt(m)); set('cP', paceTxt(sec,m)); set('cK', kcalOf(m));
-  const cl=document.getElementById('cLaps'), L=corsa?(corsa.laps||[]):[]; if(cl){ cl.hidden=!L.length; cl.innerHTML=`<b>Tempi per chilometro</b>${L.map((l,i)=>`<div class="clap"><span>Km ${i+1}</span><b>${fmtDur(l)}</b></div>`).join('')}`; }
+  set('cT', fmtDur(sec)); set('cKm', kmTxt(m)); set('cP', paceTxt(sec,m)); set('cK', kcalOf(m)); set('cPar', corsa ? fmtDur(sec-(corsa.lapAt||0)) : '0:00');
+  const cl=document.getElementById('cLaps'), L=corsa?(corsa.laps||[]):[]; if(cl){ cl.hidden=!L.length; cl.innerHTML=`<b>Tempi per chilometro</b>${lapRows(L, corsa&&corsa.kms)}`; }
   set('cGps', !corsa ? '' : corsa.paused ? 'In pausa' : corsa.acc_m ? (corsa.acc_m<=35?`GPS ok (±${corsa.acc_m} m)`:`GPS debole (±${corsa.acc_m} m)`) : 'Cerco il GPS…');
   set('cMsg', corsaMsg);
-  const mp=document.getElementById('cMap'); if(mp && !cmapReady) mp.innerHTML = pathSVG(corsa?corsa.pts:[]);
+  const mp=document.getElementById('cMap'); if(mp && !cmapReady) mp.innerHTML = pathSVG(corsa?corsa.pts:[],340,230,corsa?corsa.kms:[]);
   updMap();
 }
 function viewCorsa(){
@@ -3124,11 +3131,12 @@ function viewCorsa(){
       <div><span>Km</span><b id="cKm">0,00</b></div>
       <div><span>Passo /km</span><b id="cP">–</b></div>
       <div><span>Calorie</span><b id="cK">0</b></div>
+      <div class="cpar"><span>Parziale km in corso</span><b id="cPar">0:00</b></div>
     </div>
     ${myKg()?'':`<p class="note">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}
-    <div class="card" id="cLaps" hidden></div>
     <div class="cmapgl" id="cMapGL"><button class="btn small" id="cCenter" type="button" hidden>◎ Segui la mia posizione</button></div>
     <div class="card cmap" id="cMap"></div>
+    <div class="card" id="cLaps" hidden></div>
     <p class="note" id="cGps"></p><p class="err" id="cMsg"></p>
     <div class="cbtns">${!corsa ? `<button class="btn big" id="cGo">▶ Inizia la corsa</button>`
       : corsa.paused ? `<button class="btn big" id="cRes">▶ Riprendi</button><button class="btn ghost big" id="cEnd">■ Fine e salva</button>`
@@ -3136,7 +3144,7 @@ function viewCorsa(){
     ${corsa?`<button class="btn ghost small" id="cDrop" style="margin-top:6px">Annulla senza salvare</button>`:''}
     <p class="lead" style="margin-top:14px">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>
     ${runProgress()}
-    ${past.length?`<div class="group-title"><h2>Ultime corse</h2></div>${past.map(w=>`<div class="card"><p style="margin:0 0 4px"><strong>${df.format(new Date(w.at))}</strong></p><p style="margin:0">${kmTxt(w.run.m)} km · ${fmtDur(w.run.sec)} · passo ${paceTxt(w.run.sec,w.run.m)} · ${w.run.kcal!=null?w.run.kcal:kcalOf(w.run.m)} kcal</p>${pathSVG(w.run.pts,340,160)}<div class="confirm"><button class="btn ghost small" type="button" data-delrun="${w.id}">Elimina</button></div></div>`).join('')}${delAllHTML('run')}`:''}
+    ${past.length?`<div class="group-title"><h2>Ultime corse</h2></div>${past.map(w=>`<div class="card"><p style="margin:0 0 4px"><strong>${df.format(new Date(w.at))}</strong></p><p style="margin:0">${kmTxt(w.run.m)} km · ${fmtDur(w.run.sec)} · passo ${paceTxt(w.run.sec,w.run.m)} · ${w.run.kcal!=null?w.run.kcal:kcalOf(w.run.m)} kcal</p>${pathSVG(w.run.pts,340,160,w.run.kms)}<div class="confirm"><button class="btn ghost small" type="button" data-delrun="${w.id}">Elimina</button></div></div>`).join('')}${delAllHTML('run')}`:''}
   </section>`;
   const on=(id,f)=>{ const e=document.getElementById(id); if(e) e.onclick=f; };
   on('cGo', ()=>{ if(!('geolocation' in navigator)){ corsaMsg='Questo telefono non dà la posizione al browser.'; corsaPaint(); return; } corsaStart(); });
@@ -3165,7 +3173,8 @@ function runProgress(){
     <div class="rbars" aria-label="Km nelle ultime 8 settimane">${weeks.map((x,i)=>`<div><u style="height:${Math.round(x.km/mx*100)}%"></u><small>${i===7?'ora':''}</small></div>`).join('')}</div>
     <p class="note" style="margin:4px 0 0">Km per settimana, ultime 8 settimane</p></div>`;
 }
-function runDetail(w){ const r=w.run; return `<p><b>${kmTxt(r.m)} km</b> in <b>${fmtDur(r.sec)}</b> · passo <b>${paceTxt(r.sec,r.m)} /km</b> · <b>${r.kcal!=null?r.kcal:kcalOf(r.m)} kcal</b></p>${(r.laps||[]).length?`<p class="note">${r.laps.map((l,i)=>`Km ${i+1}: ${fmtDur(l)}`).join(' · ')}</p>`:''}${pathSVG(r.pts,340,190)}`; }
+function lapRows(L, K){ let c=0; return (L||[]).map((l,i)=>{ c+=l; const t=(K&&K[i]&&K[i].s)||c; return `<div class="clap"><span>Km ${i+1}</span><b>${fmtDur(l)}</b><i>totale ${fmtDur(t)}</i></div>`; }).join(''); }
+function runDetail(w){ const r=w.run; return `<p>Tempo finale <b>${fmtDur(r.sec)}</b> · <b>${kmTxt(r.m)} km</b> · passo <b>${paceTxt(r.sec,r.m)} /km</b> · <b>${r.kcal!=null?r.kcal:kcalOf(r.m)} kcal</b></p>${(r.laps||[]).length?`<div class="claps">${lapRows(r.laps,r.kms)}</div>`:''}${pathSVG(r.pts,340,190,r.kms)}`; }
 
 function viewDiary(){
   view='diary'; brand(); setTab('diario');
