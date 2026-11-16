@@ -158,6 +158,16 @@ nav.tabs a[aria-current="page"] svg{stroke-width:2.4}
 .mvol .bar{position:relative;height:14px;border-radius:7px;background:var(--sunk);overflow:hidden}.mvol .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:7px}
 .mvol .bar u{position:absolute;top:0;bottom:0;border-left:2px dashed #0004;border-right:2px dashed #0004;text-decoration:none}
 .mvol .n{text-align:right;font-weight:700}
+.bmap{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:360px;margin:0 auto;width:100%}
+.bfig{margin:0;text-align:center}.bfig svg{width:100%;height:auto;display:block}.bfig figcaption{font-size:13px;color:var(--muted);font-weight:600}
+.mleg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;color:var(--muted)}.mleg span{display:inline-flex;align-items:center;gap:6px}.mleg i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.mneed{display:grid;gap:6px}.mneed>div:not(.eyebrow){background:var(--sunk);border-radius:8px;padding:6px 10px;border-left:4px solid #E0483A;font-size:15px}.mneed span{color:var(--muted);font-size:14px}.mneed .mex{display:block}.mneed a{color:var(--fg);font-weight:600}
+.mvol .r{grid-template-columns:110px 1fr 40px}
+.sci{display:grid;gap:12px;font-size:15px}.sci p{margin:0}.sci cite{display:block;font-style:normal;font-size:13px;color:var(--muted);margin-top:3px}
+.pill{display:inline-block;font-style:normal;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:1px 8px;border-radius:999px;margin-right:6px;vertical-align:1px}
+.pill.s{background:#2FA86622;color:#1f8a50}.pill.m{background:#F0A03026;color:#b06d00}.pill.w{background:var(--sunk);color:var(--muted)}
+.next.adv{display:grid;gap:6px}.next.adv p{margin:0}
+.advline{background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:15px}
 .errs .fx{display:block;color:var(--muted);font-size:14px;margin-top:2px}
 .errs .fx b{color:var(--green,#1f9d55)}
 .cues{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:10px}
@@ -2586,16 +2596,6 @@ function lineChart(pts, color, aria, emptyMsg){
   </svg>`;
 }
 
-function nextTip(x,h){
-  if(x.id==='trazioni-assistite'||x.e==='corpo') return '';
-  const last=h[h.length-1]; if(!last||!last.sets.length) return '';
-  const top=parseInt(String(x.dose[1]).split(/[–-]/).pop())||0; if(!top) return '';
-  const kg=Math.max(...last.sets.map(t=>+t.kg||0)); const allTop=last.sets.every(t=>(+t.reps||0)>=top);
-  const step=(x.g==='gambe'||x.g==='schiena')?2.5:1;
-  const msg = allTop ? `L'ultima volta hai fatto ${top} ripetizioni in tutte le serie: la prossima volta prova <b>${kgf(kg+step)} kg</b>.`
-    : `La prossima volta resta su <b>${kgf(kg)} kg</b> e prova a fare 1 ripetizione in più per serie, fino ad arrivare a ${top}.`;
-  return `<p class="next">💡 ${msg}</p>`;
-}
 function progressCard(x){
   if(isTime(x)){
     const h = histFor(x.id); if(!h.length) return '';
@@ -2606,7 +2606,7 @@ function progressCard(x){
   const r = recordsOf(h);
   return `<section class="card"><h2>I tuoi progressi</h2>
     <div class="dose rec"><div><b>${kgf(r.kg)}</b><span>Peso max kg</span><small>× ${r.kgReps}</small></div><div><b>${kgf(r.best)}</b><span>Massimale stimato</span><small>kg per 1 rip.</small></div><div><b>${r.reps}</b><span>Più ripetizioni</span><small>in una serie</small></div></div>
-    ${nextTip(x,h)}
+    ${nextTip(x)}
     <div class="eyebrow">Massimale stimato, kg</div>
     ${chartSVG(h, G.color)}
     <div class="hist">${h.slice(-5).reverse().map(s=>`<div><b>${s.sets.map(t=>setTxt(t)).join(', ')}</b><span>${df.format(new Date(s.at))}</span></div>`).join('')}</div>
@@ -2827,6 +2827,8 @@ function startRun(id){
 function defaults(p, setNo){
   const here = run.sets.filter(s=>s.ex===p.ex);
   if(here.length) return {kg:here[here.length-1].kg, reps:here[here.length-1].reps};
+  const a = advise(EXMAP[p.ex], p.reps);
+  if(a && !a.first && a.kg!=null) return {kg:a.kg, reps: a.goal ? (a.goal[setNo-1] ?? a.goal[a.goal.length-1]) : a.reps};
   const h = histFor(p.ex); const last = h[h.length-1];
   if(last){ const s = last.sets[setNo-1] || last.sets[last.sets.length-1]; return {kg:s.kg, reps:s.reps}; }
   return {kg:'', reps:parseInt(p.reps,10)||''};
@@ -2846,7 +2848,7 @@ function drawRun(){
   const sayKey = resting ? 'r'+run.restEnd : run.i+'-'+run.set;
   if(sayKey!==lastSaid){ lastSaid=sayKey;
     if(resting) say('Recupero, '+spokenRest(Math.round((run.restEnd-Date.now())/1000))+'. '+(run.set>1?'Poi serie '+run.set+' di '+p.sets+'.':'Poi '+x.name+'.'));
-    else say((run.set===1?x.name+'. ':'')+'Serie '+run.set+' di '+p.sets+'. '+spokenReps(p.reps)+(!timeEx && /^[\d–\- ]+$/.test(String(p.reps).trim())?' ripetizioni':'')+'.'); }
+    else say((run.set===1?x.name+'. ':'')+(run.set===1&&!timeEx?(a=>a&&a.act==='up'&&a.kg>0?'Oggi sali a '+kgf(a.kg)+' chili. ':a&&a.act==='down'&&a.kg>0?'Oggi scendi a '+kgf(a.kg)+' chili. ':'')(advise(x,p.reps)):'')+'Serie '+run.set+' di '+p.sets+'. '+spokenReps(p.reps)+(!timeEx && /^[\d–\- ]+$/.test(String(p.reps).trim())?' ripetizioni':'')+'.'); }
   $app.innerHTML = `<section class="run">
     <div class="progress" aria-label="Avanzamento"><i style="width:${Math.min(100,Math.round(done/total*100))}%"></i></div>
     <div><div class="eyebrow">${esc(run.name)} · esercizio ${run.i+1} di ${run.plan.length}</div><h1>${esc(x.name)}</h1></div>
@@ -2858,6 +2860,7 @@ function drawRun(){
     : `
       <div class="pips" aria-hidden="true">${Array.from({length:p.sets},(_,k)=>`<i class="${k<run.set-1?'done':k===run.set-1?'now':''}"></i>`).join('')}</div>
       <div class="prev">Serie <b>${run.set} di ${p.sets}</b> · obiettivo <b>${esc(p.reps)}</b>${!timeEx&&last?` · volta scorsa <b>${last.sets.map(s=>setTxt(s)).join(', ')}</b>`:''}</div>
+      ${runAdvice(p, x)}
       ${timeEx ? '' : `<div class="logger">
         <div class="stepper"><label for="kgIn">Peso kg</label><div class="ctl"><button type="button" data-step="kg" data-d="-2.5" aria-label="Meno 2,5 kg">−</button><input id="kgIn" inputmode="decimal" value="${d.kg===''?'':kgf(+d.kg)}" placeholder="0"><button type="button" data-step="kg" data-d="2.5" aria-label="Più 2,5 kg">+</button></div></div>
         <div class="stepper"><label for="repsIn">Ripetizioni</label><div class="ctl"><button type="button" data-step="reps" data-d="-1" aria-label="Una in meno">−</button><input id="repsIn" inputmode="numeric" value="${d.reps}" placeholder="0"><button type="button" data-step="reps" data-d="1" aria-label="Una in più">+</button></div></div>
@@ -3061,13 +3064,137 @@ function bindAudioCard(redraw){
 }
 
 /* ---------------- DIARIO ---------------- */
-function muscleVolume(ws){
-  const cnt={}; Object.keys(GROUPS).forEach(g=>cnt[g]=0);
-  ws.forEach(w=>(w.sets||[]).forEach(st=>{ const x=EXMAP[st.ex]; if(x && x.g!=='cardio' && cnt[x.g]!=null) cnt[x.g]++; }));
-  const gs=Object.keys(GROUPS).filter(g=>g!=='cardio'); const max=Math.max(24,...gs.map(g=>cnt[g]));
-  return `<section class="card"><h2>Serie per muscolo</h2>
-    <p class="note" style="margin:0 0 12px">Gli studi indicano che per far crescere un muscolo servono circa <b>10–20 serie a settimana</b>, divise in 2 o più allenamenti. La zona tratteggiata è l'obiettivo.</p>
-    <div class="mvol">${gs.map(g=>{ const n=cnt[g]; const ok=n>=10&&n<=20; return `<div class="r"><span>${GROUPS[g].label}</span><span class="bar"><u style="left:${10/max*100}%;width:${10/max*100}%"></u><i style="width:${Math.min(100,n/max*100)}%;background:${g==="core"?"var(--fg)":GROUPS[g].color}"></i></span><span class="n">${n}${ok?' ✓':''}</span></div>`; }).join('')}</div></section>`;
+/* ---------- MAPPA DEI MUSCOLI ----------
+   Serie degli ultimi 7 giorni per muscolo. Conteggio "frazionario" come in Pelland e coll. (Sports Med 2025):
+   1 serie per i muscoli che lavorano di più, ½ per quelli che aiutano. Soglie: 4 (minimo), 10–20 (zona consigliata, ACSM 2026). */
+const MUW = {"chest-press":[["pecs"],["delt_a","triceps"]],"panca-piana":[["pecs"],["delt_a","triceps"]],"croci-cavi":[["pecs"],["delt_a"]],"piegamenti":[["pecs"],["triceps","delt_a","abs"]],"panca-manubri":[["pecs"],["delt_a","triceps"]],"panca-inclinata-manubri":[["pecs","delt_a"],["triceps"]],"pectoral-machine":[["pecs"],["delt_a"]],"lat-machine":[["lats"],["biceps","rhomb","delt_p","traps","forearm"]],"pulley":[["lats","rhomb"],["biceps","delt_p","traps"]],"rematore-manubrio":[["lats"],["rhomb","biceps","delt_p"]],"trazioni-assistite":[["lats"],["biceps","rhomb","delt_p","forearm"]],"rematore-bilanciere":[["lats","rhomb"],["biceps","delt_p","lowback","hams"]],"pullover-cavo":[["lats"],["triceps","pecs"]],"leg-press":[["quads","glutes"],["hams","adduct"]],"squat":[["quads","glutes"],["hams","lowback","adduct"]],"leg-extension":[["quads"],[]],"leg-curl":[["hams"],["calves"]],"affondi":[["quads","glutes"],["hams","adduct","calves"]],"polpacci":[["calves"],[]],"hip-thrust":[["glutes"],["hams","quads"]],"stacco-rumeno":[["hams","glutes"],["lowback","forearm"]],"goblet-squat":[["quads","glutes"],["adduct","abs"]],"abductor":[["gmed"],["glutes"]],"adductor":[["adduct"],[]],"shoulder-press":[["delt_a","delt_l"],["triceps","traps"]],"alzate-laterali":[["delt_l"],["traps","delt_a"]],"face-pull":[["delt_p","rhomb"],["traps"]],"lento-manubri":[["delt_a","delt_l"],["triceps","traps"]],"alzate-frontali":[["delt_a"],["pecs","delt_l"]],"reverse-fly":[["delt_p","rhomb"],["traps"]],"tirate-mento":[["delt_l","traps"],["biceps","delt_a"]],"curl-bilanciere":[["biceps"],["forearm","delt_a"]],"curl-manubri":[["biceps"],["forearm"]],"curl-martello":[["biceps","forearm"],[]],"curl-cavo":[["biceps"],["forearm"]],"curl-scott":[["biceps"],["forearm"]],"pushdown":[["triceps"],[]],"french-press":[["triceps"],[]],"estensioni-sopra-testa":[["triceps"],[]],"kickback":[["triceps"],["delt_p"]],"dip-macchina":[["triceps"],["pecs","delt_a"]],"plank":[["abs","obliq"],["delt_a","glutes","quads"]],"crunch":[["abs"],["obliq"]],"crunch-cavo":[["abs"],["obliq"]],"sollevamento-gambe":[["abs"],["quads","obliq"]],"crunch-macchina":[["abs"],["obliq"]],"mountain-climber":[["abs"],["delt_a","quads","obliq"]],"tapis-roulant":[["quads","calves"],["glutes","hams"]],"cyclette":[["quads"],["glutes","calves","hams"]],"ellittica":[["quads","glutes"],["hams","calves","lats","delt_a"]],"stepper":[["glutes","quads"],["calves","hams"]],"vogatore":[["lats","quads"],["hams","glutes","biceps","rhomb","lowback"]],"iperestensioni":[["lowback","glutes"],["hams"]]};
+const MZ = [ // [chiave, nome, muscoli dell'esercizio, principale]
+  ['pecs','Petto',['pecs'],1], ['lats','Dorsali',['lats'],1], ['mid','Centro schiena',['rhomb','traps'],1],
+  ['delt_a','Spalle davanti',['delt_a'],1], ['delt_l','Spalle laterali',['delt_l'],1], ['delt_p','Spalle dietro',['delt_p'],1],
+  ['biceps','Bicipiti',['biceps'],1], ['triceps','Tricipiti',['triceps'],1], ['abs','Addominali',['abs'],1],
+  ['glutes','Glutei',['glutes','gmed'],1], ['quads','Quadricipiti',['quads'],1], ['hams','Femorali',['hams'],1], ['calves','Polpacci',['calves'],1],
+  ['forearm','Avambracci',['forearm'],0], ['obliq','Obliqui',['obliq'],0], ['lowback','Lombari',['lowback'],0], ['adduct','Adduttori',['adduct'],0]];
+const MZMAP = Object.fromEntries(MZ.map(z=>[z[0],z]));
+function zoneSets(ws){
+  const c={}; MZ.forEach(z=>c[z[0]]=0);
+  ws.forEach(w=>(w.sets||[]).forEach(st=>{ const x=EXMAP[st.ex], m=MUW[st.ex]; if(!x||!m||x.g==='cardio') return;
+    MZ.forEach(z=>{ c[z[0]] += z[2].some(k=>m[0].includes(k)) ? 1 : z[2].some(k=>m[1].includes(k)) ? .5 : 0; }); }));
+  return c;
+}
+const MCOL = {red:'#E0483A', orange:'#F0A030', green:'#2FA866', blue:'#3B7DD8'};
+function zoneLvl(n, main){ if(n<4) return main?'red':''; if(n<10) return 'orange'; if(n<=20) return 'green'; return 'blue'; }
+/* forme (lato destro della figura, specchiate per il sinistro) */
+const BF = {
+  front:{ delt_a:'M45,43 C38,40 31,43 30,52 C35,53 40,51 45,49 Z', delt_l:'M30,44 C25,47 23,55 25,63 C27,60 29,56 30,52 C30,49 30,46 30,44 Z',
+    pecs:'M59,44 L47,44 C41,47 39,53 40,61 C45,66 54,66 59,63 Z', biceps:'M30,60 C26,68 26,80 29,88 C33,88 36,80 36,69 C36,63 33,60 30,60 Z',
+    forearm:'M28,93 C24,103 23,114 25,124 L31,124 C34,113 35,101 34,93 Z', abs:'M59,68 L51,68 C49,82 50,98 52,112 C55,116 57,118 59,118 Z',
+    obliq:'M49,66 C44,69 41,76 42,87 C43,97 45,104 50,110 C48,96 48,80 49,66 Z', quads:'M44,126 C38,141 38,166 42,182 C47,186 53,185 55,179 C57,161 56,142 53,128 Z',
+    adduct:'M55,128 C58,138 59,152 57,166 C59,154 59,140 59,129 Z', calves:'M42,196 C39,210 40,228 43,240 L48,240 C50,226 51,210 49,196 Z' },
+  back:{ mid:'M60,30 C56,37 48,41 41,44 C48,50 55,63 60,82 Z', delt_p:'M41,44 C34,42 29,46 28,56 C33,56 38,53 43,49 Z',
+    delt_l:'M29,45 C25,48 23,55 25,63 C27,60 28,57 28,54 C28,50 28,47 29,45 Z',
+    lats:'M45,53 C40,62 40,76 44,90 C48,97 53,100 58,101 L58,86 C55,74 51,62 45,53 Z', triceps:'M29,59 C26,67 26,79 29,88 C33,88 36,80 36,69 C35,63 32,59 29,59 Z',
+    forearm:'M28,93 C24,103 23,114 25,124 L31,124 C34,113 35,101 34,93 Z', lowback:'M52,101 C53,107 56,112 60,114 L60,95 C57,99 55,101 52,101 Z',
+    glutes:'M60,117 C52,114 44,116 42,125 C41,135 46,143 54,143 C58,143 60,139 60,135 Z', hams:'M43,147 C40,161 41,175 45,187 L55,187 C58,173 58,159 56,147 Z',
+    calves:'M42,196 C38,206 39,221 44,231 C47,233 50,231 51,223 C52,211 51,201 48,195 Z' } };
+const BBASE = 'M60,4 C52,4 48,10 48,18 C48,25 51,30 54,32 L54,37 C46,40 36,40 30,43 C24,46 23,54 24,64 C24,76 24,88 26,94 C23,104 22,116 23,126 C22,130 24,136 28,134 C31,133 32,128 32,124 C35,112 36,100 36,92 C37,84 38,76 39,68 C40,80 41,94 42,108 C42,114 41,120 41,126 C37,140 37,164 41,184 C39,190 39,194 41,198 C38,212 39,228 42,242 C40,246 38,250 42,251 L51,251 C52,247 51,243 50,240 C52,226 52,210 50,196 C52,192 52,188 51,186 C55,170 57,150 58,132 L60,132 Z';
+function bodySVG(side, c, empty){
+  const P = BF[side];
+  const one = (k,d)=>{ const z=MZMAP[k], lv=empty?'':zoneLvl(c[k]||0, z[3]); return `<path d="${d}" fill="${lv?MCOL[lv]:'var(--far)'}" fill-opacity="${lv?1:.45}"><title>${z[1]}: ${kgf(c[k]||0)} serie</title></path>`; };
+  const half = Object.keys(P).map(k=>one(k,P[k])).join('');
+  return `<figure class="bfig"><svg viewBox="0 0 120 256" role="img" aria-label="Muscoli ${side==='front'?'davanti':'dietro'}">
+    <g><path d="${BBASE}" fill="var(--sunk)"/>${half}</g><g transform="translate(120,0) scale(-1,1)"><path d="${BBASE}" fill="var(--sunk)"/>${half}</g>
+    <g fill="none" stroke="var(--bg)" stroke-width="1"><path d="${BBASE}"/><path d="${BBASE}" transform="translate(120,0) scale(-1,1)"/></g></svg>
+    <figcaption>${side==='front'?'Davanti':'Dietro'}</figcaption></figure>`;
+}
+const pill = (k)=> k==='s' ? '<i class="pill s">Dimostrato</i>' : k==='m' ? '<i class="pill m">Prove medie</i>' : '<i class="pill w">Stima</i>';
+const SCI_MAP = `<div class="sci">
+  <p>${pill('s')}<b>Più serie, più muscolo, fino a un certo punto.</b> Ogni serie in più a settimana per muscolo aggiunge crescita, ma oltre le 20 il guadagno in più è piccolo. Le linee guida dell'American College of Sports Medicine consigliano almeno 10 serie a settimana per muscolo.<cite>Pelland e coll., Sports Medicine 2025 (67 studi, 2.058 persone) · Schoenfeld e coll., J Sports Sci 2017 · ACSM 2026</cite></p>
+  <p>${pill('s')}<b>Contare 1 e ½.</b> Negli studi, contare 1 serie per il muscolo principale e mezza per quelli che aiutano prevede la crescita meglio degli altri modi di contare.<cite>Pelland e coll., Sports Medicine 2025</cite></p>
+  <p>${pill('m')}<b>Anche poche serie servono.</b> Già con circa 4 serie a settimana un muscolo cresce un po', e per mantenerlo ne bastano poche se il peso resta impegnativo. Per questo sotto le 4 il muscolo è segnato in rosso.<cite>Pelland e coll. 2025 · Spiering e coll., J Strength Cond Res 2021</cite></p>
+  <p>${pill('w')}<b>Le soglie sono medie, non leggi.</b> Ognuno risponde in modo diverso. Allenatori esperti come Mike Israetel parlano di "volume minimo" e "volume massimo recuperabile" diversi per ogni persona e ogni muscolo: sono indicazioni pratiche, non misure di laboratorio. Chi inizia cresce anche con meno serie.</p>
+  <p>${pill('w')}<b>Quali muscoli aiutano</b> in ogni esercizio viene dalla descrizione anatomica dell'app: è una semplificazione ragionevole.</p></div>`;
+const SCI_W = `<div class="sci">
+  <p>${pill('s')}<b>Prima le ripetizioni, poi il peso.</b> Aumentare le ripetizioni o aumentare il peso fanno crescere il muscolo allo stesso modo. L'app usa la "doppia progressione": quando arrivi al massimo delle ripetizioni in tutte le serie, sali di peso.<cite>Plotkin e coll., PeerJ 2022</cite></p>
+  <p>${pill('s')}<b>Di quanto salire.</b> La linea guida consiglia un aumento del 2–10% quando superi l'obiettivo di ripetizioni. L'app sale fino al 5% per petto, schiena, spalle e braccia e fino al 10% per le gambe, arrotondando ai pesi che trovi in palestra (2,5 kg; manubri di 2 in 2, di 1 in 1 sotto i 10 kg). La linea guida aspetta 2 allenamenti di fila: l'app sale dopo 1, come negli studi sulla doppia progressione.<cite>ACSM, Progression models in resistance training, Med Sci Sports Exerc 2009</cite></p>
+  <p>${pill('m')}<b>Non serve arrivare a cedimento.</b> Chiudere la serie con 1–3 ripetizioni "di riserva" fa crescere quasi come arrivare allo sfinimento, con meno fatica.<cite>Robinson e coll., Sports Medicine 2024 · Helms e coll., Strength Cond J 2016 (scala delle ripetizioni di riserva)</cite></p>
+  <p>${pill('m')}<b>Se ti blocchi, settimana leggera.</b> Quando non migliori da 3 allenamenti, gli esperti consigliano una settimana con metà delle serie, non una pausa completa.<cite>Bell e coll., Sports Medicine Open 2023 (consenso di esperti) · Coleman e coll., PeerJ 2024</cite></p>
+  <p>${pill('w')}<b>L'app non sa quanto eri stanco.</b> Se le serie ti sono sembrate facili (ne avresti fatte più di 3 in più) puoi salire prima; se ti fa male qualcosa, non salire. Il massimale stimato usa la formula di Epley: è un'approssimazione, meno precisa sopra le 10 ripetizioni.</p></div>`;
+function muscleMap(ws){
+  const c = zoneSets(ws), empty = !ws.some(w=>(w.sets||[]).some(s=>MUW[s.ex] && EXMAP[s.ex] && EXMAP[s.ex].g!=='cardio'));
+  const weak = MZ.filter(z=>z[3] && c[z[0]]<4).sort((a,b)=>c[a[0]]-c[b[0]]);
+  const exFor = k => EX.filter(x=>x.g!=='cardio' && MUW[x.id] && MZMAP[k][2].some(m=>MUW[x.id][0].includes(m))).slice(0,2);
+  const leg = [['red','Sotto 4: trascurato'],['orange','4–9: poco'],['green','10–20: ideale'],['blue','Oltre 20: tanto']];
+  const max = Math.max(24, ...MZ.map(z=>c[z[0]]));
+  return `<section class="card" id="mmap"><h2>Mappa dei muscoli</h2>
+    <p class="note" style="margin:0">Serie degli <b>ultimi 7 giorni</b> per ogni muscolo. Conta 1 serie per il muscolo che lavora di più e ½ per quelli che aiutano.</p>
+    <div class="bmap">${bodySVG('front',c,empty)}${bodySVG('back',c,empty)}</div>
+    <div class="mleg">${leg.map(l=>`<span><i style="background:${MCOL[l[0]]}"></i>${l[1]}</span>`).join('')}</div>
+    ${empty ? `<p class="next" style="margin:0">Completa un allenamento: la mappa si colora con i muscoli che hai lavorato.</p>`
+      : weak.length ? `<div class="mneed"><div class="eyebrow">Da allenare questa settimana</div>${weak.map(z=>`<div><b>${z[1]}</b> <span>${kgf(c[z[0]])} serie</span><span class="mex">${exFor(z[0]).map(x=>`<a href="#ex-${x.id}">${esc(x.name)}</a>`).join(' · ')}</span></div>`).join('')}</div>`
+      : `<p class="next" style="margin:0">Tutti i muscoli principali hanno almeno 4 serie questa settimana. Ottimo lavoro!</p>`}
+    <details class="more"><summary>Tutti i muscoli, con il numero di serie</summary>
+      <div class="mvol">${MZ.map(z=>{ const n=c[z[0]], lv=zoneLvl(n,z[3]); return `<div class="r"><span>${z[1]}</span><span class="bar"><u style="left:${10/max*100}%;width:${10/max*100}%"></u><i style="width:${Math.min(100,n/max*100)}%;background:${lv?MCOL[lv]:'var(--far)'}"></i></span><span class="n">${kgf(n)}</span></div>`; }).join('')}</div>
+      <p class="note">La zona tratteggiata è l'obiettivo di 10–20 serie. Avambracci, obliqui, lombari e adduttori lavorano già negli altri esercizi: non sono mai segnati in rosso.</p></details>
+    <details class="more"><summary>Da dove vengono questi numeri</summary>${SCI_MAP}</details>
+  </section>`;
+}
+
+/* ---------- PESO CONSIGLIATO (doppia progressione) ---------- */
+function repRange(r){ r=String(r||''); if(/["″']/.test(r)) return null; const n=r.match(/\d+/g); if(!n) return null; const a=+n[0], b=+(n[1]||n[0]); return [Math.min(a,b),Math.max(a,b)]; }
+function advise(x, repsTxt){
+  if(!x || isTime(x)) return null;
+  const R = repRange(repsTxt || (x.dose&&x.dose[1])); if(!R) return null; const [lo,hi]=R;
+  const h = histFor(x.id), last = h[h.length-1];
+  if(!last) return {first:true, lo, hi, short:`Prima volta: scegli un peso con cui arrivi a ${hi} ripetizioni sentendo che ne avresti ancora 2 o 3.`};
+  const S2 = last.sets.filter(s=>+s.reps>0); if(!S2.length) return null;
+  const assist = x.id==='trazioni-assistite';
+  const kgs = S2.map(s=>+s.kg||0), kg = assist ? Math.min(...kgs) : Math.max(...kgs);
+  const reps = S2.filter(s=>(+s.kg||0)===kg).map(s=>+s.reps);
+  const allTop = reps.every(r=>r>=hi), manyLow = reps.filter(r=>r<lo-1).length*2 > reps.length;
+  const step = x.e==='manubri' ? (kg<10?1:2) : 2.5, rnd = v => Math.round(v/step)*step;
+  const goal = reps.map(r=>Math.min(hi, r+1));
+  let a;
+  if(!kg && !assist){
+    a = allTop ? {kg:0, reps:hi, act:'up', msg:`Hai fatto ${hi} ripetizioni in tutte le serie: prova una versione più difficile o aggiungi un peso.`, short:`Hai chiuso tutte le serie a ${hi}: prova una versione più difficile.`}
+      : {kg:0, goal, act:'reps', msg:`Prova a fare 1 ripetizione in più per serie (${goal.join(', ')}), fino ad arrivare a ${hi}.`, short:`Oggi 1 ripetizione in più per serie (${goal.join(', ')}).`};
+  } else if(assist){
+    if(allTop){ const n=Math.max(0, Math.min(kg-step, rnd(kg*.9))); a={kg:n, reps:lo, act:'up', msg:`Hai fatto ${hi} ripetizioni in tutte le serie: togli un po' di aiuto e scendi a <b>${kgf(n)} kg</b> di contrappeso.`, short:`Oggi meno aiuto: <b>${kgf(n)} kg</b> di contrappeso.`}; }
+    else if(manyLow){ const n=kg+step; a={kg:n, reps:lo, act:'down', msg:`Le ripetizioni sono state meno di ${lo}: aggiungi aiuto e sali a <b>${kgf(n)} kg</b> di contrappeso.`, short:`Oggi più aiuto: <b>${kgf(n)} kg</b> di contrappeso.`}; }
+    else a={kg, goal, act:'reps', msg:`Resta su <b>${kgf(kg)} kg</b> di contrappeso e prova 1 ripetizione in più per serie (${goal.join(', ')}).`, short:`Oggi stesso aiuto (${kgf(kg)} kg), 1 ripetizione in più per serie.`};
+  } else if(allTop){
+    const pct = Math.min(x.g==='gambe'?.10:.05, Math.max(.025, (1+hi/30)/(1+lo/30)-1));
+    let n = rnd(kg*(1+pct)); if(n<=kg) n = kg+step;
+    a={kg:n, reps:lo, act:'up', msg:`Hai fatto ${hi} ripetizioni in tutte le serie: è ora di salire a <b>${kgf(n)} kg</b>. Va bene se all'inizio arrivi a ${lo}.`, short:`Oggi sali a <b>${kgf(n)} kg</b>: la volta scorsa hai chiuso tutte le serie a ${hi}.`};
+  } else if(manyLow){
+    const avg = reps.reduce((t,r)=>t+r,0)/reps.length, f = Math.min(.95, Math.max(.8, (1+avg/30)/(1+lo/30)));
+    let n = rnd(kg*f); if(n>=kg) n = kg-step; n = Math.max(step, n);
+    a={kg:n, reps:lo, act:'down', msg:`Con ${kgf(kg)} kg le ripetizioni sono state meno di ${lo}: prova <b>${kgf(n)} kg</b> e punta a ${lo}–${hi}.`, short:`Oggi scendi a <b>${kgf(n)} kg</b> e punta a ${lo}–${hi} ripetizioni.`};
+  } else {
+    a={kg, goal, act:'reps', msg:`Resta su <b>${kgf(kg)} kg</b> e prova 1 ripetizione in più per serie (${goal.join(', ')}). Quando arrivi a ${hi} in tutte, sali di peso.`, short:`Oggi stesso peso (${kgf(kg)} kg), 1 ripetizione in più per serie.`};
+  }
+  if(!assist && h.length>=4){ const b=h.map(s=>Math.max(0,...s.sets.map(t=>e1rm(+t.kg||0,+t.reps||0)))), L=b.length;
+    if(b[L-4]>0 && Math.max(b[L-1],b[L-2],b[L-3]) <= b[L-4]+.01 && last.at-h[L-4].at >= 10*864e5) a.stall=true; }
+  a.was = `L'ultima volta: ${S2.map(s=>setTxt(s)).join(', ')}.`; a.lo=lo; a.hi=hi;
+  return a;
+}
+const STALL_TXT = 'Da 3 allenamenti non migliori su questo esercizio. Capita: fai una settimana leggera (metà delle serie, stesso peso) e poi riparti.';
+function nextTip(x){
+  const a = advise(x); if(!a || a.first) return '';
+  return `<div class="next adv"><b>💡 Peso consigliato per la prossima volta</b><p>${esc(a.was)} ${a.msg}</p>${a.stall?`<p>${STALL_TXT}</p>`:''}
+    <details class="more"><summary>Perché questo peso?</summary>${SCI_W}</details></div>`;
+}
+/* durante la serie: consiglio di oggi e correzione dopo una serie troppo facile o troppo pesante */
+function runAdvice(p, x){
+  if(isTime(x)) return '';
+  const R = repRange(p.reps), done = run.sets.filter(s=>s.ex===p.ex && +s.reps>0), prev = done[done.length-1];
+  if(R && prev && (+prev.kg||0)>0 && x.id!=='trazioni-assistite'){
+    if(+prev.reps >= R[1]+3) return `<div class="advline">💡 La serie prima era leggera (${prev.reps} ripetizioni): puoi alzare il peso.</div>`;
+    if(+prev.reps < R[0]-2) return `<div class="advline">💡 La serie prima era pesante (${prev.reps} ripetizioni): abbassa un po' il peso.</div>`;
+    return '';
+  }
+  if(done.length) return '';
+  const a = advise(x, p.reps); if(!a) return '';
+  return `<div class="advline">💡 ${a.short}${a.stall?' '+STALL_TXT:''}</div>`;
 }
 /* ---------- CORSA ALL'APERTO ---------- */
 let corsa = store.get('corsa', null), gpsWatch = null, corsaTick = null, corsaWake = null, corsaMsg = '';
@@ -3255,7 +3382,7 @@ function viewDiary(){
     ${runBanner()}
     <div class="week">${days.map(d=>`<div><i class="${d.on?'on':''} ${d.today?'today':''}"></i>${d.l}</div>`).join('')}</div>
     <div class="stats"><div><b>${wSets}</b><span>Serie</span></div><div><b>${kgf(wVol)}</b><span>Kg sollevati</span></div><div><b>${log.length}</b><span>Totale sessioni</span></div></div>
-    ${muscleVolume(thisWeek)}
+    ${muscleMap(log.filter(w=>w.at>=Date.now()-7*864e5))}
     <h2 style="font-size:22px;text-transform:uppercase;margin-top:8px">Storico</h2>
     ${log.length ? `<div class="log2">${log.slice(0,60).map(w=>{
       const by={}; (w.sets||[]).forEach(s=>{(by[s.ex]=by[s.ex]||[]).push(s)});
