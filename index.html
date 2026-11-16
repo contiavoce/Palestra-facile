@@ -1709,7 +1709,7 @@ const GROUPS = {
   gambe:  {label:'Gambe',   color:'var(--yellow)'},
   spalle: {label:'Spalle',  color:'var(--green)'},
   braccia:{label:'Braccia', color:'var(--violet)'},
-  core:   {label:'Addome',  color:'var(--white)'},
+  core:   {label:'Core e addome',  color:'var(--white)'},
   cardio: {label:'Cardio',  color:'var(--teal)'}
 };
 const EQUIP = {macchina:'Macchina', cavi:'Cavi', bilanciere:'Bilanciere', manubri:'Manubri', corpo:'Corpo libero', cardio:'Attrezzo cardio'};
@@ -1936,6 +1936,43 @@ const EX = [
   steps:['Posizione di piegamento: mani sotto le spalle, corpo dritto.','Porta un ginocchio verso il petto.','Cambia gamba velocemente, come se corressi.','Tieni il bacino basso e fermo.'],
   br:{in:'Ogni 2 passi, dal naso.',out:'Ogni 2 passi, dalla bocca.'},tempo:[1,1],
   err:['Sedere troppo alto','Trattenere il fiato'],dose:['3','30"','45"']},
+ {id:'curl-up',name:'Curl-up di McGill',g:'core',e:'corpo',lv:'Principiante',mu:'Addome',hl:['abs'],
+  steps:['Sdraiato sulla schiena: una gamba piegata con il piede a terra, l\'altra distesa.','Mani sotto la parte bassa della schiena, per tenere la sua curva naturale.','Contrai l\'addome e solleva appena testa e spalle di pochi centimetri, senza piegare il collo.','Resta su 8–10 secondi respirando, poi scendi. A metà serie cambia gamba.'],
+  br:{in:'Prima di salire, con calma.',out:'Respira corto e regolare mentre tieni su.'},tempo:[3,2],
+  note:'Fa parte dei "tre grandi" di Stuart McGill (con plank laterale e bird dog): allenano l\'addome senza piegare troppo la schiena.',
+  err:['Salire troppo in alto (diventa un crunch)','Tirare su la testa con il collo','Schiacciare la schiena a terra'],dose:['3','6 da 10"','45"']},
+ {id:'bird-dog',name:'Bird dog',g:'core',e:'corpo',lv:'Principiante',mu:'Lombari, glutei e addome',hl:['lowback','glutes','abs'],
+  steps:['A quattro zampe: mani sotto le spalle, ginocchia sotto le anche, schiena dritta.','Contrai leggermente l\'addome.','Distendi insieme il braccio destro in avanti e la gamba sinistra indietro, fino a fare una linea con il corpo.','Tieni 8–10 secondi, torna giù e cambia lato.'],
+  br:{in:'Mentre torni a quattro zampe.',out:'Respira regolare mentre tieni la posizione.'},tempo:[3,2],
+  note:'Uno dei "tre grandi" di McGill: rinforza schiena bassa e glutei con un carico minimo sulla colonna.',
+  err:['Inarcare la schiena alzando troppo la gamba','Ruotare il bacino','Andare veloce'],dose:['3','6 per lato','45"']},
+ {id:'dead-bug',name:'Dead bug',g:'core',e:'corpo',lv:'Principiante',mu:'Addome',hl:['abs'],
+  steps:['Sdraiato sulla schiena, braccia tese verso il soffitto.','Anche e ginocchia piegate a 90°, stinchi paralleli al pavimento.','Schiena bassa appoggiata a terra: distendi lentamente il braccio destro dietro la testa e la gamba sinistra in avanti, senza toccare terra.','Torna al centro e cambia lato.'],
+  br:{in:'Mentre torni al centro.',out:'Mentre distendi braccio e gamba.'},tempo:[2,3],
+  err:['La schiena si stacca da terra','Andare troppo veloce','Trattenere il fiato'],dose:['3','8 per lato','45"']},
+ {id:'pallof-press',name:'Pallof press ai cavi',g:'core',e:'cavi',lv:'Principiante',mu:'Addome e obliqui',hl:['abs'],
+  steps:['Cavo all\'altezza del petto. Mettiti di fianco alla carrucola, piedi alla larghezza delle spalle.','Maniglia stretta con due mani al centro del petto.','Spingi le mani in avanti fino a braccia tese: il cavo prova a girarti, tu resti dritto.','Tieni 2 secondi, riporta le mani al petto. Finite le ripetizioni, girati e fai l\'altro lato.'],
+  br:{in:'Mentre riporti le mani al petto.',out:'Mentre spingi in avanti.'},tempo:[2,2],
+  note:'Esercizio "anti-rotazione": il core lavora per impedire al busto di girare, come fa nella vita di tutti i giorni.',
+  err:['Lasciare che il busto ruoti verso il cavo','Peso troppo alto','Inarcare la schiena'],dose:['3','10 per lato','60"']},
+ {id:'woodchop-cavi',name:'Woodchop ai cavi',g:'core',e:'cavi',lv:'Intermedio',mu:'Obliqui e addome',hl:['abs'],
+  steps:['Carrucola alta. Mettiti di fianco, piedi più larghi delle spalle.','Afferra la maniglia con due mani sopra la spalla, braccia quasi tese.','Porta la maniglia in diagonale verso il ginocchio opposto, girando busto e anche insieme.','Torna su lentamente. Finite le ripetizioni, cambia lato.'],
+  br:{in:'Mentre torni su.',out:'Mentre tiri in diagonale verso il basso.'},tempo:[3,2],
+  err:['Tirare solo con le braccia','Curvare la schiena','Peso troppo alto e movimento a strappo'],dose:['3','10–12 per lato','60"']},
+ {id:'ruota-addominale',name:'Ruota addominale',g:'core',e:'corpo',lv:'Intermedio',mu:'Addome',hl:['abs'],
+  steps:['In ginocchio su un tappetino, mani sulla ruota sotto le spalle.','Addome e glutei contratti, schiena dritta.','Fai rotolare la ruota in avanti lentamente, finché riesci a tenere la schiena dritta.','Torna indietro tirando con l\'addome.'],
+  br:{in:'Mentre vai avanti.',out:'Mentre torni indietro.'},tempo:[3,2],
+  note:'Negli studi è tra gli esercizi che attivano di più l\'addome. Inizia con un percorso corto e allungalo piano piano.',
+  err:['La schiena si inarca (pancia verso il basso)','Andare troppo lontano subito','Tornare indietro spingendo il sedere in alto'],dose:['3','6–10','90"']},
+ {id:'suitcase-carry',name:'Camminata con manubrio da un lato',g:'core',e:'manubri',lv:'Principiante',mu:'Obliqui, addome e presa',hl:['abs'],t:1,
+  steps:['Prendi un manubrio pesante in una sola mano, come una valigia.','In piedi dritto, spalle allo stesso livello, addome contratto.','Cammina a passi normali senza piegarti verso il manubrio.','Dopo il tempo indicato cambia mano.'],
+  br:{in:'Regolare, dal naso.',out:'Regolare, senza trattenere il fiato.'},tempo:[2,2],
+  note:'Il "suitcase carry" (camminata con valigia): il core lavora per non farti piegare di lato.',
+  err:['Piegarsi verso il lato del manubrio','Spalla del manubrio che scende','Passi troppo veloci'],dose:['3','30" per lato','60"']},
+ {id:'knee-raise-sedia',name:'Ginocchia al petto alla sedia romana',g:'core',e:'macchina',lv:'Intermedio',mu:'Addome basso',hl:['abs'],
+  steps:['Sali sulla sedia romana: schiena appoggiata allo schienale, avambracci sui cuscinetti, gambe che pendono.','Spalle basse, addome contratto.','Porta le ginocchia verso il petto, arrotolando un po\' il bacino in avanti alla fine.','Scendi lentamente senza dondolare.'],
+  br:{in:'Mentre scendi.',out:'Mentre porti su le ginocchia.'},tempo:[3,2],
+  err:['Dondolare e usare lo slancio','Staccare la schiena dallo schienale','Scendere di colpo'],dose:['3','10–15','60"']},
 
  {id:'ellittica',name:'Ellittica',g:'cardio',e:'cardio',lv:'Tutti',mu:'Cuore, gambe e braccia',
   steps:['Sali sui pedali e afferra le maniglie mobili.','Parti piano per 3 minuti.','Spingi e tira con le braccia mentre pedali, schiena dritta.','Alza la resistenza invece della velocità per faticare di più.'],
@@ -2225,6 +2262,38 @@ const PRO = {
  steps:["Posizione di piegamento: mani sotto le spalle, corpo dritto.","Porta un ginocchio verso il petto.","Cambia gamba velocemente, come se corressi.","Tieni il bacino basso e fermo."],
  cues:["Le spalle stanno sopra le mani per tutto il tempo.","Se sei agli inizi, fallo lento: un ginocchio alla volta.","Respira: non trattenere il fiato."],
  err:["Sedere troppo alto → corpo dritto","Trattenere il fiato → respira","Spalle indietro rispetto alle mani → sopra le mani"]},
+"curl-up":{feel:"Addome, soprattutto la parte alta e centrale.",
+ steps:["Sdraiato: una gamba piegata con il piede a terra, l'altra distesa.","Mani sotto la parte bassa della schiena per tenere la sua curva naturale.","Contrai l'addome come per prepararti a un colpo e solleva appena testa e spalle.","Resta su 8–10 secondi respirando, poi scendi. A metà serie cambia gamba."],
+ cues:["Il movimento è piccolo: pochi centimetri.","Testa e collo restano in linea, come un blocco unico con il petto.","Si respira mentre si tiene su."],
+ err:["Salire troppo → resta basso","Collo piegato → mento lontano dal petto","Trattenere il fiato → respira corto"]},
+"bird-dog":{feel:"Schiena bassa, glutei e addome.",
+ steps:["A quattro zampe: mani sotto le spalle, ginocchia sotto le anche.","Contrai leggermente l'addome.","Distendi il braccio destro avanti e la gamba sinistra indietro, fino alla linea del corpo.","Tieni 8–10 secondi, torna giù e cambia lato."],
+ cues:["Immagina un bicchiere d'acqua sulla schiena: non deve cadere.","La gamba si allunga indietro, non sale in alto.","Pugno chiuso e piede a martello aiutano a contrarre di più."],
+ err:["Schiena inarcata → gamba più bassa","Bacino che ruota → muoviti più lento","Andare veloce → tieni 8–10 secondi"]},
+"dead-bug":{feel:"Addome, in profondità.",
+ steps:["Sdraiato sulla schiena, braccia tese verso il soffitto.","Anche e ginocchia piegate a 90°.","Distendi lentamente il braccio destro dietro la testa e la gamba sinistra in avanti.","Torna al centro e cambia lato."],
+ cues:["La schiena bassa resta incollata a terra per tutto il tempo.","Se la schiena si stacca, distendi meno la gamba.","Espira mentre allunghi."],
+ err:["Schiena staccata → allunga meno","Troppo veloce → 3 secondi per allungare","Fiato trattenuto → espira allungando"]},
+"pallof-press":{feel:"Addome e fianchi (obliqui), dal lato opposto al cavo.",
+ steps:["Cavo all'altezza del petto, tu di fianco alla carrucola.","Maniglia al centro del petto con due mani.","Spingi in avanti fino a braccia tese, senza farti girare.","Tieni 2 secondi e torna al petto. Poi cambia lato."],
+ cues:["Il busto resta fermo e guarda sempre davanti.","Più ti allontani dalla carrucola, più è difficile.","Ginocchia morbide, glutei contratti."],
+ err:["Busto che gira → meno peso","Spalle che salgono → spalle basse","Schiena inarcata → addome contratto"]},
+"woodchop-cavi":{feel:"Fianchi (obliqui) e addome.",
+ steps:["Carrucola alta, tu di fianco, piedi larghi.","Maniglia con due mani sopra la spalla.","Tira in diagonale verso il ginocchio opposto girando busto e anche insieme.","Torna su lentamente e poi cambia lato."],
+ cues:["Le braccia restano quasi tese: il lavoro lo fa il busto.","Il piede dietro ruota insieme all'anca.","Movimento fluido, non a strappo."],
+ err:["Tirare con le braccia → braccia ferme","Schiena curva → petto alto","Strappo → più lento"]},
+"ruota-addominale":{feel:"Addome, tutto, e un po' le spalle.",
+ steps:["In ginocchio, mani sulla ruota sotto le spalle.","Addome e glutei contratti.","Rotola avanti lentamente finché la schiena resta dritta.","Torna indietro tirando con l'addome."],
+ cues:["Pancia in dentro e bacino leggermente ruotato in avanti.","Vai solo fin dove la schiena non si inarca.","All'inizio puoi rotolare verso un muro che ti ferma."],
+ err:["Schiena inarcata → percorso più corto","Troppo lontano → aumenta piano piano","Sedere in alto al ritorno → bacino in linea"]},
+"suitcase-carry":{feel:"Fianco opposto al manubrio (obliqui) e presa.",
+ steps:["Manubrio pesante in una mano, come una valigia.","In piedi dritto, spalle allo stesso livello.","Cammina a passi normali senza piegarti.","Dopo il tempo indicato cambia mano."],
+ cues:["Immagina di essere tirato in alto da un filo sulla testa.","Il braccio libero resta rilassato o un po' aperto.","Scegli un peso che riesci a tenere dritto fino alla fine."],
+ err:["Piegarsi verso il peso → meno peso","Spalla bassa → spalle allo stesso livello","Passi veloci → passi normali"]},
+"knee-raise-sedia":{feel:"Addome, soprattutto la parte bassa.",
+ steps:["Schiena allo schienale, avambracci sui cuscinetti, gambe che pendono.","Spalle basse, addome contratto.","Porta le ginocchia verso il petto, arrotolando il bacino alla fine.","Scendi lentamente senza dondolare."],
+ cues:["Il bacino deve arrotolarsi: non basta alzare le ginocchia.","Lento in discesa: niente pendolo.","Schiena sempre appoggiata."],
+ err:["Dondolare → fermati in basso un attimo","Schiena staccata → appoggiala","Scendere di colpo → 3 secondi"]},
 "ellittica":{feel:"Cuore e fiato, gambe, glutei e braccia.",
  steps:["Sali sui pedali e afferra le maniglie mobili.","Parti piano per 3 minuti.","Spingi e tira con le braccia mentre pedali, schiena dritta.","Alza la resistenza invece della velocità per faticare di più."],
  cues:["Tutto il piede resta sul pedale.","Spingi con i talloni per far lavorare di più i glutei.","Busto dritto, sguardo avanti."],
@@ -2247,8 +2316,12 @@ const SESS = [
   items:[['vogatore',1,'5\' riscaldamento',0],['panca-piana',4,'6–8',120],['trazioni-assistite',3,'6–10',120],['croci-cavi',3,'12–15',60],['rematore-manubrio',3,'10 per lato',60],['alzate-laterali',3,'12–15',60],['curl-manubri',3,'10–12',60],['pushdown',3,'12',60]]},
  {id:'parte-bassa',name:'Parte bassa',for:'Gambe e addome',min:50,
   items:[['cyclette',1,'5\' riscaldamento',0],['squat',4,'6–8',120],['leg-press',3,'10–12',90],['leg-extension',3,'12–15',60],['leg-curl',3,'12',60],['polpacci',3,'15',45],['crunch-cavo',3,'12–15',60]]},
- {id:'addome-15',name:'Addome 15 minuti',for:'Da fare a fine allenamento o da sola',min:15,
-  items:[['plank',3,'30–45"',45],['crunch',3,'15',45],['crunch-cavo',3,'12–15',60]]},
+ {id:'addome-15',name:'Core 15 minuti',for:'Da fare a fine allenamento o da sola',min:15,
+  items:[['dead-bug',3,'8 per lato',45],['pallof-press',3,'10 per lato',45],['crunch-cavo',3,'12–15',60],['plank',3,'30–45"',45]]},
+ {id:'core-schiena',name:'Core per la schiena',for:'I "tre grandi" di McGill: core forte senza caricare la schiena',min:15,
+  items:[['curl-up',3,'6 da 10"',45],['plank-laterale',3,'20–30" per lato',45],['bird-dog',3,'6 per lato',45],['suitcase-carry',2,'30" per lato',60]]},
+ {id:'core-forte',name:'Core forte',for:'Per chi è già allenato: anti-estensione, rotazione e carichi',min:20,
+  items:[['ruota-addominale',3,'6–10',90],['knee-raise-sedia',3,'10–15',60],['woodchop-cavi',3,'10–12 per lato',60],['suitcase-carry',3,'30–40" per lato',60]]},
  {id:'cardio-30',name:'Cardio 30 minuti',for:'Fiato e resistenza, ritmo in cui riesci a parlare',min:30,
   items:[['tapis-roulant',1,'10\'',60],['cyclette',1,'10\'',60],['vogatore',1,'10\'',0]]},
  {id:'braccia',name:'Braccia',for:'Bicipiti e tricipiti, alternati',min:45,
@@ -2265,28 +2338,28 @@ const LIVELLI = {
  esperto:{name:'Esperto',info:'Oltre 2 anni. 5 giorni: Forza alta, Forza bassa, riposo, Spinta, Tirata, Gambe e glutei. Sui primi esercizi di forza fai la prima serie più pesante (4–6), poi le altre con il 10% in meno. Blocchi di 4–6 settimane, poi 1 settimana leggera.'}
 };
 SESS.push(
- {id:'liv-p-a',lvl:'principiante',name:'Principiante A',for:'Corpo intero · alterna con la B',min:45,
-  items:[['tapis-roulant',1,'5\' facile',0],['leg-press',3,'10–15',90],['chest-press',3,'10–15',90],['lat-machine',3,'10–15',90],['leg-curl',2,'12–15',60],['shoulder-press',2,'10–12',60],['plank',2,'20–30"',45]]},
+ {id:'liv-p-a',lvl:'principiante',name:'Principiante A',for:'Corpo intero · alterna con la B',min:50,
+  items:[['tapis-roulant',1,'5\' facile',0],['leg-press',3,'10–15',90],['chest-press',3,'10–15',90],['lat-machine',3,'10–15',90],['leg-curl',2,'12–15',60],['shoulder-press',2,'10–12',60],['plank',2,'20–30"',45],['bird-dog',2,'6 per lato',45]]},
  {id:'liv-p-b',lvl:'principiante',name:'Principiante B',for:'Corpo intero · alterna con la A',min:45,
-  items:[['cyclette',1,'5\' facile',0],['goblet-squat',3,'10–12',90],['pulley',3,'10–15',90],['pectoral-machine',2,'12–15',60],['hip-thrust',2,'10–12',90],['alzate-laterali',2,'12–15',60],['crunch',2,'12–15',45]]},
+  items:[['cyclette',1,'5\' facile',0],['goblet-squat',3,'10–12',90],['pulley',3,'10–15',90],['pectoral-machine',2,'12–15',60],['hip-thrust',2,'10–12',90],['alzate-laterali',2,'12–15',60],['dead-bug',2,'8 per lato',45]]},
  {id:'liv-i-alta-a',lvl:'intermedio',name:'Intermedio · Parte alta A',for:'Petto, schiena, spalle, braccia',min:60,
   items:[['vogatore',1,'5\' riscaldamento',0],['panca-piana',4,'6–8',150],['lat-machine',4,'8–10',120],['shoulder-press',3,'8–10',120],['pulley',3,'10–12',90],['alzate-laterali',3,'12–15',60],['curl-manubri',2,'10–12',60],['pushdown',2,'10–12',60]]},
  {id:'liv-i-bassa-a',lvl:'intermedio',name:'Intermedio · Parte bassa A',for:'Cosce, glutei, polpacci, addome',min:60,
-  items:[['cyclette',1,'5\' riscaldamento',0],['squat',4,'6–8',180],['stacco-rumeno',3,'8–10',120],['leg-press',3,'10–12',120],['leg-curl',3,'10–12',90],['polpacci',3,'12–15',60],['crunch-cavo',3,'12–15',60]]},
+  items:[['cyclette',1,'5\' riscaldamento',0],['squat',4,'6–8',180],['stacco-rumeno',3,'8–10',120],['leg-press',3,'10–12',120],['leg-curl',3,'10–12',90],['polpacci',3,'12–15',60],['crunch-cavo',3,'12–15',60],['pallof-press',2,'10 per lato',45]]},
  {id:'liv-i-alta-b',lvl:'intermedio',name:'Intermedio · Parte alta B',for:'Petto, schiena, spalle, braccia',min:60,
   items:[['vogatore',1,'5\' riscaldamento',0],['panca-inclinata-manubri',3,'8–10',120],['rematore-manubrio',3,'8–10 per lato',90],['chest-press',3,'10–12',90],['trazioni-assistite',3,'8–10',120],['face-pull',3,'15',60],['curl-martello',2,'12',60],['estensioni-sopra-testa',2,'12',60],['alzate-laterali',2,'15',60]]},
- {id:'liv-i-bassa-b',lvl:'intermedio',name:'Intermedio · Parte bassa B',for:'Glutei, cosce, addome',min:55,
-  items:[['cyclette',1,'5\' riscaldamento',0],['hip-thrust',4,'8–10',120],['affondi',3,'10 per gamba',90],['leg-extension',3,'12–15',60],['leg-curl',3,'12–15',60],['abductor',2,'15',60],['sollevamento-gambe',3,'12',60]]},
+ {id:'liv-i-bassa-b',lvl:'intermedio',name:'Intermedio · Parte bassa B',for:'Glutei, cosce, addome',min:60,
+  items:[['cyclette',1,'5\' riscaldamento',0],['hip-thrust',4,'8–10',120],['affondi',3,'10 per gamba',90],['leg-extension',3,'12–15',60],['leg-curl',3,'12–15',60],['abductor',2,'15',60],['knee-raise-sedia',3,'10–12',60],['suitcase-carry',2,'30" per lato',60]]},
  {id:'liv-e-forza-alta',lvl:'esperto',name:'Esperto · Forza parte alta',for:'Esercizi pesanti per petto, schiena, spalle',min:70,
   items:[['vogatore',1,'5\' riscaldamento',0],['panca-piana',4,'1ª 4–6, poi 6–8',180],['rematore-bilanciere',4,'6–8',150],['lento-manubri',3,'8–10',120],['trazioni-assistite',3,'6–10',120],['alzate-laterali',3,'12–15',60],['curl-bilanciere',3,'8–10',90],['french-press',3,'8–10',90]]},
  {id:'liv-e-forza-bassa',lvl:'esperto',name:'Esperto · Forza parte bassa',for:'Esercizi pesanti per gambe e glutei',min:70,
-  items:[['cyclette',1,'5\' riscaldamento',0],['squat',4,'1ª 4–6, poi 6–8',210],['stacco-rumeno',4,'6–8',180],['leg-press',3,'10–12',120],['leg-curl',3,'10–12',90],['polpacci',4,'10–12',60],['crunch-macchina',3,'10–12',60]]},
+  items:[['cyclette',1,'5\' riscaldamento',0],['squat',4,'1ª 4–6, poi 6–8',210],['stacco-rumeno',4,'6–8',180],['leg-press',3,'10–12',120],['leg-curl',3,'10–12',90],['polpacci',4,'10–12',60],['ruota-addominale',3,'6–10',90]]},
  {id:'liv-e-spinta',lvl:'esperto',name:'Esperto · Spinta',for:'Petto, spalle, tricipiti',min:65,
   items:[['ellittica',1,'5\' riscaldamento',0],['panca-inclinata-manubri',4,'8–10',120],['chest-press',3,'10–12',120],['croci-cavi',3,'12–15',60],['shoulder-press',3,'8–10',120],['alzate-laterali',4,'12–20',60],['dip-macchina',3,'10–12',90],['estensioni-sopra-testa',3,'12–15',60]]},
- {id:'liv-e-tirata',lvl:'esperto',name:'Esperto · Tirata',for:'Schiena, spalle dietro, bicipiti',min:65,
-  items:[['vogatore',1,'5\' riscaldamento',0],['lat-machine',4,'8–10',120],['pulley',3,'10–12',120],['rematore-manubrio',3,'10 per lato',90],['pullover-cavo',3,'12–15',60],['reverse-fly',3,'15',60],['curl-scott',3,'10–12',60],['curl-martello',2,'12',60]]},
- {id:'liv-e-gambe',lvl:'esperto',name:'Esperto · Gambe e glutei',for:'Glutei, cosce, interno-esterno coscia, addome',min:65,
-  items:[['stepper',1,'5\' riscaldamento',0],['hip-thrust',4,'8–10',120],['affondi',3,'10 per gamba',120],['leg-extension',3,'12–15',60],['leg-curl',3,'12–15',60],['adductor',3,'15',60],['abductor',2,'15',60],['sollevamento-gambe',3,'15',60]]}
+ {id:'liv-e-tirata',lvl:'esperto',name:'Esperto · Tirata',for:'Schiena, spalle dietro, bicipiti',min:70,
+  items:[['vogatore',1,'5\' riscaldamento',0],['lat-machine',4,'8–10',120],['pulley',3,'10–12',120],['rematore-manubrio',3,'10 per lato',90],['pullover-cavo',3,'12–15',60],['reverse-fly',3,'15',60],['curl-scott',3,'10–12',60],['curl-martello',2,'12',60],['suitcase-carry',3,'30–40" per lato',60]]},
+ {id:'liv-e-gambe',lvl:'esperto',name:'Esperto · Gambe e glutei',for:'Glutei, cosce, interno-esterno coscia, addome',min:70,
+  items:[['stepper',1,'5\' riscaldamento',0],['hip-thrust',4,'8–10',120],['affondi',3,'10 per gamba',120],['leg-extension',3,'12–15',60],['leg-curl',3,'12–15',60],['adductor',3,'15',60],['abductor',2,'15',60],['sollevamento-gambe',3,'15',60],['woodchop-cavi',3,'10 per lato',60]]}
 );
 /* piani a corpo libero (senza palestra) */
 const LIVELLI_CL = {
@@ -2445,6 +2518,22 @@ const ANIM = {
    A:{hip:[140,128],torso:-2,hand:[156,74],foot:[184,184],eb:1}, B:{hip:[140,128],torso:36,hand:[184,98],foot:[184,184],eb:1}},
  'mountain-climber':{ab:'out',props:['floor'],
    A:{hip:[112,140],torso:66,hand:[166,184],foot:[48,184],foot2:[122,172],eb:-1}, B:{hip:[112,140],torso:66,hand:[166,184],foot:[122,172],foot2:[48,184],eb:-1}},
+ 'curl-up':{ab:'out',props:['floor'],
+   A:{hip:[160,176],torso:270,hand:[150,184],foot:[204,184],foot2:[236,182],eb:-1}, B:{hip:[160,176],torso:281,hand:[150,184],foot:[204,184],foot2:[236,182],eb:-1}},
+ 'bird-dog':{ab:'in',props:['floor'],hl:['lowback','glutes','abs'],
+   A:{hip:[116,142],torso:90,hand:[170,184],hand2:[170,184],foot:[78,184],foot2:[78,184],eb:1,lb:-1}, B:{hip:[116,142],torso:90,hand:[226,136],hand2:[170,184],foot:[40,140],foot2:[78,184],eb:1,lb:-1}},
+ 'dead-bug':{ab:'out',props:['floor'],
+   A:{hip:[180,176],torso:270,hand:[128,122],hand2:[128,122],thAng:0,shAng:90,foot2:[218,136],eb:1,lb:1}, B:{hip:[180,176],torso:270,hand:[74,168],hand2:[128,122],thAng:78,shAng:84,foot2:[218,136],eb:1,lb:1}},
+ 'pallof-press':{ab:'out',props:['cable'],anchor:[40,82],
+   A:{hip:[150,106],torso:0,hand:[170,86],foot:[166,184],foot2:[136,184],eb:1}, B:{hip:[150,106],torso:0,hand:[206,78],foot:[166,184],foot2:[136,184],eb:1}},
+ 'woodchop-cavi':{ab:'out',props:['cable'],anchor:[44,22],
+   A:{hip:[150,108],torso:-6,hand:[112,40],foot:[184,184],foot2:[118,184],eb:1}, B:{hip:[150,110],torso:16,hand:[198,142],foot:[184,184],foot2:[118,184],eb:1}},
+ 'ruota-addominale':{ab:'in',props:['wheel'],
+   A:{hip:[108,140],torso:60,hand:[158,170],thAng:180,shAng:270,eb:-1}, B:{hip:[138.6,154.3],torso:84,hand:[240,170],thAng:230,shAng:270,eb:-1}},
+ 'suitcase-carry':{ab:'in',props:['db'],noArrow:true,
+   A:{hip:[150,106],torso:0,hand:'down',foot:[172,182],foot2:[130,184],eb:1}, B:{hip:[150,106],torso:0,hand:'down',foot:[130,184],foot2:[172,182],eb:1}},
+ 'knee-raise-sedia':{ab:'out',props:['back','captain'],
+   A:{hip:[140,98],torso:0,uaAng:180,faAng:90,thAng:180,shAng:180}, B:{hip:[140,96],torso:4,uaAng:180,faAng:90,thAng:76,shAng:170}},
  'ellittica':{ab:'in',props:['ellip'],
    A:{hip:[150,96],torso:2,hand:[186,92],hand2:[170,104],foot:[174,170],foot2:[126,178]}, B:{hip:[150,96],torso:2,hand:[170,104],hand2:[186,92],foot:[126,178],foot2:[174,170]}},
  'stepper':{ab:'in',props:['stairs'],
@@ -2562,6 +2651,7 @@ function drawScene(ctx, id, t, col, info){
   if(pr.has('treadmill')){ rect(60,180,200,7,M); line([[236,180],[250,96]],5,M); line([[238,104],[266,96]],6,M); }
   if(pr.has('bike')){ const c=A.crank; line([[J.hip[0],J.hip[1]+8],[c[0],c[1]],[196,96]],6,M); line([[c[0]-10,GROUND],[c[0]+30,GROUND]],6,M); line([[J.hip[0]-14,J.hip[1]+7],[J.hip[0]+12,J.hip[1]+7]],6,M); line([[188,94],[204,90]],6,M); ctx.beginPath(); ctx.arc(c[0],c[1],16,0,Math.PI*2); ctx.lineWidth=2; ctx.strokeStyle=col.line; ctx.stroke(); }
   if(pr.has('rower')){ line([[40,180],[230,180]],5,M); rect(J.hip[0]-16,J.hip[1]+6,32,6,M); line([[204,152],[204,180]],6,M); disc([236,160],20,col.line); }
+  if(pr.has('captain')){ line([[J.hip[0]-16,30],[J.hip[0]-16,GROUND]],6,M); line([[J.hip[0]-16,GROUND],[J.hip[0]+40,GROUND]],6,M); line([[J.hip[0]-16,J.sh[1]+34],[J.hip[0]+36,J.sh[1]+34]],5,M); }
   if(pr.has('kneepad')){ rect(J.knee[0]-12,J.knee[1]-14,26,8,M); }
   if(pr.has('footplate')){ line([[214,138],[214,176]],6,M); }
   // figura piena: contorno nel colore di fondo + riempimento
@@ -2616,6 +2706,8 @@ function drawScene(ctx, id, t, col, info){
   if(pr.has('bar')){ const h=J.hand; disc(h,16,K); disc(h,4,col.bg); }
   if(pr.has('db')){ const h=J.hand; line([[h[0]-7,h[1]],[h[0]+7,h[1]]],10,K,'butt'); if(A.mirror){ const m=mir(h); line([[m[0]-7,m[1]],[m[0]+7,m[1]]],10,K,'butt'); } if(J.hand2&&!pr.has('rowbench')){} }
   if(pr.has('grip')) disc(J.hand,6,K);
+  if(pr.has('captain')) rect(J.elbow[0]-6,J.elbow[1]+5,44,7,K);
+  if(pr.has('wheel')){ const w=[J.hand[0],J.hand[1]+8]; disc(w,9,K); disc(w,3,col.bg); line([[w[0]-12,w[1]],[w[0]+12,w[1]]],3,M); }
   if(pr.has('dbv')){ const h=J.hand; line([[h[0],h[1]-7],[h[0],h[1]+7]],10,K,'butt'); }
   if(pr.has('handles')){ disc(J.hand,5,K); disc(mir(J.hand),5,K); }
   if(pr.has('kneepads')){ disc([J.knee[0]+8,J.knee[1]],6,K); disc([mir(J.knee)[0]-8,J.knee[1]],6,K); }
@@ -2956,7 +3048,7 @@ const vdb = {
 };
 let videoURLs = [];
 const MUIT = {lats:'Dorsali',biceps:'Bicipiti',rhomb:'Romboidi',delt_p:'Spalle dietro',traps:'Trapezio',forearm:'Avambracci',pecs:'Pettorali',triceps:'Tricipiti',delt_a:'Spalle davanti',delt_l:'Spalle laterali',abs:'Addominali',obliq:'Obliqui',serr:'Dentato',lowback:'Lombari',glutes:'Glutei',gmed:'Gluteo medio',quads:'Quadricipiti',hams:'Femorali',adduct:'Adduttori',calves:'Polpacci',tibialis:'Tibiali'};
-function muNames(id){ const E=(typeof G3!=='undefined'&&G3.E&&G3.E[id])||{}; const f=a=>[...new Set((a||[]).map(k=>MUIT[k]||k))].join(', '); return {p:f(E.prim), s:f(E.sec)}; }
+function muNames(id){ const E=(typeof G3!=='undefined'&&G3.E&&G3.E[id])||(MUW[id]?{prim:MUW[id][0],sec:MUW[id][1]}:{}); const f=a=>[...new Set((a||[]).map(k=>MUIT[k]||k))].join(', '); return {p:f(E.prim), s:f(E.sec)}; }
 const builtinVid = id => (typeof VIDS!=='undefined' && VIDS.includes(id)) ? 'v-'+id+'.mp4' : null;
 async function videoSrc(id){ const b=await vdb.get(id); if(b){ const u=URL.createObjectURL(b); videoURLs.push(u); return {src:u, mine:true}; } const v=builtinVid(id); return v?{src:v, mine:false}:null; }
 async function paintMyVideo(id){
@@ -3980,7 +4072,7 @@ function bindAudioCard(redraw){
 /* ---------- MAPPA DEI MUSCOLI ----------
    Serie degli ultimi 7 giorni per muscolo. Conteggio "frazionario" come in Pelland e coll. (Sports Med 2025):
    1 serie per i muscoli che lavorano di più, ½ per quelli che aiutano. Soglie: 4 (minimo), 10–20 (zona consigliata, ACSM 2026). */
-const MUW = {"chest-press":[["pecs"],["delt_a","triceps"]],"panca-piana":[["pecs"],["delt_a","triceps"]],"croci-cavi":[["pecs"],["delt_a"]],"piegamenti":[["pecs"],["triceps","delt_a","abs"]],"panca-manubri":[["pecs"],["delt_a","triceps"]],"panca-inclinata-manubri":[["pecs","delt_a"],["triceps"]],"pectoral-machine":[["pecs"],["delt_a"]],"lat-machine":[["lats"],["biceps","rhomb","delt_p","traps","forearm"]],"pulley":[["lats","rhomb"],["biceps","delt_p","traps"]],"rematore-manubrio":[["lats"],["rhomb","biceps","delt_p"]],"trazioni-assistite":[["lats"],["biceps","rhomb","delt_p","forearm"]],"rematore-bilanciere":[["lats","rhomb"],["biceps","delt_p","lowback","hams"]],"pullover-cavo":[["lats"],["triceps","pecs"]],"leg-press":[["quads","glutes"],["hams","adduct"]],"squat":[["quads","glutes"],["hams","lowback","adduct"]],"leg-extension":[["quads"],[]],"leg-curl":[["hams"],["calves"]],"affondi":[["quads","glutes"],["hams","adduct","calves"]],"polpacci":[["calves"],[]],"hip-thrust":[["glutes"],["hams","quads"]],"stacco-rumeno":[["hams","glutes"],["lowback","forearm"]],"goblet-squat":[["quads","glutes"],["adduct","abs"]],"abductor":[["gmed"],["glutes"]],"adductor":[["adduct"],[]],"shoulder-press":[["delt_a","delt_l"],["triceps","traps"]],"alzate-laterali":[["delt_l"],["traps","delt_a"]],"face-pull":[["delt_p","rhomb"],["traps"]],"lento-manubri":[["delt_a","delt_l"],["triceps","traps"]],"alzate-frontali":[["delt_a"],["pecs","delt_l"]],"reverse-fly":[["delt_p","rhomb"],["traps"]],"tirate-mento":[["delt_l","traps"],["biceps","delt_a"]],"curl-bilanciere":[["biceps"],["forearm","delt_a"]],"curl-manubri":[["biceps"],["forearm"]],"curl-martello":[["biceps","forearm"],[]],"curl-cavo":[["biceps"],["forearm"]],"curl-scott":[["biceps"],["forearm"]],"pushdown":[["triceps"],[]],"french-press":[["triceps"],[]],"estensioni-sopra-testa":[["triceps"],[]],"kickback":[["triceps"],["delt_p"]],"dip-macchina":[["triceps"],["pecs","delt_a"]],"plank":[["abs","obliq"],["delt_a","glutes","quads"]],"crunch":[["abs"],["obliq"]],"crunch-cavo":[["abs"],["obliq"]],"sollevamento-gambe":[["abs"],["quads","obliq"]],"crunch-macchina":[["abs"],["obliq"]],"mountain-climber":[["abs"],["delt_a","quads","obliq"]],"tapis-roulant":[["quads","calves"],["glutes","hams"]],"cyclette":[["quads"],["glutes","calves","hams"]],"ellittica":[["quads","glutes"],["hams","calves","lats","delt_a"]],"stepper":[["glutes","quads"],["calves","hams"]],"vogatore":[["lats","quads"],["hams","glutes","biceps","rhomb","lowback"]],"iperestensioni":[["lowback","glutes"],["hams"]],"squat-libero":[["quads","glutes"],["adduct","hams"]],"squat-bulgaro":[["quads","glutes"],["adduct","hams"]],"ponte-glutei":[["glutes"],["hams"]],"leg-curl-asciugamano":[["hams"],["glutes","calves"]],"nordic-curl":[["hams"],["calves","glutes"]],"polpacci-gradino":[["calves"],[]],"piegamenti-rialzati":[["pecs"],["triceps","delt_a"]],"piegamenti-stretti":[["triceps","pecs"],["delt_a","abs"]],"piegamenti-piedi-rialzati":[["pecs","delt_a"],["triceps","abs"]],"pike-push-up":[["delt_a","delt_l"],["triceps","traps"]],"dip-sedia":[["triceps"],["pecs","delt_a"]],"rematore-tavolo":[["lats","rhomb"],["biceps","delt_p","traps","forearm"]],"alzate-yt":[["delt_p","traps"],["rhomb","delt_l"]],"plank-laterale":[["obliq","abs"],["gmed","delt_l"]]};
+const MUW = {"curl-up":[["abs"],["obliq"]],"bird-dog":[["lowback","glutes"],["abs","delt_a"]],"dead-bug":[["abs"],["obliq"]],"pallof-press":[["abs","obliq"],["glutes","delt_a"]],"woodchop-cavi":[["obliq","abs"],["delt_a"]],"ruota-addominale":[["abs"],["lats","delt_a","obliq"]],"suitcase-carry":[["obliq","forearm"],["abs","traps","lowback"]],"knee-raise-sedia":[["abs"],["obliq"]],"chest-press":[["pecs"],["delt_a","triceps"]],"panca-piana":[["pecs"],["delt_a","triceps"]],"croci-cavi":[["pecs"],["delt_a"]],"piegamenti":[["pecs"],["triceps","delt_a","abs"]],"panca-manubri":[["pecs"],["delt_a","triceps"]],"panca-inclinata-manubri":[["pecs","delt_a"],["triceps"]],"pectoral-machine":[["pecs"],["delt_a"]],"lat-machine":[["lats"],["biceps","rhomb","delt_p","traps","forearm"]],"pulley":[["lats","rhomb"],["biceps","delt_p","traps"]],"rematore-manubrio":[["lats"],["rhomb","biceps","delt_p"]],"trazioni-assistite":[["lats"],["biceps","rhomb","delt_p","forearm"]],"rematore-bilanciere":[["lats","rhomb"],["biceps","delt_p","lowback","hams"]],"pullover-cavo":[["lats"],["triceps","pecs"]],"leg-press":[["quads","glutes"],["hams","adduct"]],"squat":[["quads","glutes"],["hams","lowback","adduct"]],"leg-extension":[["quads"],[]],"leg-curl":[["hams"],["calves"]],"affondi":[["quads","glutes"],["hams","adduct","calves"]],"polpacci":[["calves"],[]],"hip-thrust":[["glutes"],["hams","quads"]],"stacco-rumeno":[["hams","glutes"],["lowback","forearm"]],"goblet-squat":[["quads","glutes"],["adduct","abs"]],"abductor":[["gmed"],["glutes"]],"adductor":[["adduct"],[]],"shoulder-press":[["delt_a","delt_l"],["triceps","traps"]],"alzate-laterali":[["delt_l"],["traps","delt_a"]],"face-pull":[["delt_p","rhomb"],["traps"]],"lento-manubri":[["delt_a","delt_l"],["triceps","traps"]],"alzate-frontali":[["delt_a"],["pecs","delt_l"]],"reverse-fly":[["delt_p","rhomb"],["traps"]],"tirate-mento":[["delt_l","traps"],["biceps","delt_a"]],"curl-bilanciere":[["biceps"],["forearm","delt_a"]],"curl-manubri":[["biceps"],["forearm"]],"curl-martello":[["biceps","forearm"],[]],"curl-cavo":[["biceps"],["forearm"]],"curl-scott":[["biceps"],["forearm"]],"pushdown":[["triceps"],[]],"french-press":[["triceps"],[]],"estensioni-sopra-testa":[["triceps"],[]],"kickback":[["triceps"],["delt_p"]],"dip-macchina":[["triceps"],["pecs","delt_a"]],"plank":[["abs","obliq"],["delt_a","glutes","quads"]],"crunch":[["abs"],["obliq"]],"crunch-cavo":[["abs"],["obliq"]],"sollevamento-gambe":[["abs"],["quads","obliq"]],"crunch-macchina":[["abs"],["obliq"]],"mountain-climber":[["abs"],["delt_a","quads","obliq"]],"tapis-roulant":[["quads","calves"],["glutes","hams"]],"cyclette":[["quads"],["glutes","calves","hams"]],"ellittica":[["quads","glutes"],["hams","calves","lats","delt_a"]],"stepper":[["glutes","quads"],["calves","hams"]],"vogatore":[["lats","quads"],["hams","glutes","biceps","rhomb","lowback"]],"iperestensioni":[["lowback","glutes"],["hams"]],"squat-libero":[["quads","glutes"],["adduct","hams"]],"squat-bulgaro":[["quads","glutes"],["adduct","hams"]],"ponte-glutei":[["glutes"],["hams"]],"leg-curl-asciugamano":[["hams"],["glutes","calves"]],"nordic-curl":[["hams"],["calves","glutes"]],"polpacci-gradino":[["calves"],[]],"piegamenti-rialzati":[["pecs"],["triceps","delt_a"]],"piegamenti-stretti":[["triceps","pecs"],["delt_a","abs"]],"piegamenti-piedi-rialzati":[["pecs","delt_a"],["triceps","abs"]],"pike-push-up":[["delt_a","delt_l"],["triceps","traps"]],"dip-sedia":[["triceps"],["pecs","delt_a"]],"rematore-tavolo":[["lats","rhomb"],["biceps","delt_p","traps","forearm"]],"alzate-yt":[["delt_p","traps"],["rhomb","delt_l"]],"plank-laterale":[["obliq","abs"],["gmed","delt_l"]]};
 const MZ = [ // [chiave, nome, muscoli dell'esercizio, principale]
   ['pecs','Petto',['pecs'],1], ['lats','Dorsali',['lats'],1], ['mid','Centro schiena',['rhomb','traps'],1],
   ['delt_a','Spalle davanti',['delt_a'],1], ['delt_l','Spalle laterali',['delt_l'],1], ['delt_p','Spalle dietro',['delt_p'],1],
@@ -5047,6 +5139,11 @@ const ALIAS = [
  ['kickback','kickback'],['kick back','kickback'],['dip','dip-macchina'],['parallele','dip-macchina'],
  ['plank','plank'],['crunch cavo','crunch-cavo'],['crunch ai cavi','crunch-cavo'],['crunch macchina','crunch-macchina'],['ab crunch','crunch-macchina'],['crunch','crunch'],['addominali','crunch'],
  ['sollevamento gambe','sollevamento-gambe'],['leg raise','sollevamento-gambe'],['gambe alla sbarra','sollevamento-gambe'],
+ ['curl up','curl-up'],['mcgill','curl-up'],['bird dog','bird-dog'],['quadrupedia','bird-dog'],['dead bug','dead-bug'],['insetto morto','dead-bug'],
+ ['pallof','pallof-press'],['antirotazione','pallof-press'],['woodchop','woodchop-cavi'],['taglialegna','woodchop-cavi'],['wood chop','woodchop-cavi'],
+ ['ruota addominale','ruota-addominale'],['ab wheel','ruota-addominale'],['rollout','ruota-addominale'],['roll out','ruota-addominale'],
+ ['suitcase','suitcase-carry'],['valigia','suitcase-carry'],['camminata con manubrio','suitcase-carry'],['farmer','suitcase-carry'],
+ ['sedia romana','knee-raise-sedia'],['captain','knee-raise-sedia'],['ginocchia al petto','knee-raise-sedia'],['knee raise','knee-raise-sedia'],
  ['mountain climber','mountain-climber'],['scalatore','mountain-climber'],
  ['tapis','tapis-roulant'],['treadmill','tapis-roulant'],['corsa','tapis-roulant'],['camminata','tapis-roulant'],
  ['cyclette','cyclette'],['bike','cyclette'],['bici','cyclette'],['vogatore','vogatore'],['rowing','vogatore'],
