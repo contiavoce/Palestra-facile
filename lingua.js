@@ -31,7 +31,9 @@
     top.appendChild(b);
   }
   var css = '.langbtn{flex:none;display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:700 12px/1 var(--display,system-ui),sans-serif;letter-spacing:.04em;cursor:pointer;margin-left:4px}' +
-            '.langbtn span{padding:6px 8px;border-radius:999px}.langbtn span.on{background:var(--accent);color:var(--on-accent)}';
+            '.langbtn span{padding:6px 8px;border-radius:999px}.langbtn span.on{background:var(--accent);color:var(--on-accent)}' +
+            '@media (max-width:440px){header.top .brand{font-size:20px;gap:8px}header.top .sync{font-size:0;gap:0}.langbtn span{padding:6px 7px}}' +
+            '@media (max-width:340px){header.top .brand{font-size:17px}}';
   function boot(){
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
     addButton();
