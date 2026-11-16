@@ -367,6 +367,8 @@ details.more[open] summary{margin-bottom:8px}
 .wrapchips{flex-wrap:wrap;overflow:visible}
 .qa{justify-content:center;margin-top:4px}
 .qa .chip{text-decoration:none}
+.sess.sel{outline:3px solid var(--accent);outline-offset:2px}
+.sess .micbar{margin-top:0}
 .micbar{margin-top:10px;background:var(--sunk);border-radius:8px;padding:10px 12px;font-size:15px;line-height:1.4}
 .micbar .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);margin-right:7px;vertical-align:1px;animation:micp 1.4s ease-in-out infinite}
 @keyframes micp{50%{opacity:.25}}
@@ -2835,7 +2837,7 @@ function runBanner(){
 function sessCard(s, mine){
   const sets = s.items.reduce((a,i)=>a+(+i[1]||0),0);
   const min = s.min || Math.round(s.items.reduce((a,i)=>a+(+i[1]||0)*(60+(+i[3]||0)),0)/60);
-  return `<article class="sess">
+  return `<article class="sess" data-sid="${s.id}">
     <div class="stack" aria-hidden="true">${s.items.map(i=>`<i style="background:${GROUPS[EXMAP[i[0]].g].color}"></i>`).join('')}</div>
     <div class="sthumbs" aria-hidden="true">${s.items.slice(0,6).map(i=>thumb(i[0],'st')).join('')}</div>
     <div class="sess-top"><div><h2>${esc(s.name)}</h2>${s.for?`<div class="next">${esc(s.for)}</div>`:''}</div></div>
@@ -2882,6 +2884,9 @@ function viewSessions(){
     $app.querySelectorAll('[data-cll]').forEach(c=>c.setAttribute('aria-pressed',c.dataset.cll===clSel));
     $app.querySelectorAll('[data-clbox]').forEach(d=>d.hidden=d.dataset.clbox!==clSel);
   });
+  $app.querySelectorAll('.sess[data-sid]').forEach(c=>c.addEventListener('click',e=>{ if(e.target.closest('a,button,summary,input')) return; pickSess(c.dataset.sid); }));
+  if(mic.pick && getSess(mic.pick)) markPick(); else mic.pick='';
+  if(micWanted()) micStart(); else micStop();
   $app.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{
     const s = SMAP[b.dataset.copy];
     edit = {id:'my'+Date.now().toString(36), name:s.name+' (mia)', items:clone(s.items), isNew:true};
@@ -3093,7 +3098,7 @@ function drawRun(){
 }
 function ringOff(){ const tot=run.restTotal||1, left=Math.max(0,run.restEnd-Date.now()); return (565.5*(1-Math.min(1,left/tot))).toFixed(1); }
 function paintRest(){ const c=document.getElementById('clock'), a=document.getElementById('arc'); if(c) c.textContent=fmt((run.restEnd-Date.now())/1000); if(a) a.setAttribute('stroke-dashoffset',ringOff()); }
-function endRun(){ clearInterval(tick); micStop(); run=null; saveRun(); try{wake&&wake.release()}catch(e){} wake=null; }
+function endRun(){ clearInterval(tick); micStop(); mic.hold=false; mic.endAsk=0; run=null; saveRun(); try{wake&&wake.release()}catch(e){} wake=null; }
 function finish(){
   clearInterval(tick);
   const before = {}; [...new Set(run.sets.map(s=>s.ex))].forEach(ex=>before[ex]=recordsOf(histFor(ex)));
@@ -3159,7 +3164,7 @@ const spokenRest = s => s<60 ? s+' secondi' : (s%60 ? Math.floor(s/60)+' minuti 
 /* ---------------- COMANDI A VOCE (mani libere) ---------------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const canListen = !!SR;
-const mic = {rec:null, on:false, heard:'', msg:'', quietUntil:0, said:'', saidAt:0, endAsk:0, err:'', timer:0};
+const mic = {lastKey:'', lastAt:0, rec:null, on:false, heard:'', msg:'', quietUntil:0, said:'', saidAt:0, endAsk:0, err:'', timer:0};
 const NUMW = (()=>{ const m={zero:0,un:1,una:1}, u=['','uno','due','tre','quattro','cinque','sei','sette','otto','nove'],
   t=['dieci','undici','dodici','tredici','quattordici','quindici','sedici','diciassette','diciotto','diciannove'],
   d=['','','venti','trenta','quaranta','cinquanta','sessanta','settanta','ottanta','novanta'];
@@ -3179,8 +3184,9 @@ function micParse(raw){
   if(rp) a.reps = parseInt(rp[1],10);
   if(!kg && !rp){ const only = s.match(/^(?:ne ho fatte |ho fatto |fatte )?(\d+)(?: fatte)?$/); if(only) a.reps = parseInt(only[1],10); }
   if(has(/\b(spegni|disattiva|basta)\b.*\b(microfono|comandi|ascolto)\b/)) a.off = 1;
-  else if(has(/\b(termina|chiudi|fine|finisci)\b.*\ballenamento\b/)) a.end = 1;
-  else if(has(/^(si|si si|conferma|confermo|salva|si salva)\b/)) a.yes = 1;
+  else if(has(/\b(termina|chiudi|finisci)\b.*\b(allenamento|sessione)\b/) || has(/^(fine|basta|termina|chiudi)( (allenamento|sessione|cosi|per oggi))?$/) || has(/\bfine (allenamento|sessione)\b/)) a.end = 1;
+  else if(has(/^(si|si si|conferma|confermo|salva|si salva|si chiudi|ok si)\b/)) a.yes = 1;
+  else if(has(/^(no|annulla|continuo|no continuo)\b/)) a.no = 1;
   else if(has(/\b(comandi|aiuto|cosa posso dire)\b/)) a.help = 1;
   else if(has(/\b(ripeti|cosa devo fare|a che punto)\b/)) a.repeat = 1;
   else if(has(/\bsalta\b.*\besercizio\b/)) a.skipEx = 1;
@@ -3199,13 +3205,26 @@ function micEcho(t){ // la frase è la voce dell'app stessa?
   return h.length>3 && w.includes(h);
 }
 function onHeard(alts){
-  if(!run || view!=='run') return;
   const speaking = canSpeak && (()=>{ try{ return speechSynthesis.speaking; }catch(e){ return false; } })();
   if((speaking || Date.now() < mic.quietUntil) && alts.some(micEcho)) return;
+  if(view==='sessions'){
+    if(!mic.pick) return;
+    mic.heard = (alts[0]||'').trim(); paintMic();
+    const t = alts.map(micNorm).join(' | ');
+    if(/\b(inizi\w*|comincia\w*|cominciamo|parti\w*|partiamo|via|vai|start)\b/.test(t)){ const id=mic.pick; mic.pick=''; location.hash='allena-'+id; }
+    return;
+  }
+  if(!run || view!=='run') return;
   let a=null, txt=alts[0]||'';
   for(const t of alts){ a = micParse(t); if(a){ txt=t; break; } }
   mic.heard = txt.trim(); paintMic();
-  if(a) micDo(a);
+  if(!a) return;
+  // stessa frase ripetuta a ruota (eco o doppio risultato): la ignoro
+  const key = micNorm(txt), now = Date.now();
+  if(key===mic.lastKey && now-mic.lastAt < 4000) return;
+  if(now-mic.lastAt < 1500 && !(a.kg!=null||a.reps!=null)) return;
+  mic.lastKey = key; mic.lastAt = now;
+  micDo(a);
 }
 function micSetVal(id, v){ const el=document.getElementById(id); if(el){ el.value = id==='kgIn' ? kgf(v) : v; el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'),700); } return !!el; }
 function restPause(on){
@@ -3219,22 +3238,31 @@ function micDo(a){
   const tap = id=>{ const b=document.getElementById(id); if(b){ b.click(); return true; } return false; };
   try{ navigator.vibrate && navigator.vibrate(30); }catch(e){}
   if(a.off){ AU.mic=false; saveAU(); micStop(); say('Comandi a voce spenti.', true); return paintMic(); }
-  if(a.help) return say("Puoi dire: fatta. Dodici ripetizioni. Quaranta chili. Salta. Pausa. Riprendi. Altri quindici secondi. Salta esercizio. Ripeti. Musica. Termina allenamento.", true);
+  if(a.help) return say("Puoi dire: fatta. Dodici ripetizioni. Quaranta chili. Salta. Pausa. Riprendi. Altri quindici secondi. Salta esercizio. Ripeti. Musica. Fine.", true);
   if(a.repeat){ lastSaid=''; return drawRun(); }
   if(a.music){ if(!music.list.length) return say('Non hai canzoni salvate.', true); if(a.music==='next' && typeof mNext==='function') return mNext(); return mToggle(); }
-  if(a.end){ mic.endAsk = Date.now(); return say("Vuoi salvare e chiudere l'allenamento? Di' sì per confermare.", true); }
-  if(a.yes && Date.now()-mic.endAsk < 15000){ mic.endAsk=0; return run.sets.length ? finish() : (endRun(true), location.hash='sessioni'); }
+  if(a.end){ mic.endAsk = Date.now(); tap('endRun'); return say("Vuoi chiudere l'allenamento? Di' sì per confermare, o no per continuare.", true); }
+  if(mic.endAsk && Date.now()-mic.endAsk < 30000){
+    if(a.yes){ mic.endAsk=0; return run.sets.length ? finish() : (endRun(true), location.hash='sessioni'); }
+    if(a.no){ mic.endAsk=0; drawRun(); return say('Ok, continuiamo.', true); }
+    return; // finché non rispondi sì o no non faccio altro
+  }
+  if(mic.hold && !resting){
+    if(a.resume || a.go){ mic.hold=false; paintMic(); return say("Ripartiamo. Quando finisci la serie di' fatta.", true); }
+    return say("Sei in pausa. Di' riprendi per ripartire.", true);
+  }
   if(resting){
     if(a.pause) return restPause(true) && say('Recupero in pausa.', true);
     if(a.resume) return restPause(false);
     if(a.more) return tap('plus') && say('Più quindici secondi.', true);
     if(a.less) return tap('minus') && say('Meno quindici secondi.', true);
-    if(a.go || a.done) return tap('skip');
+    if(a.go) return tap('skip');
+    if(a.done) return; // «fatto» durante il recupero non salta il recupero: per quello si dice «salta»
     if(a.kg!=null || a.reps!=null) return say('Ora sei in recupero. Dimmi i numeri quando inizi la serie.', true);
     return;
   }
   if(a.skipEx) return tap('skipEx');
-  if(a.pause){ if(music.el && !music.el.paused) return mToggle(); return say("Prenditi il tuo tempo. Quando finisci la serie di' fatta.", true); }
+  if(a.pause){ mic.hold=true; paintMic(); return say("In pausa. Di' riprendi quando vuoi ripartire.", true); }
   const parts=[];
   if(a.reps!=null && micSetVal('repsIn', a.reps)) parts.push(a.reps+(a.reps===1?' ripetizione':' ripetizioni'));
   if(a.kg!=null && micSetVal('kgIn', a.kg)) parts.push(kgf(a.kg).replace('.',',')+' chili');
@@ -3246,13 +3274,25 @@ function micDo(a){
   if(a.go && !parts.length) return say("Per saltare l'esercizio di' salta esercizio. Quando finisci la serie di' fatta.", true);
   if(parts.length) say(parts.join(', ')+'.', true);
 }
-function micWanted(){ return !!(canListen && AU.mic && run && view==='run' && location.hash==='#allena-'+run.id && document.visibilityState!=='hidden'); }
+function micWanted(){ return !!(canListen && AU.mic && document.visibilityState!=='hidden' && ((run && view==='run' && location.hash==='#allena-'+run.id) || (view==='sessions' && mic.pick))); }
+function pickSess(id){
+  const s=getSess(id); if(!s) return;
+  mic.pick=id; mic.heard=''; markPick();
+  if(AU.mic){ micStart(); say("Hai scelto "+s.name+". Di' inizio allenamento."); }
+}
+function markPick(){
+  document.querySelectorAll('.sess.sel').forEach(c=>c.classList.remove('sel'));
+  document.querySelectorAll('#micBar').forEach(b=>b.remove());
+  const c=[...document.querySelectorAll('.sess[data-sid]')].find(c=>c.dataset.sid===mic.pick && c.offsetParent!==null); if(!c) return;
+  c.classList.add('sel'); const b=document.createElement('div'); b.className='micbar'; b.id='micBar'; c.appendChild(b); paintMic();
+}
 function micStart(){
   clearTimeout(mic.timer);
   if(mic.on || !micWanted()) return;
   try{
     const r = new SR(); r.lang='it-IT'; r.continuous=true; r.interimResults=false; r.maxAlternatives=3;
-    r.onresult = e=>{ for(let k=e.resultIndex;k<e.results.length;k++){ const res=e.results[k]; if(!res.isFinal) continue;
+    let seen = 0; // Android a volte ripete i risultati già dati: li processo una volta sola
+    r.onresult = e=>{ for(let k=Math.max(e.resultIndex, seen);k<e.results.length;k++){ const res=e.results[k]; if(!res.isFinal) continue; seen = k+1;
       const alts=[]; for(let j=0;j<res.length;j++) alts.push(res[j].transcript); onHeard(alts); } };
     r.onerror = e=>{ mic.err = e.error;
       if(e.error==='not-allowed' || e.error==='service-not-allowed'){ AU.mic=false; saveAU(); mic.msg='Il microfono è bloccato. Tocca il lucchetto vicino all\'indirizzo (o Impostazioni sito di Chrome) e consenti il microfono.'; }
@@ -3270,20 +3310,32 @@ function micStop(){ clearTimeout(mic.timer); const r=mic.rec; mic.rec=null; mic.
 function paintMic(){
   const c=document.getElementById('qMic'); if(c){ c.setAttribute('aria-pressed',String(!!AU.mic)); c.textContent = AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'; }
   const b=document.getElementById('micBar'); if(!b) return;
+  if(view==='sessions'){
+    const s=getSess(mic.pick); if(!s) return;
+    b.hidden=false;
+    b.innerHTML = AU.mic
+      ? `<b>${mic.on?'<span class="live" aria-hidden="true"></span>Ti ascolto':'🎙 Accendo il microfono…'}</b> · hai scelto <b>${esc(s.name)}</b>: di' «inizio allenamento»`
+        + (mic.msg?`<span class="heard" style="color:var(--red)">${esc(mic.msg)}</span>`:'') + (mic.heard?`<span class="heard">Ho sentito: «${esc(mic.heard)}»</span>`:'')
+        + `<div class="links" style="margin-top:8px"><button class="btn ghost small" type="button" id="micOff">Spegni comandi a voce</button></div>`
+      : `Hai scelto <b>${esc(s.name)}</b>.` + (canListen?` Attiva i comandi a voce per partire dicendo «inizio allenamento».<div class="links" style="margin-top:8px"><button class="btn small" type="button" id="micOn">🎙 Attiva comandi a voce</button></div>`:` Su questo telefono i comandi a voce non sono disponibili: premi Inizia.`);
+    const on=document.getElementById('micOn'); if(on) on.onclick=()=>{ AU.mic=true; saveAU(); mic.msg=''; micStart(); say("Comandi a voce attivi. Di' inizio allenamento."); paintMic(); };
+    const off=document.getElementById('micOff'); if(off) off.onclick=()=>{ AU.mic=false; saveAU(); micStop(); paintMic(); };
+    return;
+  }
   if(!AU.mic && !mic.msg){ b.hidden=true; return; }
   b.hidden=false;
   const resting = run && (run.restEnd > Date.now() || run.pauseLeft!=null);
-  b.innerHTML = (AU.mic ? `<b>${mic.on?'<span class="live" aria-hidden="true"></span>Ti ascolto':'🎙 Accendo il microfono…'}</b> · ${resting?"di' «salta», «pausa» o «altri 15 secondi»":"di' per esempio «12 ripetizioni, 40 chili, fatta»"}` : '')
+  b.innerHTML = (AU.mic ? `<b>${mic.on?'<span class="live" aria-hidden="true"></span>Ti ascolto':'🎙 Accendo il microfono…'}</b> · ${mic.hold&&!resting?"<b>in pausa</b>, di' «riprendi»":resting?"di' «salta», «pausa» o «altri 15 secondi»":"di' per esempio «12 ripetizioni, 40 chili, fatta»"}` : '')
     + (mic.msg?`<span class="heard" style="color:var(--red)">${esc(mic.msg)}</span>`:'')
     + (mic.heard&&AU.mic?`<span class="heard">Ho sentito: «${esc(mic.heard)}»</span>`:'')
     + (AU.mic?`<details><summary>Cosa posso dire</summary><ul>
       <li><b>«Fatta»</b> (o «finito»): segna la serie e parte il recupero</li>
       <li><b>«12 ripetizioni»</b>, <b>«40 chili»</b>, anche insieme: «10 ripetizioni con 35 chili, fatta»</li>
-      <li><b>«Salta»</b>: salta il recupero · <b>«Salta esercizio»</b></li>
-      <li><b>«Pausa»</b> / <b>«Riprendi»</b>: ferma il conto del recupero</li>
+      <li><b>«Fatta»</b> durante il recupero non fa nulla, il recupero va avanti da solo · <b>«Salta»</b>: salta il recupero · <b>«Salta esercizio»</b></li>
+      <li><b>«Pausa»</b> / <b>«Riprendi»</b>: mette in pausa (anche il recupero)</li>
       <li><b>«Altri 15 secondi»</b> / <b>«Meno tempo»</b></li>
       <li><b>«Ripeti»</b>: ti ridico a che punto sei · <b>«Musica»</b></li>
-      <li><b>«Termina allenamento»</b>, poi <b>«Sì»</b> · <b>«Spegni microfono»</b></li>
+      <li><b>«Fine»</b>: chiude la sessione, poi <b>«Sì»</b> per confermare o <b>«No»</b> · <b>«Spegni microfono»</b></li>
       </ul><p style="margin:6px 0 0;opacity:.8">Serve internet e il permesso del microfono. Funziona meglio con Chrome su Android. Lo schermo deve restare acceso.</p></details>`:'');
 }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') micStart(); else micStop(); });
@@ -4144,7 +4196,7 @@ function route(soft){
   stopPacer(); stopAnim(); dispose3D();
   if(explaining){ explaining=false; try{speechSynthesis.cancel()}catch(e){} }
   const h = (location.hash||'#esercizi').slice(1);
-  if(!h.startsWith('allena-')){ clearInterval(tick); micStop(); }
+  if(!h.startsWith('allena-')){ clearInterval(tick); if(h!=='sessioni') micStop(); }
   const go = ()=>{
     if(h.startsWith('ex-')) return viewExercise(h.slice(3));
     if(h.startsWith('allena-')) return startRun(h.slice(7));
