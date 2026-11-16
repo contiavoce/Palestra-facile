@@ -551,6 +551,17 @@ body.noscroll{overflow:hidden}
 .crow{display:flex;align-items:center;gap:10px}.crow input{border:1px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--bg);color:var(--fg);font:inherit;font-size:16px}
 .cplans{display:grid;gap:8px}.cplan{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--sunk);border-radius:10px;padding:6px 6px 6px 12px;font-size:15px}
 .coachl{border-left:4px solid #7a3fb0}
+.cagree{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:16px;padding:12px;background:var(--sunk);border-radius:12px}.cagree input{width:22px;height:22px;flex:none;margin-top:2px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.coachc{position:relative}.coachc.off{border-left-color:var(--line);opacity:.95}.coachc a.cgo{text-decoration:none}
+.chead2,.conoff{display:flex;align-items:center;justify-content:space-between;gap:10px}.conoff>div{display:grid;gap:2px}.conoff{border-left:6px solid #7a3fb0}
+.cswitch{flex:none;display:inline-flex;align-items:center;gap:8px;border:0;background:none;cursor:pointer;font:inherit;font-weight:700;font-size:14px;color:var(--fg);padding:6px 4px}
+.cswitch i{width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;transition:background .2s}
+.cswitch i::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px #0004;transition:left .2s}
+.cswitch[aria-checked="true"] i{background:#7a3fb0}.cswitch[aria-checked="true"] i::after{left:21px}
+.fb{display:inline-flex;align-items:center;gap:4px;margin-left:6px;vertical-align:middle;flex-wrap:wrap}.fb button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:2px 9px;font-size:15px;cursor:pointer;line-height:1.4}
+.fb button[aria-pressed="true"]{background:#7a3fb0;border-color:#7a3fb0}.fbmsg{font-style:normal;font-size:12px;color:var(--muted)}
+.sci p .fb{display:flex;margin:6px 0 0}
 .chip[data-img][aria-pressed="true"],.btn[data-img][aria-pressed="true"]{outline:3px solid #7a3fb0}
 </style>
 
@@ -3158,7 +3169,7 @@ function drawRun(){
       <div class="rest"><div class="eyebrow">${run.pauseLeft!=null?'Recupero in pausa':'Recupero'}</div><div class="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="90"/><circle class="arc" id="arc" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="${ringOff()}"/></svg><div class="clock" id="clock">${fmt((run.restEnd-Date.now())/1000)}</div></div>
         <div class="next">${run.set>1?`Prossima: serie ${run.set} di ${esc(x.name)}`:`Prossimo esercizio: ${esc(x.name)}`}</div>
         <div class="links"><button class="btn ghost small" id="minus" type="button">−15"</button><button class="btn ghost small" id="plus" type="button">+15"</button><button class="btn ghost small" id="pauseRest" type="button">${run.pauseLeft!=null?'▶ Riprendi':'❚❚ Pausa'}</button><button class="btn small" id="skip" type="button">Salta recupero</button></div></div>
-      ${run.cMsg&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cMsg)}</span></div>`:''}
+      ${run.cMsg&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cMsg)}</span>${run.cMsg===run.cLast?fbBtns(run.cMsg):''}</div>`:''}
       <div class="remind"><span><b>Intanto:</b> respira lento e profondo, inspira dal naso ed espira dalla bocca.</span></div>`
     : `
       <div class="pips" aria-hidden="true">${Array.from({length:p.sets},(_,k)=>`<i class="${k<run.set-1?'done':k===run.set-1?'now':''}"></i>`).join('')}</div>
@@ -3168,6 +3179,7 @@ function drawRun(){
         <div class="stepper"><label for="kgIn">Peso kg</label><div class="ctl"><button type="button" data-step="kg" data-d="-2.5" aria-label="Meno 2,5 kg">−</button><input id="kgIn" inputmode="decimal" value="${d.kg===''?'':kgf(+d.kg)}" placeholder="0"><button type="button" data-step="kg" data-d="2.5" aria-label="Più 2,5 kg">+</button></div></div>
         <div class="stepper"><label for="repsIn">Ripetizioni</label><div class="ctl"><button type="button" data-step="reps" data-d="-1" aria-label="Una in meno">−</button><input id="repsIn" inputmode="numeric" value="${d.reps}" placeholder="0"><button type="button" data-step="reps" data-d="1" aria-label="Una in più">+</button></div></div>
       </div>`}
+      ${run.cLast&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cLast)}</span>${fbBtns(run.cLast)}</div>`:''}
       <div class="remind"><span><b>Inspira</b> ${esc(x.br.in.toLowerCase())} <b>Espira</b> ${esc(x.br.out.toLowerCase())}</span></div>
       <p class="err" id="err" hidden></p>
       <button class="btn big" id="doneSet" type="button">${timeEx?'Fatto ✓':'Serie fatta ✓'}${p.rest>0 && !(run.set>=p.sets && run.i>=run.plan.length-1) ? ` <span style="font-weight:500;opacity:.75">· parte il recupero ${fmt(p.rest)}</span>` : ''}</button>
@@ -3221,7 +3233,7 @@ function drawRun(){
   }
   const qv=document.getElementById('qVoice'); if(qv) qv.onclick=()=>{ AU.voice=!AU.voice; saveAU(); qv.setAttribute('aria-pressed',String(AU.voice)); qv.textContent=AU.voice?'🔊 Voce':'🔇 Voce'; if(AU.voice) say('Voce attiva.'); else try{speechSynthesis.cancel()}catch(e){} };
   const qm=document.getElementById('qMusic'); if(qm) qm.onclick=mToggle;
-  const qc=document.getElementById('qCoach'); if(qc) qc.onclick=()=>{ COACH.on=!coachOn(); coachSave(); qc.setAttribute('aria-pressed',String(coachOn())); qc.textContent=coachOn()?'🧠 Coach':'🧠 Coach: spento'; say(coachOn()?'Coach attivo.':'Coach spento.'); };
+  const qc=document.getElementById('qCoach'); if(qc) qc.onclick=()=>{ if(!COACH.ok){ location.hash='coach-info'; return; } COACH.on=!coachOn(); coachSave(); qc.setAttribute('aria-pressed',String(coachOn())); qc.textContent=coachOn()?'🧠 Coach':'🧠 Coach: spento'; say(coachOn()?'Coach attivo.':'Coach spento.'); };
   $app.querySelectorAll('[data-img]').forEach(b=>b.onclick=()=>imgPlay(b.dataset.img, b));
   const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; saveAU(); mic.msg='';
     if(AU.mic){ say("Comandi a voce attivi. Quando finisci la serie di' fatta."); micStart(); } else { micStop(); say('Comandi a voce spenti.'); } paintMic(); };
@@ -3262,7 +3274,7 @@ function finish(){
     <h2 style="font-size:30px;text-transform:uppercase">${esc(name)} completata</h2>
     <div class="stats"><div><b>${mins}'</b><span>Durata</span></div><div><b>${nsets}</b><span>Serie</span></div><div><b>${kgf(vol)}</b><span>Kg sollevati</span></div>${hs?`<div><b>${hs.avg}</b><span>Battito medio</span></div>`:''}</div>${hs?hrDetail(hs):''}
     ${prs.length?`<div class="prs"><div class="eyebrow">Nuovi record</div>${prs.map(p=>`<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`:''}
-    ${coachOn()?`<p class="next coachl"><b>🧠 Coach:</b> ${esc((coachEndTxt()+cTip).trim())}</p>`:''}
+    ${coachOn()?`<p class="next coachl"><b>🧠 Coach:</b> ${esc((coachEndTxt()+cTip).trim())}</p>${cTip?`<p class="note fbq">Ti è utile questo consiglio? ${fbBtns(cTip)}</p>`:''}`:''}
     <p class="next">Salvata nel diario. Bevi acqua e fai qualche minuto di allungamento.</p>
     <div class="links"><a class="btn" href="#diario">Vai al diario</a><a class="btn ghost" href="#sessioni">Altre sessioni</a></div></section>`;
 }
@@ -4827,7 +4839,7 @@ const COACH_IF = [
 const GG = ['Lun','Mar','Mer','Gio','Ven','Sab','Dom'], GGL = ['lunedì','martedì','mercoledì','giovedì','venerdì','sabato','domenica'];
 const COACH = Object.assign({on:true, why:'', goal:3, days:[], time:'', place:'palestra', plans:[], ph:{m1:1,m2:1,m3:1,m4:1,m6:1,t1:1,t3:1,r1:1,r2:1}, mine:[], created:Date.now()}, store.get('coach',{}));
 const coachSave = ()=>store.set('coach', COACH);
-const coachOn = ()=> COACH.on!==false;
+const coachOn = ()=> COACH.on!==false && !!COACH.ok; // si attiva solo dopo aver letto e accettato le informazioni
 const DAY = 864e5;
 const dayStart = t => { const d=new Date(t); d.setHours(0,0,0,0); return d.getTime(); };
 const monday = t => { const d=new Date(dayStart(t)); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.getTime(); };
@@ -4850,7 +4862,21 @@ function coachStats(){
 }
 const coachPicked = w => COACH_PH.filter(p=>COACH.ph[p.id] && (p.w==='all'||p.w===w)).map(p=>p.t).concat((COACH.mine||[]).filter(Boolean));
 let coachLastPh = '';
-function coachPhrase(w){ const a = coachPicked(w).filter(t=>t!==coachLastPh); if(!a.length) return coachLastPh||''; const t=a[Math.floor(Math.random()*a.length)]; coachLastPh=t; return t; }
+/* il coach impara da te: 👍/👎 su frasi e consigli. Punteggio da −3 a +3 per ogni testo, salvato in COACH.fb (anche nel backup).
+   Le frasi con 👍 escono più spesso (peso doppio per ogni punto), con 2 👎 non vengono più usate. */
+const fbKey = t => { let h=0; const x=String(t).trim(); for(let i=0;i<x.length;i++) h=(h*31+x.charCodeAt(i))|0; return 'k'+(h>>>0).toString(36); };
+const fbScore = t => ((COACH.fb||{})[fbKey(t)]||0);
+function fbPick(list, avoid){ let a=list.filter(t=>fbScore(t)>-2); if(!a.length) a=list.slice(); if(a.length>1 && avoid) a=a.filter(t=>t!==avoid)||a;
+  if(!a.length) return ''; const w=a.map(t=>Math.pow(2, Math.max(-1,Math.min(2,fbScore(t))))), tot=w.reduce((x,y)=>x+y,0); let r=Math.random()*tot;
+  for(let i=0;i<a.length;i++){ r-=w[i]; if(r<=0) return a[i]; } return a[a.length-1]; }
+function fbBtns(t){ if(!t) return ''; const k=fbKey(t), v=fbScore(t);
+  return `<span class="fb" data-fbk="${k}" data-fbt="${esc(String(t).trim())}"><button type="button" data-fb="1" aria-pressed="${v>0}" aria-label="Mi piace">👍</button><button type="button" data-fb="-1" aria-pressed="${v<0}" aria-label="Non mi piace">👎</button><em class="fbmsg" aria-live="polite"></em></span>`; }
+document.addEventListener('click', e=>{ const b=e.target.closest && e.target.closest('[data-fb]'); if(!b) return; const w=b.closest('[data-fbk]'); if(!w) return;
+  e.preventDefault(); e.stopPropagation(); COACH.fb=COACH.fb||{}; const k=w.dataset.fbk, d=+b.dataset.fb, v=Math.max(-3,Math.min(3,(COACH.fb[k]||0)+d));
+  if(v) COACH.fb[k]=v; else delete COACH.fb[k]; COACH.fbt=COACH.fbt||{}; COACH.fbt[k]=w.dataset.fbt; coachSave();
+  w.querySelector('[data-fb="1"]').setAttribute('aria-pressed',String(v>0)); w.querySelector('[data-fb="-1"]').setAttribute('aria-pressed',String(v<0));
+  const m=w.querySelector('.fbmsg'); if(m) m.textContent = d>0 ? 'Ok, lo userò di più' : v<=-2 ? 'Ok, non lo userò più' : 'Ok, lo userò meno'; if(view==='coach') setTimeout(()=>{ if(view==='coach') keepScroll(viewCoach); }, 1200); }, true);
+function coachPhrase(w){ const t=fbPick(coachPicked(w), coachLastPh); if(!t) return coachLastPh||''; coachLastPh=t; if(run) run.cLast=t; return t; }
 const whyTxt = () => { const t=String(COACH.why||'').trim().replace(/[.!]+$/,''); return t ? t[0].toLowerCase()+t.slice(1) : ''; };
 function coachWelcome(st){ if(st.gap<5) return '';
   return st.gap>=14 ? 'Bentornato! È passato un po\' di tempo, ed è normale: conta che sei qui. Oggi riparti con calma, anche con pesi più leggeri.'
@@ -4881,7 +4907,7 @@ function coachRestTxt(rec){ if(!coachOn() || !run) return '';
   const x=EXMAP[rec.ex]; if(x && !isTime(x) && rec.reps){ const h=histFor(rec.ex), last=h[h.length-1];
     const k = run.sets.filter(s=>s.ex===rec.ex).length-1, prev = last && (last.sets[k]||null);
     run.cBet = run.cBet||{};
-    if(prev && !run.cBet[rec.ex] && ((rec.kg||0)>(prev.kg||0) || ((rec.kg||0)===(prev.kg||0) && rec.reps>prev.reps))){ run.cBet[rec.ex]=1; return 'Meglio della volta scorsa, stai migliorando!'; } }
+    if(prev && !run.cBet[rec.ex] && ((rec.kg||0)>(prev.kg||0) || ((rec.kg||0)===(prev.kg||0) && rec.reps>prev.reps))){ run.cBet[rec.ex]=1; run.cLast=''; return 'Meglio della volta scorsa, stai migliorando!'; } }
   run.cN=(run.cN||0)+1; if(run.cN%3===0) return coachPhrase('gym');
   return ''; }
 
@@ -4905,27 +4931,34 @@ function imgPlay(kind, btn){ if(imgOn===kind){ imgStop(); return; } imgStop(); i
   let at=0; IMG_SCRIPT[kind](whyTxt()).forEach(([t,p],i,a)=>{ imgT.push(setTimeout(()=>{ if(imgOn!==kind) return; say(t,true); if(i===a.length-1){ imgOn=''; imgT.push(setTimeout(()=>{ if(btn) btn.setAttribute('aria-pressed','false'); }, 3500)); } }, at)); at += t.length*68 + 900 + p*1000; });
 }
 
+function coachSwitch(){ const on=coachOn(); return `<button class="cswitch" type="button" role="switch" aria-checked="${on}" data-coachsw><i aria-hidden="true"></i><span>${on?'Attivo':'Spento'}</span></button>`; }
+document.addEventListener('click', e=>{ const b=e.target.closest && e.target.closest('[data-coachsw]'); if(!b) return; e.preventDefault(); e.stopPropagation();
+  if(!coachOn() && !COACH.ok){ location.hash='coach-info'; return; }
+  COACH.on=!coachOn(); coachSave(); if(!COACH.on){ imgStop(); try{speechSynthesis.cancel()}catch(e){} }
+  say(COACH.on?'Mental coach attivo. Ci sono io con te.':'Mental coach spento.', true); if(view==='run') drawRun(); else route(true); }, true);
 function coachCardHTML(){
   const st = coachStats(), set = !!(whyTxt() || (COACH.days||[]).length);
-  if(!coachOn()) return '';
+  const head = `<div class="chead2"><b>🧠 Mental coach${coachOn()&&COACH.obj&&OBJ[COACH.obj]?` · ${OBJ[COACH.obj].n}`:''}</b>${coachSwitch()}</div>`;
+  if(!coachOn()) return `<div class="card ccard coachc off"><div>${head}<span>${COACH.ok?"Spento: niente frasi a voce né consigli durante l'allenamento. Tocca l'interruttore per riattivarlo.":"Una voce che ti motiva e consigli basati sugli studi. Tocca l'interruttore: prima ti spiego come funziona."}</span><a class="cgo" href="#coach">Impostazioni del coach →</a></div></div>`;
   const pct = Math.min(100, Math.round(st.week/st.goal*100));
   const today = st.planned && !st.doneToday ? `Oggi è uno dei tuoi giorni${COACH.time?` · ore ${esc(COACH.time)}`:''}${COACH.place?` · ${COACH.place==='casa'?'a casa':COACH.place==='corsa'?'corsa':'in palestra'}`:''}.` : '';
   const wb = coachWelcome(st);
-  return `<a class="card ccard coachc" href="#coach"><div><b>🧠 Mental coach${COACH.obj&&OBJ[COACH.obj]?` · ${OBJ[COACH.obj].n}`:''}</b>
+  return `<div class="card ccard coachc"><div>${head}
     ${set ? `<span>${st.week>=st.goal?`Obiettivo della settimana raggiunto: ${st.week} su ${st.goal} 🎉`:`Questa settimana ${st.week} su ${st.goal} allenamenti`}</span>
       <i class="cbar" aria-hidden="true"><u style="width:${pct}%"></u></i>
       ${wb?`<span class="cwb">${esc(wb)}</span>`:today?`<span class="cwb">${today}</span>`:''}`
     : `<span>Scegli il tuo perché, l'obiettivo della settimana e le frasi che ti caricano.</span>`}
-    <i class="cgo">${set?'Apri il coach':'Prepara il coach'} →</i></div></a>`;
+    <a class="cgo" href="#coach">${set?'Apri il coach':'Prepara il coach'} →</a></div></div>`;
 }
 
 const SCI_COACH = `<div class="sci">
   <p>${pill('s')}<b>Le frasi che ti dici funzionano.</b> In 32 studi il dialogo interiore ha migliorato la prestazione sportiva. Le frasi di carica aiutano negli sforzi di forza e resistenza, quelle sulla tecnica nei movimenti precisi. In un esperimento i ciclisti allenati a dirsi frasi motivanti hanno resistito il 18% in più.<cite>Hatzigeorgiadis e coll., Perspect Psychol Sci 2011 (meta-analisi) · Blanchfield e coll., Med Sci Sports Exerc 2014</cite></p>
-  <p>${pill('s')}<b>Piani "se… allora…".</b> Decidere prima quando, dove e cosa fare se c'è un ostacolo aiuta a passare dall'intenzione ai fatti, anche per l'attività fisica.<cite>Gollwitzer e Sheeran, Adv Exp Soc Psychol 2006 (meta-analisi di 94 studi) · Bélanger-Gravel e coll., Health Psychol Rev 2013 (meta-analisi)</cite></p>
+  <p>${pill('s')}<b>Piani "se… allora…".</b> Decidere prima quando, dove e cosa fare se c'è un ostacolo aiuta a passare dall'intenzione ai fatti, anche per l'attività fisica. Immaginare per qualche secondo il momento in cui metti in pratica il piano lo rende ancora più efficace.<cite>Gollwitzer e Sheeran, Adv Exp Soc Psychol 2006 (meta-analisi di 94 studi) · Bélanger-Gravel e coll., Health Psychol Rev 2013 (meta-analisi) · Divine e coll., Br J Health Psychol 2025</cite></p>
   <p>${pill('m')}<b>Obiettivi piccoli e misurabili.</b> Un numero preciso di allenamenti a settimana, con il controllo dei progressi, aumenta l'attività fisica più di un generico "farò del mio meglio".<cite>McEwan e coll., Health Psychol Rev 2016 (meta-analisi) · Michie e coll., Health Psychol 2009</cite></p>
-  <p>${pill('m')}<b>66 giorni per un'abitudine.</b> In media servono circa 66 giorni perché un comportamento diventi automatico, ma va da 18 a 254 giorni. Saltare una volta non cambia il risultato. Nei nuovi iscritti in palestra l'abitudine si formava dopo circa 6 settimane con almeno 4 allenamenti a settimana.<cite>Lally e coll., Eur J Soc Psychol 2010 · Kaushal e Rhodes, J Behav Med 2015</cite></p>
+  <p>${pill('m')}<b>Circa 2 mesi per un'abitudine.</b> Gli studi più recenti confermano: la metà delle persone ci mette 59–66 giorni, ma c'è chi ne impiega molti di più (fino a 335). Allenarsi alla stessa ora e nello stesso posto aiuta. Saltare una volta non cambia il risultato. Nei nuovi iscritti in palestra l'abitudine si formava dopo circa 6 settimane con almeno 4 allenamenti a settimana.<cite>Singh e coll., Healthcare 2024 (revisione sistematica e meta-analisi) · Lally e coll., Eur J Soc Psychol 2010 · Kaushal e Rhodes, J Behav Med 2015</cite></p>
   <p>${pill('m')}<b>Visualizzazione.</b> Immaginare il movimento prima di farlo migliora la prestazione e un po' anche la forza, soprattutto insieme all'allenamento vero.<cite>Simonsmeier e coll., Sport Exerc Perform Psychol 2021 (meta-analisi) · Slimani e coll., J Hum Kinet 2016</cite></p>
   <p>${pill('m')}<b>Gentilezza dopo uno stop.</b> Chi si tratta con comprensione dopo un errore riprende più facilmente le buone abitudini; sgridarsi non aiuta.<cite>Sirois, Kitner e Hirsch, Health Psychol 2015 (meta-analisi)</cite></p>
+  <p>${pill('m')}<b>Il coach impara da te.</b> Quando dai 👍 o 👎 il coach usa di più le frasi e i consigli che senti tuoi. Sentire di poter scegliere aumenta la motivazione e la costanza nell'attività fisica.<cite>Ntoumanis e coll., Health Psychol Rev 2021 (meta-analisi) · Teixeira e coll., Int J Behav Nutr Phys Act 2012</cite></p>
   <p>${pill('w')}<b>Dirsi "tu".</b> Parlarsi in seconda persona ("ce la fai") sembra aiutare un po' più di "ce la faccio": per questo le frasi del coach usano il tu.<cite>Kross e coll., J Pers Soc Psychol 2014 · Dolcos e Albarracín, Eur J Soc Psychol 2014</cite></p>
 </div>`;
 
@@ -5013,18 +5046,58 @@ function coachGoalTip(kind){ const o=COACH.obj; if(!coachOn() || !o) return ''; 
   if(o==='res' && kind==='run') T.push('Ricorda: la maggior parte delle uscite a ritmo facile, in cui riesci a parlare.');
   if(o==='res' && kind==='gym') T.push('La forza rende la tua corsa più economica: ottima scelta.');
   if(o==='sal') T.push('Ogni allenamento ti avvicina ai minuti consigliati per la salute.');
-  if(!T.length) return ''; COACH.tipN=(COACH.tipN||0)+1; coachSave(); return ' '+T[COACH.tipN%T.length]; }
+  if(!T.length) return ''; const t=fbPick(T, COACH.lastTip); COACH.lastTip=t; coachSave(); return t ? ' '+t : ''; }
 function adviceHTML(){
   const o=COACH.obj;
   const chips = Object.keys(OBJ).map(k=>`<button class="chip" type="button" data-obj="${k}" aria-pressed="${o===k}">${OBJ[k].i} ${OBJ[k].n}</button>`).join('');
   if(!o) return `<section class="card" id="cAdv"><h2>Il tuo obiettivo</h2><p class="note">Scegli cosa vuoi ottenere: ti do consigli con i tuoi numeri, solo quelli provati dagli studi.</p><div class="chips wrapchips">${chips}</div></section>`;
-  const {A,D}=coachAdvice(), row=a=>`<p>${a.k?pill(a.k):''}<b>${a.t}.</b> ${a.x}${a.c?`<cite>${a.c}</cite>`:''}</p>`;
+  const {A:A0,D}=coachAdvice(), row=(a,f)=>`<p>${a.k?pill(a.k):''}${f&&fbScore(a.t)>0?'⭐ ':''}<b>${a.t}.</b> ${a.x}${a.c?`<cite>${a.c}</cite>`:''}${f?fbBtns(a.t):''}</p>`;
+  const A=A0.filter(a=>fbScore(a.t)>-2).sort((a,b)=>fbScore(b.t)-fbScore(a.t)), H=A0.filter(a=>fbScore(a.t)<=-2);
   return `<section class="card" id="cAdv"><h2>Il tuo obiettivo</h2><div class="chips wrapchips">${chips}</div>
     ${D.length?`<h3 class="subh">Cosa vedo dai tuoi dati</h3><div class="sci">${D.map(row).join('')}</div>`:''}
-    <h3 class="subh">I consigli per te</h3><div class="sci">${A.map(row).join('')}</div>
+    <h3 class="subh">I consigli per te</h3><p class="note">Tocca 👍 o 👎: il coach mette in alto e ripete a voce quelli che ti servono.</p><div class="sci">${A.map(a=>row(a,1)).join('')}</div>
+    ${H.length?`<details class="more"><summary>Consigli che hai nascosto (${H.length})</summary><div class="sci">${H.map(a=>row(a,1)).join('')}</div></details>`:''}
     <p class="note">Solo consigli con studi solidi: <i class="pill s">Dimostrato</i> molti studi concordano, <i class="pill m">Prove medie</i> buoni studi ma meno numerosi. Non sostituiscono medico e nutrizionista.</p></section>`;
 }
 
+function learnHTML(){ const F=COACH.fb||{}, T=COACH.fbt||{}, ks=Object.keys(F); if(!ks.length) return '';
+  const up=ks.filter(k=>F[k]>0).sort((a,b)=>F[b]-F[a]).map(k=>T[k]).filter(Boolean), dn=ks.filter(k=>F[k]<0).map(k=>T[k]).filter(Boolean);
+  return `<section class="card"><h2>Cosa ho imparato da te</h2>
+    ${up.length?`<p><b>👍 Ti piacciono, li uso di più:</b> ${up.slice(0,6).map(t=>'«'+esc(t)+'»').join(', ')}</p>`:''}
+    ${dn.length?`<p><b>👎 Li uso meno o per niente:</b> ${dn.slice(0,6).map(t=>'«'+esc(t)+'»').join(', ')}</p>`:''}
+    <p class="note">Dai 👍 o 👎 alle frasi durante l'allenamento e ai consigli: il coach si adatta a te. Resta tutto sul tuo telefono.</p>
+    <div class="links"><button class="btn ghost small" type="button" id="fbReset">Ricomincia da zero</button></div></section>`; }
+function viewCoachInfo(){
+  view='coachinfo'; backBar('Indietro','#coach'); setTab('');
+  $app.innerHTML = `<section class="view coach">
+    <div><div class="eyebrow">Prima di attivarlo</div><h1 style="font-size:36px;text-transform:uppercase">Come funziona il mental coach</h1></div>
+    <section class="card"><h2>Da dove prende i dati</h2>
+      <p><b>Dagli studi scientifici.</b> Frasi, consigli e numeri vengono da ricerche pubblicate su riviste scientifiche e da linee guida ufficiali (per esempio Organizzazione Mondiale della Sanità, ACSM, NICE). Sotto ogni consiglio trovi gli autori, la rivista e l'anno, così puoi controllare.</p>
+      <p><b>Dai tuoi dati.</b> Usa solo quello che scrivi tu nell'app: peso, altezza, età e misure in Corpo, gli allenamenti e le corse nel Diario, le tue frasi e i tuoi 👍/👎. Tutto resta salvato <b>solo su questo telefono</b>: non viene mandato a nessuno.</p>
+      <p><b>Come decide.</b> Segue regole fisse prese dagli studi (per esempio "almeno 10 serie a settimana per muscolo"). Non è un medico e non è un'intelligenza artificiale: fa calcoli semplici sui tuoi numeri.</p>
+    </section>
+    <section class="card"><h2>Quanto sono affidabili</h2>
+      <p>Ogni consiglio ha un'etichetta:</p>
+      <p>${pill('s')} molti studi di buona qualità dicono la stessa cosa.</p>
+      <p>${pill('m')} buoni studi, ma meno numerosi o con risultati meno netti.</p>
+      <p>${pill('w')} indicazione ragionevole, ma con poche prove: prendila come uno spunto.</p>
+      <p>Gli studi descrivono <b>la media delle persone</b>: tu puoi rispondere in modo diverso. I numeri (come i grammi di proteine o i chili a settimana) sono stime, non misure precise. I risultati non sono garantiti.</p>
+    </section>
+    <section class="warn" role="note"><h2>Avvertenze</h2>
+      <p>Il mental coach dà <b>informazioni generali</b> per motivarti e orientarti. <b>Non sostituisce</b> il medico, il nutrizionista o un allenatore qualificato e non fa diagnosi.</p>
+      <p><b>Prima di iniziare</b> un programma di allenamento o di cambiare alimentazione, parla con il tuo medico, soprattutto se hai problemi di cuore, pressione, diabete, reni, dolori, se sei in gravidanza o se non ti alleni da tanto.</p>
+      <p>Fermati e chiedi aiuto se senti dolore al petto, giramenti di testa, fiato molto corto o dolore che non passa.</p>
+      <p>Usi l'app e segui i consigli <b>sotto la tua responsabilità</b>: chi ha realizzato l'app non risponde di danni, infortuni o problemi di salute legati al suo uso.</p>
+    </section>
+    ${COACH.ok ? `<p class="note">Hai accettato queste condizioni il ${df.format(new Date(COACH.ok))}.</p><a class="btn big" href="#coach">Torna al coach</a>`
+      : `<label class="cagree"><input type="checkbox" id="cAgree"> Ho letto e accetto queste informazioni e le avvertenze</label>
+      <button class="btn big" type="button" id="cAccept" disabled>Attiva il mental coach</button>
+      <a class="btn ghost big" href="#coach">Non ora</a>`}
+  </section>`;
+  const ag=document.getElementById('cAgree'), ac=document.getElementById('cAccept');
+  if(ag) ag.onchange=()=>{ ac.disabled=!ag.checked; };
+  if(ac) ac.onclick=()=>{ if(!ag.checked) return; COACH.ok=Date.now(); COACH.on=true; coachSave(); say('Mental coach attivo. Ci sono io con te.', true); location.hash='coach'; };
+}
 function viewCoach(){
   view='coach'; backBar('Indietro','#esercizi'); setTab('');
   const st = coachStats(), wb = coachWelcome(st);
@@ -5033,7 +5106,8 @@ function viewCoach(){
   $app.innerHTML = `<section class="view coach">
     <div><div class="eyebrow">La tua testa allenata</div><h1 style="font-size:40px;text-transform:uppercase">Mental coach</h1></div>
     <p class="lead">Una voce che ti incoraggia in palestra, a casa e nella corsa, festeggia i progressi e ti aiuta a non mollare. Tutto basato sugli studi di psicologia dello sport.</p>
-    <div class="chips"><button class="chip" type="button" id="cOn" aria-pressed="${coachOn()}">${coachOn()?'✓ Coach attivo':'Coach spento: tocca per attivarlo'}</button></div>
+    <div class="card conoff"><div><b>Mental coach ${coachOn()?'attivo':'spento'}</b><span class="note">${coachOn()?'Ti parla durante allenamenti e corse. Spegnilo quando vuoi.':'Nessuna frase e nessun consiglio a voce. Riaccendilo quando vuoi.'}</span></div>${coachSwitch()}</div>
+    ${learnHTML()}
 
     <section class="card"><h2>Come stai andando</h2>
       ${wb?`<p class="feel">${esc(wb)}</p>`:''}
@@ -5084,9 +5158,10 @@ function viewCoach(){
     </section>
 
     <details class="more"><summary>Su cosa si basa il coach</summary>${SCI_COACH}</details>
+    <a class="btn ghost small" href="#coach-info">Da dove vengono i dati e avvertenze</a>
   </section>`;
   const redraw = ()=>keepScroll(viewCoach), $ = id=>document.getElementById(id);
-  $('cOn').onclick=()=>{ COACH.on=!coachOn(); coachSave(); if(COACH.on) say('Coach attivo. Ci sono io con te.', true); redraw(); };
+  const fr=$('fbReset'); if(fr) fr.onclick=()=>{ if(fr.dataset.sure){ COACH.fb={}; COACH.fbt={}; coachSave(); redraw(); } else { fr.dataset.sure='1'; fr.textContent='Sicuro? Tocca ancora'; } };
   $app.querySelectorAll('[data-obj]').forEach(b=>b.onclick=()=>{ COACH.obj = COACH.obj===b.dataset.obj ? '' : b.dataset.obj; coachSave(); redraw(); });
   $('cWhy').oninput=e=>{ COACH.why=e.target.value; coachSave(); };
   $app.querySelectorAll('[data-why]').forEach(b=>b.onclick=()=>{ COACH.why=COACH_WHY[+b.dataset.why]; coachSave(); $('cWhy').value=COACH.why; });
@@ -5121,6 +5196,7 @@ function route(soft){
     if(h==='diario') return viewDiary();
     if(h==='corpo') return viewBody();
     if(h==='coach') return viewCoach();
+    if(h==='coach-info') return viewCoachInfo();
     if(h==='dieta') return viewFood();
     viewList();
   };
