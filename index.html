@@ -1694,7 +1694,82 @@ const EX = [
  {id:'stepper',name:'Stair climber',g:'cardio',e:'cardio',lv:'Tutti',mu:'Cuore, gambe e glutei',
   steps:['Sali sulla scala mobile e scegli una velocità bassa.','Busto dritto, mani appena appoggiate ai corrimano.','Appoggia tutto il piede su ogni gradino.','Aumenta la velocità poco per volta.'],
   br:{in:'Dal naso per 2 gradini.',out:'Dalla bocca per 2 gradini.'},tempo:[2,2],
-  err:['Tenersi forte ai corrimano','Piegarsi in avanti'],dose:['1','10–15\'','—']}
+  err:['Tenersi forte ai corrimano','Piegarsi in avanti'],dose:['1','10–15\'','—']},
+ {id:'squat-libero',name:'Squat a corpo libero',g:'gambe',e:'corpo',lv:'Principiante',mu:'Cosce e glutei',hl:['thigh','glutes'],
+  steps:['In piedi, piedi alla larghezza delle spalle, punte un po\' aperte.','Braccia avanti per tenere l\'equilibrio.','Scendi portando il bacino indietro e in basso, come per sederti su una sedia bassa.','Arriva con le cosce almeno parallele al pavimento e spingi sui talloni per tornare su.'],
+  br:{in:'Mentre scendi.',out:'Mentre risali.'},tempo:[3,1],
+  note:'Quando fai più di 25 ripetizioni facilmente, scendi in 3 secondi e fermati 2 secondi in basso, oppure passa allo squat bulgaro.',
+  err:['Ginocchia che cadono verso l\'interno → spingile in fuori, in linea con le punte','Talloni che si alzano → sposta il peso indietro, sui talloni','Schiena che si arrotonda in basso → scendi un po\' meno e tieni il petto alto'],dose:['3','12–20','60"']},
+ {id:'squat-bulgaro',name:'Squat bulgaro',g:'gambe',e:'corpo',lv:'Intermedio',mu:'Cosce e glutei',hl:['thigh','glutes'],
+  steps:['Mettiti davanti a una sedia, di spalle, e appoggia sulla seduta il collo del piede dietro.','Il piede davanti è a circa un passo lungo dalla sedia.','Scendi dritto finché il ginocchio dietro quasi tocca terra.','Spingi sul tallone davanti per tornare su. Finisci tutte le ripetizioni, poi cambia gamba.'],
+  br:{in:'Mentre scendi.',out:'Mentre risali.'},tempo:[3,1],
+  note:'Usa una sedia che non scivola, contro il muro. Per l\'equilibrio puoi tenerti a una parete con una mano.',
+  err:['Piede davanti troppo vicino alla sedia → allontanalo finché in basso il ginocchio resta sopra la caviglia','Spingere con la gamba dietro → la gamba dietro serve solo da appoggio'],dose:['3','8–12 per gamba','90"']},
+ {id:'ponte-glutei',name:'Ponte per glutei',g:'gambe',e:'corpo',lv:'Principiante',mu:'Glutei',hl:['glutes','hams'],
+  steps:['Sdraiati sulla schiena, ginocchia piegate, piedi a terra vicino ai glutei.','Braccia lungo i fianchi, palmi a terra.','Spingi sui talloni e alza il bacino finché spalle, fianchi e ginocchia sono in linea.','Stringi i glutei 1 secondo in alto e scendi piano.'],
+  br:{in:'Mentre scendi.',out:'Mentre alzi il bacino.'},tempo:[2,1],
+  note:'Quando diventa facile fallo su una gamba sola: l\'altra gamba resta tesa in aria.',
+  err:['Inarcare la schiena in alto → fermati quando il corpo è dritto e stringi i glutei','Spingere sulle punte → spingi sui talloni'],dose:['3','12–20','60"']},
+ {id:'leg-curl-asciugamano',name:'Leg curl con asciugamano',g:'gambe',e:'corpo',lv:'Intermedio',mu:'Femorali',hl:['hams'],
+  steps:['Sdraiati sulla schiena su un pavimento liscio, talloni su un asciugamano (o calzini su parquet).','Alza il bacino come nel ponte per glutei.','Tenendo il bacino alto, porta i talloni verso i glutei facendo scivolare l\'asciugamano.','Allunga di nuovo le gambe piano, sempre con il bacino alto.'],
+  br:{in:'Mentre allunghi le gambe.',out:'Mentre tiri i talloni verso di te.'},tempo:[3,2],
+  note:'Se è troppo difficile, allunga le gambe solo a metà. Più facile con due gambe, più difficile con una.',
+  err:['Bacino che cade a terra → tienilo alto per tutta la serie','Allungare le gambe di colpo → la fase di ritorno è quella che lavora di più'],dose:['3','8–12','75"']},
+ {id:'nordic-curl',name:'Nordic curl',g:'gambe',e:'corpo',lv:'Avanzato',mu:'Femorali',hl:['hams'],
+  steps:['In ginocchio su un cuscino, caviglie bloccate sotto un divano pesante o tenute da qualcuno.','Corpo dritto dalle ginocchia alla testa, glutei stretti.','Lasciati cadere in avanti più lentamente che puoi, frenando con i femorali.','Quando non riesci più a frenare, appoggia le mani a terra, spingiti su e torna in ginocchio.'],
+  br:{in:'Prima di scendere, quando sei dritto.',out:'Piano, mentre scendi frenando.'},tempo:[2,4],
+  note:'È l\'esercizio più studiato per prevenire gli strappi ai femorali. Inizia con poche ripetizioni: i primi giorni dà molto indolenzimento.',
+  err:['Piegarsi ai fianchi → corpo dritto come una tavola, glutei stretti','Cadere di colpo → frena il più a lungo possibile, anche solo per poco'],dose:['3','4–6','2\'']},
+ {id:'polpacci-gradino',name:'Polpacci sul gradino',g:'gambe',e:'corpo',lv:'Principiante',mu:'Polpacci',hl:['calf'],
+  steps:['Punta di un piede sul bordo di un gradino, tallone nel vuoto. L\'altro piede è sollevato.','Tieniti con una mano al muro o al corrimano.','Scendi con il tallone sotto il gradino, fino a sentire il polpaccio allungato.','Sali più in alto che puoi sulla punta, fermati 1 secondo e scendi piano.'],
+  br:{in:'Mentre scendi.',out:'Mentre sali sulla punta.'},tempo:[2,1],
+  note:'Se su una gamba è troppo difficile, inizia con due piedi.',
+  err:['Molleggiare veloce → fermati 1 secondo in basso e 1 in alto','Piegare il ginocchio → la gamba resta tesa'],dose:['3','12–20 per gamba','60"']},
+ {id:'piegamenti-rialzati',name:'Piegamenti con mani rialzate',g:'petto',e:'corpo',lv:'Principiante',mu:'Petto e tricipiti',
+  steps:['Mani sul bordo di un tavolo robusto o del divano, poco più larghe delle spalle.','Fai un passo indietro: corpo dritto dalla testa ai talloni.','Scendi piegando i gomiti a circa 45° dal busto finché il petto quasi tocca il bordo.','Spingi per tornare su, addome e glutei contratti.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi.'},tempo:[3,1],
+  note:'Più alto è l\'appoggio, più è facile. Quando fai 15 ripetizioni facili, usa un appoggio più basso, fino a passare ai piegamenti normali.',
+  err:['Fianchi che cedono → stringi glutei e addome','Gomiti aperti a 90° → tienili più vicini al corpo'],dose:['3','8–15','60"']},
+ {id:'piegamenti-stretti',name:'Piegamenti stretti',g:'braccia',e:'corpo',lv:'Intermedio',mu:'Tricipiti e petto',hl:['ua','chest'],
+  steps:['Come nei piegamenti, ma con le mani sotto le spalle, più vicine tra loro.','Corpo dritto dalla testa ai talloni.','Scendi tenendo i gomiti stretti, che sfiorano i fianchi.','Spingi fino a braccia tese.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi.'},tempo:[3,1],
+  note:'Se sono troppo difficili, appoggia le ginocchia o le mani su un rialzo.',
+  err:['Gomiti che si aprono → tienili attaccati al corpo','Mani troppo unite che fanno male ai polsi → mettile larghe come le spalle'],dose:['3','8–15','75"']},
+ {id:'piegamenti-piedi-rialzati',name:'Piegamenti con piedi rialzati',g:'petto',e:'corpo',lv:'Avanzato',mu:'Petto alto e spalle',hl:['chest','delt'],
+  steps:['Piedi su una sedia o sul divano, mani a terra poco più larghe delle spalle.','Corpo dritto dalla testa ai talloni.','Scendi lentamente finché il petto quasi tocca terra.','Spingi fino a braccia tese.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi.'},tempo:[3,1],
+  note:'Più alti sono i piedi, più lavorano spalle e petto alto. Per renderli ancora più duri: 1 secondo fermo in basso.',
+  err:['Bacino che cade → stringi addome e glutei','Testa che va giù prima del petto → sguardo a terra poco davanti alle mani'],dose:['4','6–15','90"']},
+ {id:'pike-push-up',name:'Piegamenti a V',g:'spalle',e:'corpo',lv:'Intermedio',mu:'Spalle e tricipiti',hl:['delt','ua'],
+  steps:['Mani a terra larghe come le spalle, bacino in alto: il corpo forma una V rovesciata.','Gambe il più dritte possibile, talloni sollevati.','Piega i gomiti e porta la testa verso il pavimento, un po\' davanti alle mani.','Spingi per tornare su.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi.'},tempo:[3,1],
+  note:'Per renderli più difficili metti i piedi su una sedia: è il passo prima della verticale.',
+  err:['Bacino che scende (diventa un piegamento normale) → tieni il bacino alto','Testa che finisce dietro le mani → la testa va un po\' davanti'],dose:['3','6–12','90"']},
+ {id:'dip-sedia',name:'Dip alla sedia',g:'braccia',e:'corpo',lv:'Principiante',mu:'Tricipiti',hl:['ua'],
+  steps:['Di spalle a una sedia stabile contro il muro, mani sul bordo della seduta, dita in avanti.','Gambe piegate, piedi a terra davanti a te.','Scendi piegando i gomiti all\'indietro finché le braccia sono a 90°.','Spingi sulle mani fino a braccia tese.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi.'},tempo:[2,1],
+  note:'Più le gambe sono tese, più è difficile. Se senti fastidio davanti alla spalla, scendi meno.',
+  err:['Scendere troppo in basso → fermati con le braccia a 90°','Spalle che salgono verso le orecchie → tienile basse'],dose:['3','8–15','60"']},
+ {id:'rematore-tavolo',name:'Rematore sotto il tavolo',g:'schiena',e:'corpo',lv:'Principiante',mu:'Schiena e bicipiti',hl:['back','ua'],
+  steps:['Sdraiati sotto un tavolo robusto che non si ribalta, con il petto sotto il bordo.','Afferra il bordo con le mani larghe come le spalle.','Corpo dritto, talloni a terra: tira il petto verso il bordo del tavolo stringendo le scapole.','Scendi piano fino a braccia tese.'],
+  br:{in:'Mentre scendi.',out:'Mentre tiri.'},tempo:[3,1],
+  note:'Prova prima che il tavolo regga il tuo peso. Con le ginocchia piegate è più facile, con i piedi su una sedia è più difficile. Con i palmi verso di te lavorano di più i bicipiti.',
+  err:['Bacino che cade → corpo dritto come una tavola','Tirare solo con le braccia → pensa di portare i gomiti verso i fianchi'],dose:['3','8–12','90"']},
+ {id:'alzate-yt',name:'Alzate Y e T a terra',g:'spalle',e:'corpo',lv:'Principiante',mu:'Spalle dietro e parte alta della schiena',hl:['delt','traps'],
+  steps:['Sdraiati a pancia in giù, fronte su un asciugamano piegato.','Braccia tese in avanti a forma di Y, pollici verso l\'alto.','Alza le braccia da terra stringendo le scapole, fermati 2 secondi e scendi.','Alterna: una ripetizione a Y, una con le braccia aperte a T.'],
+  br:{in:'Mentre scendi.',out:'Mentre alzi le braccia.'},tempo:[2,2],
+  note:'Lavorano poco peso ma sono ottime per la postura e per le spalle di chi fa tanti piegamenti.',
+  err:['Alzare la testa e inarcare la schiena → la fronte resta vicino a terra','Fare veloce → fermati 2 secondi in alto'],dose:['3','10–15','45"']},
+ {id:'plank-laterale',name:'Plank laterale',g:'core',e:'corpo',lv:'Principiante',t:1,mu:'Addome laterale e fianchi',hl:['abs'],
+  steps:['Sdraiati sul fianco, gomito sotto la spalla, piedi uno sopra l\'altro.','Alza il bacino: corpo dritto dalla testa ai piedi.','Tieni la posizione respirando con calma.','Poi cambia lato.'],
+  br:{in:'Dal naso, lento.',out:'Dalla bocca, lenta, senza mollare l\'addome.'},tempo:[4,4],
+  note:'Più facile con le ginocchia a terra.',
+  err:['Bacino che scende → spingilo verso il soffitto','Busto ruotato in avanti → spalla, fianco e piede in linea'],dose:['3','20–40" per lato','45"']},
+ {id:'jumping-jack',name:'Saltelli a stella',g:'cardio',e:'corpo',lv:'Tutti',t:1,mu:'Cuore e gambe',
+  steps:['In piedi, piedi uniti e braccia lungo i fianchi.','Con un piccolo salto apri le gambe e porta le braccia sopra la testa.','Con un altro salto torna a piedi uniti e braccia giù.','Continua a ritmo costante, atterrando morbido sulle punte.'],
+  br:{in:'Dal naso, per 2 saltelli.',out:'Dalla bocca, per 2 saltelli.'},tempo:[1,1],
+  note:'Per non saltare (vicini di casa o ginocchia): fai un passo di lato invece del salto.',
+  err:['Atterrare sui talloni → atterra morbido sulle punte','Trattenere il fiato'],dose:['1','3\'','—']}
 ];
 const PRO = {
 "chest-press":{feel:"Al centro del petto e un po' dietro le braccia (tricipiti).",
@@ -1999,6 +2074,43 @@ SESS.push(
  {id:'liv-e-gambe',lvl:'esperto',name:'Esperto · Gambe e glutei',for:'Glutei, cosce, interno-esterno coscia, addome',min:70,
   items:[['stepper',1,'5\' riscaldamento',0],['hip-thrust',4,'8–10',120],['affondi',3,'10 per gamba',120],['leg-extension',3,'12–15',60],['leg-curl',3,'12–15',60],['adductor',3,'15',60],['abductor',2,'15',60],['sollevamento-gambe',3,'15',60],['woodchop-cavi',3,'10 per lato',60]]}
 );
+/* piani a corpo libero (senza palestra) */
+const LIVELLI_CL = {
+ principiante:{name:'Principiante',info:'Per chi inizia. 3 giorni a settimana alternando A e B (es. lun-mer-ven). Ti servono una sedia, un tavolo robusto e un asciugamano. 2–3 serie da 10–20 ripetizioni, lasciandone 2–3 in canna. Scendi sempre lentamente (3 secondi).'},
+ intermedio:{name:'Intermedio',info:'Dopo 2–3 mesi. 4 giorni: Alta A, Bassa A, riposo, Alta B, Bassa B. Chiudi ogni serie con 1–2 ripetizioni in canna. Quando superi 20–25 ripetizioni, passa alla versione più dura indicata nell\'esercizio.'},
+ esperto:{name:'Esperto',info:'Per chi è già allenato. 4 giorni: Spinta, Tirata, riposo, Gambe davanti, Gambe dietro. Serie quasi al limite (0–1 in canna) con le versioni più dure: piedi rialzati, una gamba, discesa in 4 secondi, pause in basso, «una e mezza» (scendi, risali a metà, riscendi, poi su). Ogni 6 settimane una settimana leggera con metà serie.'}
+};
+SESS.push(
+ {id:'cl-p-a',cl:'principiante',name:'Senza palestra · Principiante A',for:'Corpo intero · alterna con la B',min:35,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['squat-libero',3,'12–20',60],['piegamenti-rialzati',3,'8–15',60],['rematore-tavolo',3,'8–12 ginocchia piegate',90],['ponte-glutei',3,'15–20',60],['plank',2,'20–30"',45]]},
+ {id:'cl-p-b',cl:'principiante',name:'Senza palestra · Principiante B',for:'Corpo intero · alterna con la A',min:35,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['affondi',3,'8–12 per gamba, senza pesi',75],['piegamenti-rialzati',3,'8–15 appoggio più basso',60],['rematore-tavolo',3,'8–12',90],['leg-curl-asciugamano',2,'6–10',75],['alzate-yt',2,'10–12',45],['plank-laterale',2,'15–30" per lato',45]]},
+ {id:'cl-i-alta-a',cl:'intermedio',name:'Senza palestra · Intermedio Alta A',for:'Petto, schiena, spalle, braccia',min:45,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['piegamenti',4,'8–20',90],['rematore-tavolo',4,'8–15',90],['pike-push-up',3,'6–12',90],['dip-sedia',3,'10–15',60],['alzate-yt',3,'12–15',45]]},
+ {id:'cl-i-bassa-a',cl:'intermedio',name:'Senza palestra · Intermedio Bassa A',for:'Cosce, glutei, polpacci, addome',min:45,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['squat-bulgaro',4,'8–12 per gamba',90],['ponte-glutei',3,'10–15 su una gamba',60],['leg-curl-asciugamano',3,'8–12',75],['polpacci-gradino',3,'12–20 per gamba',60],['plank',3,'30–45"',45]]},
+ {id:'cl-i-alta-b',cl:'intermedio',name:'Senza palestra · Intermedio Alta B',for:'Petto, schiena, spalle, braccia',min:45,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['piegamenti-piedi-rialzati',3,'6–15',90],['rematore-tavolo',4,'8–12 palmi verso di te',90],['piegamenti-stretti',3,'8–15',75],['pike-push-up',3,'6–12',90],['mountain-climber',3,'20–30 totali',45]]},
+ {id:'cl-i-bassa-b',cl:'intermedio',name:'Senza palestra · Intermedio Bassa B',for:'Glutei, cosce, addome',min:45,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['squat-libero',3,'15–25, 3" giù e 1" fermo',75],['affondi',3,'10–15 per gamba, senza pesi',75],['ponte-glutei',3,'10–15 su una gamba',60],['polpacci-gradino',3,'12–20 per gamba',60],['plank-laterale',3,'30" per lato',45]]},
+ {id:'cl-e-spinta',cl:'esperto',name:'Senza palestra · Esperto Spinta',for:'Petto, spalle, tricipiti',min:50,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['piegamenti-piedi-rialzati',4,'6–12, 4" giù e 1" fermo',120],['pike-push-up',4,'5–10 piedi sulla sedia',120],['dip-sedia',3,'12–20 gambe tese',90],['piegamenti-stretti',3,'8–15',90],['piegamenti',2,'più che puoi, poi 3 mini-serie da 3–5',90]]},
+ {id:'cl-e-tirata',cl:'esperto',name:'Senza palestra · Esperto Tirata',for:'Schiena, spalle dietro, bicipiti, addome',min:50,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['rematore-tavolo',5,'8–12 piedi su una sedia, 2" fermo in alto',120],['rematore-tavolo',3,'8–12 palmi verso di te',90],['alzate-yt',4,'12–15',45],['sollevamento-gambe',3,'10–15',60],['plank-laterale',3,'40–60" per lato',45]]},
+ {id:'cl-e-gambe-davanti',cl:'esperto',name:'Senza palestra · Esperto Gambe davanti',for:'Cosce, polpacci, addome',min:50,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['squat-bulgaro',4,'8–12 per gamba, «una e mezza»',120],['squat-libero',3,'20–30, 4" giù',90],['affondi',3,'12–15 per gamba, camminando',90],['polpacci-gradino',4,'15–20 per gamba, 2" fermo in basso',60],['plank',3,'45–60"',45]]},
+ {id:'cl-e-gambe-dietro',cl:'esperto',name:'Senza palestra · Esperto Gambe dietro',for:'Femorali e glutei',min:45,
+  items:[['jumping-jack',1,'3\' riscaldamento',0],['nordic-curl',3,'4–6, scendi più lento che puoi',150],['ponte-glutei',4,'12–15 su una gamba, 2" fermo in alto',75],['leg-curl-asciugamano',3,'8–12 su una gamba',90],['squat-bulgaro',3,'10–12 per gamba, busto in avanti',90],['mountain-climber',3,'30 totali',45]]}
+);
+const SCI_CL = `<div class="sci"><p>Perché funziona anche senza pesi:</p><ul>
+<li><b>Il muscolo cresce anche con carichi leggeri</b>, se la serie arriva vicino al limite: con 20–30 ripetizioni i risultati sono quasi uguali a quelli con pesi pesanti. Schoenfeld e coll., J Strength Cond Res 2017; Lopez e coll., Med Sci Sports Exerc 2021.</li>
+<li><b>I piegamenti valgono quanto la panca piana</b> per forza e massa del petto, a parità di fatica. Calatayud e coll., J Strength Cond Res 2015; Kikuchi e Nakazato, J Exerc Sci Fit 2017; Kotarsky e coll., J Strength Cond Res 2018.</li>
+<li><b>Quante serie</b>: almeno 10 a settimana per muscolo; di più dà un po' di più, ma con meno guadagno per serie. Pelland e coll., Sports Med 2025; ACSM, posizione ufficiale sull'allenamento con sovraccarichi 2026.</li>
+<li><b>Quanto vicino al limite</b>: 0–3 ripetizioni in canna, più vicino per chi è esperto. Robinson e coll., Sports Med 2024.</li>
+<li><b>Come progredire senza pesi</b>: versione più dura, discesa più lenta, pause, una gamba o un braccio alla volta. È il metodo delle «progressioni» della ginnastica a corpo libero (Low, Overcoming Gravity).</li>
+<li><b>Nordic curl</b>: nei programmi che lo usano gli strappi ai femorali calano circa della metà. van Dyk e coll., Br J Sports Med 2019.</li>
+<li><b>Il minimo per la salute</b>: esercizi di forza almeno 2 giorni a settimana. OMS, linee guida 2020; Momma e coll., Br J Sports Med 2022.</li>
+</ul></div>`;
 const SMAP = Object.fromEntries(SESS.map(s=>[s.id,s]));
 
 
@@ -2138,7 +2250,37 @@ const ANIM = {
  'ellittica':{ab:'in',props:['ellip'],
    A:{hip:[150,96],torso:2,hand:[186,92],hand2:[170,104],foot:[174,170],foot2:[126,178]}, B:{hip:[150,96],torso:2,hand:[170,104],hand2:[186,92],foot:[126,178],foot2:[174,170]}},
  'stepper':{ab:'in',props:['stairs'],
-   A:{hip:[150,100],torso:6,hand:[186,104],foot:[172,156],foot2:[150,180]}, B:{hip:[150,100],torso:6,hand:[186,104],foot:[150,180],foot2:[172,156]}}
+   A:{hip:[150,100],torso:6,hand:[186,104],foot:[172,156],foot2:[150,180]}, B:{hip:[150,100],torso:6,hand:[186,104],foot:[150,180],foot2:[172,156]}},
+ 'squat-libero':{ab:'in',props:['floor'],akey:'hip',
+   A:{hip:[150,106],torso:2,hand:[204,62],foot:[154,184]}, B:{hip:[118,148],torso:42,hand:[206,104],foot:[154,184]}},
+ 'squat-bulgaro':{ab:'in',props:['floor'],akey:'hip',boxes:[[60,152,52,8],[64,160,6,24],[102,160,6,24],[60,112,6,40]],
+   A:{hip:[146,114],torso:4,hand:'down',foot:[174,184],foot2:[98,148],toe2:[86,152]}, B:{hip:[138,146],torso:12,hand:'down',foot:[174,184],foot2:[98,148],toe2:[86,152]}},
+ 'ponte-glutei':{ab:'out',props:['floor'],akey:'hip',
+   A:{hip:[150,178],torso:268,hand:[134,182],foot:[196,184],lb:-1,eb:1}, B:{hip:[150,150],torso:242,hand:[140,182],foot:[196,184],lb:-1,eb:1}},
+ 'leg-curl-asciugamano':{ab:'out',props:['floor'],akey:'ankle',
+   A:{hip:[140,168],torso:261,hand:[126,182],foot:[214,182],lb:-1,eb:1}, B:{hip:[146,150],torso:242,hand:[136,182],foot:[186,182],lb:-1,eb:1}},
+ 'nordic-curl':{ab:'out',props:['floor'],akey:'head',
+   A:{hip:[150,142],torso:0,hand:[170,118],thAng:180,shAng:270,eb:1}, B:{hip:[183,159],torso:55,hand:[244,176],thAng:235,shAng:270,eb:1}},
+ 'polpacci-gradino':{ab:'out',props:['step'],
+   A:{hip:[150,98],torso:0,hand:'down',foot:[150,176],toe:[163,170]}, B:{hip:[150,88],torso:0,hand:'down',foot:[153,165],toe:[163,170]}},
+ 'piegamenti-rialzati':{ab:'in',props:['floor'],boxes:[[150,152,110,8],[248,160,6,24]],
+   A:{hip:[128,135],torso:50,hand:[172,153],foot:[70,184],eb:-1}, B:{hip:[134,144],torso:58,hand:[172,153],foot:[70,184],eb:-1}},
+ 'piegamenti-stretti':{ab:'out',props:['floor'],
+   A:{hip:[117,170],torso:80,hand:[158,184],foot:[40,184],eb:-1}, B:{hip:[110,149],torso:63.5,hand:[158,184],foot:[40,184],eb:-1}},
+ 'piegamenti-piedi-rialzati':{ab:'in',props:['floor'],boxes:[[14,152,54,8],[18,160,6,24],[58,160,6,24]],
+   A:{hip:[119,137],torso:80,hand:[172,184],foot:[44,150],eb:-1}, B:{hip:[120,156],torso:94,hand:[172,184],foot:[44,150],eb:-1}},
+ 'pike-push-up':{ab:'in',props:['floor'],akey:'head',
+   A:{hip:[132,114],torso:120,hand:[204,184],foot:[104,184],eb:-1}, B:{hip:[136,118],torso:142,hand:[204,184],foot:[104,184],eb:-1}},
+ 'dip-sedia':{ab:'in',props:['floor'],akey:'hip',boxes:[[64,144,64,8],[68,152,5,32],[120,152,5,32],[64,100,6,44]],
+   A:{hip:[136,140],torso:0,hand:[124,144],foot:[196,184],eb:1}, B:{hip:[138,168],torso:2,hand:[124,144],foot:[196,184],eb:1}},
+ 'rematore-tavolo':{ab:'out',props:['floor'],akey:'hip',boxes:[[56,112,118,8],[60,120,6,64]],
+   A:{hip:[202,176],torso:275,hand:[150,118],foot:[277,184],eb:-1}, B:{hip:[207,154],torso:293,hand:[150,118],foot:[277,184],eb:-1}},
+ 'alzate-yt':{ab:'out',props:['floor'],akey:'hand',
+   A:{hip:[128,178],torso:90,hand:[236,180],foot:[52,182],eb:1}, B:{hip:[128,178],torso:84,hand:[234,154],foot:[52,182],eb:1}},
+ 'plank-laterale':{ab:'in',props:['floor'],noArrow:true,
+   A:{hip:[126,165],torso:77.3,uaAng:180,faAng:90,foot:[52,184]}, B:{hip:[126,167],torso:76.5,uaAng:180,faAng:90,foot:[52,184]}},
+ 'jumping-jack':{ab:'in',mirror:true,props:['floor'],akey:'hand',
+   A:{hip:[160,106],torso:0,hand:[180,158],foot:[168,184]}, B:{hip:[160,102],torso:0,hand:[200,8],foot:[196,182]}}
 };
 
 const L = {torso:52, ua:30, fa:28, th:40, sh:38, foot:12, head:10};
@@ -2204,6 +2346,7 @@ function drawScene(ctx, id, t, col, info){
   line([[10,GROUND+2],[310,GROUND+2]],2,col.line,'butt');
   // attrezzi dietro
   const pr = new Set(A.props);
+  if(A.boxes) A.boxes.forEach(b=>rect(b[0],b[1],b[2],b[3],M));
   if(pr.has('seat')){ rect(J.hip[0]-24,J.hip[1]+6,52,8,M); line([[J.hip[0],J.hip[1]+14],[J.hip[0],GROUND]],5,M); }
   if(pr.has('back')){ const b0=add(J.hip,[-1,0],12), b1=add(J.sh,[-1,0],12); line([[b0[0],b0[1]],[b1[0],b1[1]-6]],8,M); }
   if(pr.has('lowseat')){ rect(J.hip[0]-30,J.hip[1]+6,60,8,M); line([[J.hip[0],J.hip[1]+14],[J.hip[0],GROUND]],5,M); }
@@ -2504,7 +2647,7 @@ function makeAnim2D(x, cv, word, sub){
   const label = ph => { const out = ph===0 ? first==='out' : first!=='out';
     if(word){ word.textContent = out?'Espira':'Inspira'; word.className = out?'out':'in'; }
     if(sub) sub.textContent = out ? x.br.out : x.br.in;
-    const ph2=wrap.querySelector('.ph'); if(ph2){ ph2.querySelector('b').textContent = out?'Espira':'Inspira'; ph2.querySelector('b').className = out?'out':'in'; ph2.querySelector('span').textContent = (out ? x.br.out : x.br.in)||''; }
+    const ph2=cv.parentElement&&cv.parentElement.querySelector('.ph'); if(ph2){ ph2.querySelector('b').textContent = out?'Espira':'Inspira'; ph2.querySelector('b').className = out?'out':'in'; ph2.querySelector('span').textContent = (out ? x.br.out : x.br.in)||''; }
     if(AU.breath && cv.id==='demo' && playing) say(out?'Espira':'Inspira', true); };
   const frame = now => { const el=(now-t0+offset)%(d1+d2); let t, ph;
     if(el<d1){ ph=0; t=ease(el/d1); } else { ph=1; t=1-ease((el-d1)/d2); }
@@ -2751,7 +2894,7 @@ function viewExercise(id){
     <section class="card"><h2>Quanto farne</h2>
       <div class="dose"><div><b>${x.dose[0]}</b><span>Serie</span></div><div><b>${x.dose[1]}</b><span>Ripetizioni</span></div><div><b>${x.dose[2]}</b><span>Recupero</span></div></div>
       ${isTime(x)?'':`<ul class="method">
-        <li><b>Riscaldamento</b>Prima di iniziare fai 1–2 serie leggere, con circa metà del peso, per preparare muscoli e articolazioni.</li>
+        <li><b>Riscaldamento</b>${x.e==='corpo'?'Prima di iniziare fai 1 serie facile con metà delle ripetizioni, o la versione più semplice, per preparare muscoli e articolazioni.':'Prima di iniziare fai 1–2 serie leggere, con circa metà del peso, per preparare muscoli e articolazioni.'}</li>
         <li><b>Quanto faticare</b>Chiudi ogni serie quando potresti fare ancora 1–2 ripetizioni fatte bene. Se ne potresti fare 5 in più, il peso è troppo leggero.</li>
         <li><b>Come progredire</b>${x.id==='trazioni-assistite'?`Quando fai ${esc(x.dose[1].split(/[–-]/).pop())} ripetizioni in tutte le serie, togli un po' di contrappeso: la macchina ti aiuta meno. L'obiettivo è arrivare alle trazioni senza aiuto.`: x.e==='corpo'?`Quando fai il numero massimo di ripetizioni (${esc(x.dose[1].split(/[–-]/).pop())}) in tutte le serie, rendi l'esercizio più difficile: scendi più lentamente, aggiungi qualche ripetizione o passa a una versione più dura.`:`Resta sullo stesso peso finché fai il numero massimo di ripetizioni (${esc(x.dose[1].split(/[–-]/).pop())}) in tutte le serie. Allora aumenta di poco: 1–2,5 kg per braccia e spalle, 2,5–5 kg per gambe e schiena.`}</li>
         <li><b>Ritmo</b>${x.tempo[1]} secondi per lo sforzo, ${x.tempo[0]} secondi per il ritorno: la fase lenta fa crescere il muscolo quanto la spinta.</li>
@@ -2795,6 +2938,7 @@ function sessCard(s, mine){
   </article>`;
 }
 let lvlSel = (()=>{ try{ const v=localStorage.getItem('pf-lvl'); return LIVELLI[v]?v:'principiante'; }catch(e){ return 'principiante'; } })();
+let clSel = (()=>{ try{ const v=localStorage.getItem('pf-cl'); return LIVELLI_CL[v]?v:'principiante'; }catch(e){ return 'principiante'; } })();
 function viewSessions(){
   view='sessions'; brand(); setTab('sessioni');
   $app.innerHTML = `<section class="view">
@@ -2809,15 +2953,26 @@ function viewSessions(){
     <div class="chips" role="group" aria-label="Livello">${Object.keys(LIVELLI).map(k=>`<button class="chip" type="button" data-lvl="${k}" aria-pressed="${k===lvlSel}">${LIVELLI[k].name}</button>`).join('')}</div>
     ${Object.keys(LIVELLI).map(k=>`<div class="lvlbox" data-box="${k}" ${k===lvlSel?'':'hidden'}><p class="lead">${esc(LIVELLI[k].info)}</p>
       <div class="sessions">${SESS.filter(s=>s.lvl===k).map(s=>sessCard(s,false)).join('')}</div></div>`).join('')}
-    <div class="group-title"><h2>Schede pronte</h2><span class="count">${SESS.filter(s=>!s.lvl).length}</span></div>
+    <div class="group-title"><h2>Senza palestra</h2><span class="count">${SESS.filter(s=>s.cl).length}</span></div>
+    <p class="lead">Allenamento a corpo libero per casa, parco o vacanza. Ti servono solo una sedia, un tavolo robusto, un asciugamano e un gradino.</p>
+    <div class="chips" role="group" aria-label="Livello senza palestra">${Object.keys(LIVELLI_CL).map(k=>`<button class="chip" type="button" data-cll="${k}" aria-pressed="${k===clSel}">${LIVELLI_CL[k].name}</button>`).join('')}</div>
+    ${Object.keys(LIVELLI_CL).map(k=>`<div class="lvlbox" data-clbox="${k}" ${k===clSel?'':'hidden'}><p class="lead">${esc(LIVELLI_CL[k].info)}</p>
+      <div class="sessions">${SESS.filter(s=>s.cl===k).map(s=>sessCard(s,false)).join('')}</div></div>`).join('')}
+    <details class="more"><summary>Da dove vengono questi piani</summary>${SCI_CL}</details>
+    <div class="group-title"><h2>Schede pronte</h2><span class="count">${SESS.filter(s=>!s.lvl&&!s.cl).length}</span></div>
     <p class="lead">Premi Inizia: l'app ti guida esercizio per esercizio, registra peso e ripetizioni e fa partire il recupero.</p>
-    <div class="sessions">${SESS.filter(s=>!s.lvl).map(s=>sessCard(s,false)).join('')}</div>
+    <div class="sessions">${SESS.filter(s=>!s.lvl&&!s.cl).map(s=>sessCard(s,false)).join('')}</div>
     ${audioCardHTML()}</section>`;
   bindAudioCard(viewSessions);
   $app.querySelectorAll('[data-lvl]').forEach(b=>b.onclick=()=>{
     lvlSel=b.dataset.lvl; try{ localStorage.setItem('pf-lvl',lvlSel); }catch(e){}
     $app.querySelectorAll('[data-lvl]').forEach(c=>c.setAttribute('aria-pressed',c.dataset.lvl===lvlSel));
     $app.querySelectorAll('[data-box]').forEach(d=>d.hidden=d.dataset.box!==lvlSel);
+  });
+  $app.querySelectorAll('[data-cll]').forEach(b=>b.onclick=()=>{
+    clSel=b.dataset.cll; try{ localStorage.setItem('pf-cl',clSel); }catch(e){}
+    $app.querySelectorAll('[data-cll]').forEach(c=>c.setAttribute('aria-pressed',c.dataset.cll===clSel));
+    $app.querySelectorAll('[data-clbox]').forEach(d=>d.hidden=d.dataset.clbox!==clSel);
   });
   $app.querySelectorAll('[data-copy]').forEach(b=>b.onclick=()=>{
     const s = SMAP[b.dataset.copy];
@@ -3308,7 +3463,7 @@ function bindAudioCard(redraw){
 /* ---------- MAPPA DEI MUSCOLI ----------
    Serie degli ultimi 7 giorni per muscolo. Conteggio "frazionario" come in Pelland e coll. (Sports Med 2025):
    1 serie per i muscoli che lavorano di più, ½ per quelli che aiutano. Soglie: 4 (minimo), 10–20 (zona consigliata, ACSM 2026). */
-const MUW = {"curl-up":[["abs"],["obliq"]],"bird-dog":[["lowback","glutes"],["abs","delt_a"]],"dead-bug":[["abs"],["obliq"]],"pallof-press":[["abs","obliq"],["glutes","delt_a"]],"woodchop-cavi":[["obliq","abs"],["delt_a"]],"ruota-addominale":[["abs"],["lats","delt_a","obliq"]],"suitcase-carry":[["obliq","forearm"],["abs","traps","lowback"]],"knee-raise-sedia":[["abs"],["obliq"]],"chest-press":[["pecs"],["delt_a","triceps"]],"panca-piana":[["pecs"],["delt_a","triceps"]],"croci-cavi":[["pecs"],["delt_a"]],"piegamenti":[["pecs"],["triceps","delt_a","abs"]],"panca-manubri":[["pecs"],["delt_a","triceps"]],"panca-inclinata-manubri":[["pecs","delt_a"],["triceps"]],"pectoral-machine":[["pecs"],["delt_a"]],"lat-machine":[["lats"],["biceps","rhomb","delt_p","traps","forearm"]],"pulley":[["lats","rhomb"],["biceps","delt_p","traps"]],"rematore-manubrio":[["lats"],["rhomb","biceps","delt_p"]],"trazioni-assistite":[["lats"],["biceps","rhomb","delt_p","forearm"]],"rematore-bilanciere":[["lats","rhomb"],["biceps","delt_p","lowback","hams"]],"pullover-cavo":[["lats"],["triceps","pecs"]],"leg-press":[["quads","glutes"],["hams","adduct"]],"squat":[["quads","glutes"],["hams","lowback","adduct"]],"leg-extension":[["quads"],[]],"leg-curl":[["hams"],["calves"]],"affondi":[["quads","glutes"],["hams","adduct","calves"]],"polpacci":[["calves"],[]],"hip-thrust":[["glutes"],["hams","quads"]],"stacco-rumeno":[["hams","glutes"],["lowback","forearm"]],"goblet-squat":[["quads","glutes"],["adduct","abs"]],"abductor":[["gmed"],["glutes"]],"adductor":[["adduct"],[]],"shoulder-press":[["delt_a","delt_l"],["triceps","traps"]],"alzate-laterali":[["delt_l"],["traps","delt_a"]],"face-pull":[["delt_p","rhomb"],["traps"]],"lento-manubri":[["delt_a","delt_l"],["triceps","traps"]],"alzate-frontali":[["delt_a"],["pecs","delt_l"]],"reverse-fly":[["delt_p","rhomb"],["traps"]],"tirate-mento":[["delt_l","traps"],["biceps","delt_a"]],"curl-bilanciere":[["biceps"],["forearm","delt_a"]],"curl-manubri":[["biceps"],["forearm"]],"curl-martello":[["biceps","forearm"],[]],"curl-cavo":[["biceps"],["forearm"]],"curl-scott":[["biceps"],["forearm"]],"pushdown":[["triceps"],[]],"french-press":[["triceps"],[]],"estensioni-sopra-testa":[["triceps"],[]],"kickback":[["triceps"],["delt_p"]],"dip-macchina":[["triceps"],["pecs","delt_a"]],"plank":[["abs","obliq"],["delt_a","glutes","quads"]],"crunch":[["abs"],["obliq"]],"crunch-cavo":[["abs"],["obliq"]],"sollevamento-gambe":[["abs"],["quads","obliq"]],"crunch-macchina":[["abs"],["obliq"]],"mountain-climber":[["abs"],["delt_a","quads","obliq"]],"tapis-roulant":[["quads","calves"],["glutes","hams"]],"cyclette":[["quads"],["glutes","calves","hams"]],"ellittica":[["quads","glutes"],["hams","calves","lats","delt_a"]],"stepper":[["glutes","quads"],["calves","hams"]],"vogatore":[["lats","quads"],["hams","glutes","biceps","rhomb","lowback"]],"iperestensioni":[["lowback","glutes"],["hams"]]};
+const MUW = {"curl-up":[["abs"],["obliq"]],"bird-dog":[["lowback","glutes"],["abs","delt_a"]],"dead-bug":[["abs"],["obliq"]],"pallof-press":[["abs","obliq"],["glutes","delt_a"]],"woodchop-cavi":[["obliq","abs"],["delt_a"]],"ruota-addominale":[["abs"],["lats","delt_a","obliq"]],"suitcase-carry":[["obliq","forearm"],["abs","traps","lowback"]],"knee-raise-sedia":[["abs"],["obliq"]],"chest-press":[["pecs"],["delt_a","triceps"]],"panca-piana":[["pecs"],["delt_a","triceps"]],"croci-cavi":[["pecs"],["delt_a"]],"piegamenti":[["pecs"],["triceps","delt_a","abs"]],"panca-manubri":[["pecs"],["delt_a","triceps"]],"panca-inclinata-manubri":[["pecs","delt_a"],["triceps"]],"pectoral-machine":[["pecs"],["delt_a"]],"lat-machine":[["lats"],["biceps","rhomb","delt_p","traps","forearm"]],"pulley":[["lats","rhomb"],["biceps","delt_p","traps"]],"rematore-manubrio":[["lats"],["rhomb","biceps","delt_p"]],"trazioni-assistite":[["lats"],["biceps","rhomb","delt_p","forearm"]],"rematore-bilanciere":[["lats","rhomb"],["biceps","delt_p","lowback","hams"]],"pullover-cavo":[["lats"],["triceps","pecs"]],"leg-press":[["quads","glutes"],["hams","adduct"]],"squat":[["quads","glutes"],["hams","lowback","adduct"]],"leg-extension":[["quads"],[]],"leg-curl":[["hams"],["calves"]],"affondi":[["quads","glutes"],["hams","adduct","calves"]],"polpacci":[["calves"],[]],"hip-thrust":[["glutes"],["hams","quads"]],"stacco-rumeno":[["hams","glutes"],["lowback","forearm"]],"goblet-squat":[["quads","glutes"],["adduct","abs"]],"abductor":[["gmed"],["glutes"]],"adductor":[["adduct"],[]],"shoulder-press":[["delt_a","delt_l"],["triceps","traps"]],"alzate-laterali":[["delt_l"],["traps","delt_a"]],"face-pull":[["delt_p","rhomb"],["traps"]],"lento-manubri":[["delt_a","delt_l"],["triceps","traps"]],"alzate-frontali":[["delt_a"],["pecs","delt_l"]],"reverse-fly":[["delt_p","rhomb"],["traps"]],"tirate-mento":[["delt_l","traps"],["biceps","delt_a"]],"curl-bilanciere":[["biceps"],["forearm","delt_a"]],"curl-manubri":[["biceps"],["forearm"]],"curl-martello":[["biceps","forearm"],[]],"curl-cavo":[["biceps"],["forearm"]],"curl-scott":[["biceps"],["forearm"]],"pushdown":[["triceps"],[]],"french-press":[["triceps"],[]],"estensioni-sopra-testa":[["triceps"],[]],"kickback":[["triceps"],["delt_p"]],"dip-macchina":[["triceps"],["pecs","delt_a"]],"plank":[["abs","obliq"],["delt_a","glutes","quads"]],"crunch":[["abs"],["obliq"]],"crunch-cavo":[["abs"],["obliq"]],"sollevamento-gambe":[["abs"],["quads","obliq"]],"crunch-macchina":[["abs"],["obliq"]],"mountain-climber":[["abs"],["delt_a","quads","obliq"]],"tapis-roulant":[["quads","calves"],["glutes","hams"]],"cyclette":[["quads"],["glutes","calves","hams"]],"ellittica":[["quads","glutes"],["hams","calves","lats","delt_a"]],"stepper":[["glutes","quads"],["calves","hams"]],"vogatore":[["lats","quads"],["hams","glutes","biceps","rhomb","lowback"]],"iperestensioni":[["lowback","glutes"],["hams"]],"squat-libero":[["quads","glutes"],["adduct","hams"]],"squat-bulgaro":[["quads","glutes"],["adduct","hams"]],"ponte-glutei":[["glutes"],["hams"]],"leg-curl-asciugamano":[["hams"],["glutes","calves"]],"nordic-curl":[["hams"],["calves","glutes"]],"polpacci-gradino":[["calves"],[]],"piegamenti-rialzati":[["pecs"],["triceps","delt_a"]],"piegamenti-stretti":[["triceps","pecs"],["delt_a","abs"]],"piegamenti-piedi-rialzati":[["pecs","delt_a"],["triceps","abs"]],"pike-push-up":[["delt_a","delt_l"],["triceps","traps"]],"dip-sedia":[["triceps"],["pecs","delt_a"]],"rematore-tavolo":[["lats","rhomb"],["biceps","delt_p","traps","forearm"]],"alzate-yt":[["delt_p","traps"],["rhomb","delt_l"]],"plank-laterale":[["obliq","abs"],["gmed","delt_l"]]};
 const MZ = [ // [chiave, nome, muscoli dell'esercizio, principale]
   ['pecs','Petto',['pecs'],1], ['lats','Dorsali',['lats'],1], ['mid','Centro schiena',['rhomb','traps'],1],
   ['delt_a','Spalle davanti',['delt_a'],1], ['delt_l','Spalle laterali',['delt_l'],1], ['delt_p','Spalle dietro',['delt_p'],1],
@@ -3370,7 +3525,7 @@ function advise(x, repsTxt){
   if(!x || isTime(x)) return null;
   const R = repRange(repsTxt || (x.dose&&x.dose[1])); if(!R) return null; const [lo,hi]=R;
   const h = histFor(x.id), last = h[h.length-1];
-  if(!last) return {first:true, lo, hi, short:`Prima volta: scegli un peso con cui arrivi a ${hi} ripetizioni sentendo che ne avresti ancora 2 o 3.`};
+  if(!last) return {first:true, lo, hi, short: x.e==='corpo' ? `Prima volta: fai fino a ${hi} ripetizioni sentendo che ne avresti ancora 2 o 3. Se ne faresti molte di più, usa la versione più difficile.` : `Prima volta: scegli un peso con cui arrivi a ${hi} ripetizioni sentendo che ne avresti ancora 2 o 3.`};
   const S2 = last.sets.filter(s=>+s.reps>0); if(!S2.length) return null;
   const assist = x.id==='trazioni-assistite';
   const kgs = S2.map(s=>+s.kg||0), kg = assist ? Math.min(...kgs) : Math.max(...kgs);
