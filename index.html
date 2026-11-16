@@ -369,6 +369,26 @@ details.more[open] summary{margin-bottom:8px}
 .qa .chip{text-decoration:none}
 .sess.sel{outline:3px solid var(--accent);outline-offset:2px}
 .sess .micbar{margin-top:0}
+.hrbox{margin:6px 0 2px;min-width:0;max-width:100%}.hrbox:empty{display:none}
+.hrrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.hrgo{display:inline-flex;align-items:center;gap:8px}
+.hrico{width:22px;height:22px;border-radius:6px;vertical-align:-5px;flex:none}.hrico.big{width:40px;height:40px;border-radius:10px}
+.hrico.beat{animation:hrbeat .8s ease-in-out infinite}
+@keyframes hrbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.18)}30%{transform:scale(1)}45%{transform:scale(1.1)}}
+@media (prefers-reduced-motion:reduce){.hrico.beat{animation:none}}
+.hrlive{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;background:var(--sunk);border-radius:10px;padding:10px 12px}
+.hrlive>b{font-size:38px;line-height:1;font-variant-numeric:tabular-nums;min-width:2.2ch;text-align:right}
+.hrunit{font-size:13px;opacity:.7;margin-left:-6px;align-self:flex-end;padding-bottom:4px}
+.hrinfo{flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:4px;font-weight:600;font-size:14px}
+.hrinfo small{font-weight:400;opacity:.7;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrmeter{height:7px;border-radius:4px;background:var(--line);overflow:hidden}.hrmeter i{display:block;height:100%;width:0;transition:width .6s,background .6s}
+.hrage{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:14px;flex-wrap:wrap}.hrage input{width:70px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit;font:inherit}
+.hrmsg{margin:6px 0 0}
+.hrdet{margin:8px 0}.hrdet p{margin:0 0 6px}
+.hrzbar{display:flex;height:10px;border-radius:5px;overflow:hidden;gap:1px}
+.hrzleg{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;margin-top:5px;opacity:.85}.hrzleg u{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;text-decoration:none}
+.hrchart{width:100%;height:80px;display:block;margin-top:8px;background:var(--sunk);border-radius:8px}
+.hrax{display:flex;justify-content:space-between;font-size:11px;opacity:.6}
 .micbar{margin-top:10px;background:var(--sunk);border-radius:8px;padding:10px 12px;font-size:15px;line-height:1.4}
 .micbar .live{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--red);margin-right:7px;vertical-align:1px;animation:micp 1.4s ease-in-out infinite}
 @keyframes micp{50%{opacity:.25}}
@@ -3021,6 +3041,7 @@ function drawRun(){
   $app.innerHTML = `<section class="run">
     <div class="progress" aria-label="Avanzamento"><i style="width:${Math.min(100,Math.round(done/total*100))}%"></i></div>
     <div><div class="eyebrow">${esc(run.name)} · esercizio ${run.i+1} di ${run.plan.length}</div><h1>${esc(x.name)}</h1></div>
+    ${hrBox()}
     ${resting ? `
       <div class="rest"><div class="eyebrow">${run.pauseLeft!=null?'Recupero in pausa':'Recupero'}</div><div class="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="90"/><circle class="arc" id="arc" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="${ringOff()}"/></svg><div class="clock" id="clock">${fmt((run.restEnd-Date.now())/1000)}</div></div>
         <div class="next">${run.set>1?`Prossima: serie ${run.set} di ${esc(x.name)}`:`Prossimo esercizio: ${esc(x.name)}`}</div>
@@ -3088,7 +3109,7 @@ function drawRun(){
   const qm=document.getElementById('qMusic'); if(qm) qm.onclick=mToggle;
   const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; saveAU(); mic.msg='';
     if(AU.mic){ say("Comandi a voce attivi. Quando finisci la serie di' fatta."); micStart(); } else { micStop(); say('Comandi a voce spenti.'); } paintMic(); };
-  paintMic(); if(AU.mic) micStart();
+  paintMic(); if(AU.mic) micStart(); hrPaint();
   document.getElementById('endRun').onclick = ()=>{
     document.getElementById('endWrap').innerHTML = `<span>${run.sets.length?'Salvare le serie fatte e chiudere?':'Chiudere senza salvare?'}</span>${run.sets.length?'<button class="btn small" type="button" id="endSave">Salva e chiudi</button>':''}<button class="btn ghost small" type="button" id="endDrop">${run.sets.length?'Chiudi senza salvare':'Sì, chiudi'}</button><button class="btn ghost small" type="button" id="endNo">Continua</button>`;
     const es=document.getElementById('endSave'); if(es) es.onclick=finish;
@@ -3107,6 +3128,7 @@ function finish(){
   const mins = Math.max(1,Math.min(240,Math.round((end-run.start)/60000)));
   const vol = run.sets.reduce((a,s)=>a+(+s.kg||0)*(+s.reps||0),0);
   const w = {id:'w'+end.toString(36), sid:run.id, name:run.name, at:run.start, end, min:mins, vol:Math.round(vol), sets:run.sets};
+  const hs = hrSummary(run.start, end); if(hs) w.hr = hs;
   addWorkout(w);
   const prs = [];
   Object.keys(before).forEach(ex=>{ if(isTime(EXMAP[ex])) return; const b=before[ex], a=recordsOf(histFor(ex));
@@ -3117,12 +3139,12 @@ function finish(){
   });
   const name = run.name, nsets = run.sets.length;
   endRun(); view='done'; lastSaid='';
-  beep('done'); say('Allenamento completato. '+nsets+' serie in '+mins+' minuti. Ottimo lavoro!');
+  beep('done'); say('Allenamento completato. '+nsets+' serie in '+mins+' minuti.'+(hs?' Battito medio '+hs.avg+'.':'')+' Ottimo lavoro!');
   try{ history.replaceState(null,'','#fatto'); }catch(e){}
   backBar('Sessioni','#sessioni');
   $app.innerHTML = `<section class="rest" style="margin-top:24px"><div class="eyebrow">Fatto</div>
     <h2 style="font-size:30px;text-transform:uppercase">${esc(name)} completata</h2>
-    <div class="stats"><div><b>${mins}'</b><span>Durata</span></div><div><b>${nsets}</b><span>Serie</span></div><div><b>${kgf(vol)}</b><span>Kg sollevati</span></div></div>
+    <div class="stats"><div><b>${mins}'</b><span>Durata</span></div><div><b>${nsets}</b><span>Serie</span></div><div><b>${kgf(vol)}</b><span>Kg sollevati</span></div>${hs?`<div><b>${hs.avg}</b><span>Battito medio</span></div>`:''}</div>${hs?hrDetail(hs):''}
     ${prs.length?`<div class="prs"><div class="eyebrow">Nuovi record</div>${prs.map(p=>`<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`:''}
     <p class="next">Salvata nel diario. Bevi acqua e fai qualche minuto di allungamento.</p>
     <div class="links"><a class="btn" href="#diario">Vai al diario</a><a class="btn ghost" href="#sessioni">Altre sessioni</a></div></section>`;
@@ -3161,6 +3183,117 @@ function say(text, force){
 const spokenReps = r => String(r).replace(/(\d+)\s*–\s*(\d+)/g,'da $1 a $2').replace(/(\d+)"/g,'$1 secondi').replace(/(\d+)'/g,'$1 minuti');
 const spokenRest = s => s<60 ? s+' secondi' : (s%60 ? Math.floor(s/60)+' minuti e '+(s%60)+' secondi' : (s/60===1?'un minuto':(s/60)+' minuti'));
 
+/* ---------------- BATTITI CARDIACI (fascia / orologio Bluetooth, servizio standard Heart Rate 0x180D) ---------------- */
+const HR_ICO="data:image/webp;base64,UklGRr4FAABXRUJQVlA4ILIFAADwGgCdASpwAHAAPmEuk0WkIqGVOoU0QAYEtABrFDlAv9348rknxHyhp1PUT4WnAeYB+oHSL8wH7afpB7KH7Ge+n0AP6x/qusW9AD+F/4byjPg//bD9ifaX//9Ode+5C/+l4XZVP2bzK0ms0vyEvjDV4ymUWXTWC5VA3wJiM6O5chA7zW3Gi8I1q2FWEjYtWr8T6obkrMfKwSl4+8iyx8JqY3PkQrhwaeZJ1AqIMuaO79Y/1xQxt325BdpHAsU43dIpiALGQi2WVX+4jsBgOJqylTgoch77gba9gxP6Zwd2AAD++tfNrRu0E3Dek/Bejlk24wUW/IWu/DnOhyv4CNqwufAg4AcPvbDjsggY8LwQ89ouIwZbzoV4VDj0tgGTH6g4+1B3V/g1UprDaji9iQkT6P/W9M8XWqkuBp+PLmeFw5I77R2v8BqGb+LTTq/9FSIyMBD7h3roxyH2wd0ka4DdttZAwtdzYKIeyws1B4uyKfr/p5kBj3tC3F3hJyXczJ61gxAMZxwDvuKarxpKH4FihWZb64YO7Af8+M8NDj3Wf5Kh11MvVMfMVG6STgY2oBsBb8eMhwFprYB/PX25+w6JFjP8PCNUCiWrmx2pfaLpxHzoTuIYBv1Xyt2sBQ6B3tUZtTENn7wpMeckmeGs7IkHVKCVgU+r+BW/dQv+loiDBm7fES5jeghuF/Fpr5IGkc3k+fH+nF/sCyK+fPw+dGky8k2iN5SHIMPnRppVyYE3dsKBK3CD6ePDj5aCDPPOvuCNrKvVX/wC3Guhpx/jFXgmb4M4YDvQHUEt0WJ4bcZeu81BPjqP7+Y5Xdj31p0oXvvmIP9ac//r3UlADouLTp1NP/Ob+CSRnZc4sVBsiyUlbBxw7X/H9GGy5ild6kfGBYCjbPZ5+Owsgy/9vF4Blo6HwVUVCtvCf/+jzHniPCoJVt8/vvvQo1/wMmP6tlpW28ekEjWnb3Z7GQ7hsvey7/npIsMF+2PrWJISkXNa4/yDVJ7d3pMn3CdtOIbMex3h3F/J0ppaWyFG7ytgdAIQOkOzGoyVf7uNfyWjmzmwMcgKl/521OW1eH1zO28t7MtnmRg+mH2nbovSwUrCm0JPpUZ4BkkR1qeOcQH+C49ykOaWIOGbYvnpWzSUCG4xp7gAL3v/SmU9Ji+ZbaaankrHmSfLIkxQ1jIWVI6vhaaDaEtvsh5i7ecpC+G+XiJN1IN3fn/X0QSKizL6NpwUGrgycebjw0AHhf9e85GlBt6e93fs/9YPLidqxM0CcfiC8jt190O8S525PnWe354Wxc/j3C8+Z8f2N3zVR16FtNbC0oKSShdcoeMJoyrqcaBgqkSOnxRhfxIcmnJlgiycWCm1XnLT9NqJAX24E7eKJ7ojL3BzYXv0FGS1Vs86bzMnY+1DpSCllhDrT/a1+yOnLMIGXl/d3TW5TF+ijXCBIc79/hcuscH7Dt4RaskXwOeV5QJpUtGaxIdiuq1wZ1M8nCkGlRPGc0iisUPzNctOSMgrdKlbCNqZZzD3eVOacY5WeP2oJqybFvK6ETBUGlYlzZ1DgySUm542R/Jrh+UOSeWvSIWxUhve/wNiknPBzA4n1DYjPr8Zysj+KYttU/y7GD/iBrOsRvzYAalVFY/odZqd7Axu5zb/4q52/l7nbqOvjPbq4J0eWtwWLGVFgXEGsbcUDYl7kUWbkYRZGnnebZ966rb5JN182d+J9XsDpkuXt3I5RgIcHJ+MsNKjbbcLRB4YylmTaehmRpvg+fucbrgAEgHvcMUXvIzTrQinp9IQbmaKRKUBaghk6Ll93bLVxMXk7KSskyzjpOpdy9y/m4s3yAB+Ow6WLZJBpoPGVSfe91KA9+aKh1wY7DNT7xqiDmMHAzU3vkaa6kMGA/iCf8N94jPEkOvg8aeayqOmI13+qzcJF2sC7HSMCexjyXNhjgElN/gAAAA=";
+const canBT = !!(navigator.bluetooth && navigator.bluetooth.requestDevice);
+const hr = {dev:null, state:'off', name:'', bpm:0, at:0, sim:0, msg:'', tries:0, rt:0, tick:0, log:store.get('hrlog',[]), lastLog:0, highSince:0, warnAt:0, savedAt:0};
+// FC max stimata: Tanaka, Monahan & Seals 2001 (J Am Coll Cardiol) = 208 − 0,7 × età
+function hrAge(){ const a=+S.body.age; return a>=10&&a<=100 ? a : 0; }
+function hrMax(){ const a=hrAge(); return a ? Math.round(208-0.7*a) : 0; }
+// zone in % della FC max (ACSM / modello a 5 zone)
+const HRZ=[{p:0,n:'Riposo',c:'var(--white)'},{p:.5,n:'Riscaldamento',c:'var(--blue)'},{p:.6,n:'Brucia grassi',c:'var(--green)'},{p:.7,n:'Aerobico',c:'var(--yellow)'},{p:.8,n:'Intenso',c:'#E8833A'},{p:.9,n:'Massimo',c:'var(--red)'}];
+function hrZone(b, mx){ mx=mx||hrMax(); if(!mx||!b) return -1; const f=b/mx; let z=0; HRZ.forEach((q,i)=>{ if(f>=q.p) z=i; }); return z; }
+const hrLive = ()=> hr.state==='on' && Date.now()-hr.at < 8000;
+function hrBeat(b){
+  if(!(b>25&&b<240)) return; hr.bpm=b; hr.at=Date.now();
+  if(!hr.sim && hr.at-hr.lastLog>=5000){ hr.lastLog=hr.at; hr.log.push([hr.at,b]); if(hr.log.length>6000) hr.log.splice(0,hr.log.length-6000);
+    if(hr.at-hr.savedAt>30000){ hr.savedAt=hr.at; store.set('hrlog',hr.log); } }
+  // avviso a voce se il battito resta troppo alto per 15 secondi (ripetuto al massimo ogni 90 s)
+  const mx=hrMax(), lim = mx ? Math.round(mx*0.92) : 185;
+  if(b>=lim){ if(!hr.highSince) hr.highSince=hr.at;
+    if(hr.at-hr.highSince>=15000 && hr.at-hr.warnAt>90000){ hr.warnAt=hr.at; beep('tick'); say('Attenzione, battito molto alto: '+b+'. Rallenta e respira con calma.', true); } }
+  else if(b<lim-5) hr.highSince=0;
+  hrUpdate();
+}
+function hrOnValue(e){ const v=e.target.value; try{ const f=v.getUint8(0); hrBeat(f&1 ? v.getUint16(1,true) : v.getUint8(1)); }catch(err){} }
+async function hrAttach(){
+  const srv = await hr.dev.gatt.connect();
+  const s = await srv.getPrimaryService('heart_rate');
+  const ch = await s.getCharacteristic('heart_rate_measurement');
+  ch.addEventListener('characteristicvaluechanged', hrOnValue);
+  await ch.startNotifications();
+  hr.state='on'; hr.tries=0; hr.msg=''; hrTick(); hrPaint();
+}
+async function hrConnect(){
+  if(!canBT){ hr.msg = 'Questo browser non può usare il Bluetooth. Apri l\'app con Chrome su Android (o installala da Chrome) e riprova.'; return hrPaint(); }
+  hrSimStop(); hr.msg=''; hr.state='connecting'; hrPaint();
+  try{
+    const dev = await navigator.bluetooth.requestDevice({filters:[{services:['heart_rate']}]});
+    hr.dev=dev; hr.name=dev.name||'Cardio';
+    dev.addEventListener('gattserverdisconnected', hrLost);
+    await hrAttach();
+    say('Cardio collegato.', true);
+  }catch(e){
+    if(hr.dev && hr.state==='connecting'){ hr.state='lost'; hr.msg='Collegamento non riuscito, riprovo…'; hrRetry(); return hrPaint(); }
+    hr.state='off'; hr.dev=null;
+    hr.msg = e && e.name==='NotFoundError' ? 'Nessun cardio trovato o scelto. Indossa la fascia (si accende col contatto della pelle, meglio se inumidisci gli elettrodi) oppure attiva la "trasmissione battito" sull\'orologio, poi riprova.'
+      : e && (e.name==='SecurityError'||e.name==='NotAllowedError') ? 'Permesso Bluetooth negato. Accendi Bluetooth e posizione del telefono e consenti l\'accesso quando Chrome lo chiede.'
+      : 'Non riesco a collegarmi. Controlla che il Bluetooth sia acceso e riprova.';
+    hrPaint();
+  }
+}
+function hrRetry(){ clearTimeout(hr.rt); if(hr.tries>=6){ hr.msg='Segnale perso. Premi Ricollega quando la fascia è di nuovo vicina.'; say('Segnale del cardio perso.', true); return hrPaint(); }
+  hr.tries++; hr.rt=setTimeout(()=>{ if(hr.state==='lost' && hr.dev) hrAttach().catch(hrRetry); }, 1500*hr.tries); }
+function hrLost(){ if(hr.state==='off'||hr.sim) return; hr.state='lost'; hr.msg='Segnale perso, riprovo a collegarmi…'; hrPaint(); hrRetry(); }
+function hrOff(){ clearTimeout(hr.rt); hrSimStop(); const d=hr.dev; hr.dev=null; hr.state='off'; hr.msg=''; hr.bpm=0; store.set('hrlog',hr.log);
+  try{ d && d.gatt.connected && d.gatt.disconnect(); }catch(e){} clearInterval(hr.tick); hrPaint(); }
+// prova senza fascia: battito finto che sale e scende (non viene salvato nel Diario)
+function hrSimStart(){ hrOff(); hr.sim=setInterval(()=>{ const t=Date.now()/1000, base=118+38*Math.sin(t/25), b=Math.round(base+6*Math.sin(t/3.1)+Math.random()*4); hrBeat(b); },1000);
+  hr.state='on'; hr.name='Prova senza fascia'; hrTick(); hrPaint(); hrBeat(110); }
+function hrSimStop(){ if(hr.sim){ clearInterval(hr.sim); hr.sim=0; hr.state='off'; } }
+function hrTick(){ clearInterval(hr.tick); hr.tick=setInterval(()=>{ if(hr.state==='off') return clearInterval(hr.tick); hrUpdate(); },2000); }
+function hrSpoken(){ if(!hrLive()) return hr.state==='off' ? 'Il cardio non è collegato.' : 'Non ricevo il battito.'; const z=hrZone(hr.bpm); return 'Battito '+hr.bpm+(z>=0?', zona '+HRZ[z].n.toLowerCase():'')+'.'; }
+// riepilogo da salvare nel Diario (solo battiti veri, presi tra inizio e fine allenamento)
+function hrSummary(t0, t1){
+  const L = hr.log.filter(x=>x[0]>=t0-5000 && x[0]<=t1+5000); if(L.length<6) return null;
+  const B=L.map(x=>x[1]), mx=hrMax(), zs=HRZ.map(()=>0);
+  L.forEach((x,i)=>{ const dt = i ? Math.min(15,(x[0]-L[i-1][0])/1000) : 5; const z=hrZone(x[1],mx); if(z>=0) zs[z]+=dt; });
+  const step=Math.ceil(L.length/240), pts=L.filter((x,i)=>i%step===0||i===L.length-1).map(x=>[Math.round((x[0]-t0)/1000), x[1]]);
+  return {avg:Math.round(B.reduce((a,b)=>a+b,0)/B.length), max:Math.max(...B), min:Math.min(...B), hmax:mx||0, zs:zs.map(Math.round), pts};
+}
+function hrZoneBar(zs){ const tot=zs.reduce((a,b)=>a+b,0); if(!tot) return '';
+  return `<div class="hrzbar" aria-hidden="true">${zs.map((s,i)=>s?`<i style="flex:${s};background:${HRZ[i].c}"></i>`:'').join('')}</div>
+  <div class="hrzleg">${zs.map((s,i)=>s>=30?`<span><u style="background:${HRZ[i].c}"></u>${HRZ[i].n} ${Math.round(s/60)}'</span>`:'').join('')}</div>`; }
+function hrChart(pts, W, H){ if(!pts||pts.length<2) return ''; const T=pts[pts.length-1][0]||1, lo=Math.min(...pts.map(p=>p[1]))-5, hi=Math.max(...pts.map(p=>p[1]))+5;
+  const d=pts.map((p,i)=>(i?'L':'M')+(p[0]/T*W).toFixed(1)+' '+(H-(p[1]-lo)/(hi-lo)*H).toFixed(1)).join(' ');
+  return `<svg class="hrchart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Andamento del battito"><path d="${d}" fill="none" stroke="var(--red)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/></svg>`; }
+function hrDetail(h){ return `<div class="hrdet"><p><img class="hrico" src="${HR_ICO}" alt=""> Battito medio <b>${h.avg}</b> · massimo <b>${h.max}</b> · minimo <b>${h.min}</b> bpm</p>${hrZoneBar(h.zs||[])}${hrChart(h.pts,340,80)}</div>`; }
+// riquadro nella schermata di allenamento / corsa
+const hrBox = ()=>`<div class="hrbox" id="hrBox"></div>`;
+function hrPaint(){
+  const box=document.getElementById('hrBox'); if(!box) return;
+  const k = hr.state+'|'+(hr.sim?1:0)+'|'+hrAge()+'|'+hr.msg;
+  if(box.dataset.k===k) return hrUpdate(); box.dataset.k=k;
+  let h='';
+  if(hr.state==='off'){
+    h = `<div class="hrrow"><button class="btn small hrgo" type="button" id="hrGo"><img class="hrico" src="${HR_ICO}" alt=""> Collega cardio</button><button class="btn ghost small" type="button" id="hrSim">Prova senza fascia</button></div>`;
+  } else if(hr.state==='connecting'){
+    h = `<div class="hrrow"><img class="hrico beat" src="${HR_ICO}" alt=""><span>Scegli la fascia o l'orologio dall'elenco…</span><button class="btn ghost small" type="button" id="hrX">Annulla</button></div>`;
+  } else {
+    h = `<div class="hrlive"><img class="hrico big" id="hrH" src="${HR_ICO}" alt=""><b id="hrB">–</b><span class="hrunit">bpm</span>
+      <div class="hrinfo"><span id="hrZ"></span><div class="hrmeter"><i id="hrM"></i></div><small>${esc(hr.name)}${hr.sim?' · battito finto, non salvato':''}${hr.state==='lost'?' · segnale perso':''}</small></div>
+      <button class="btn ghost small" type="button" id="hrX">${hr.sim?'Chiudi prova':'Scollega'}</button></div>
+      ${hr.state==='lost'?`<button class="btn small" type="button" id="hrRe" style="margin-top:6px">Ricollega</button>`:''}
+      ${hrAge()?'':`<div class="hrage"><label for="hrAgeIn">Per le zone scrivi la tua età</label><input id="hrAgeIn" inputmode="numeric" maxlength="2" placeholder="anni"><button class="btn small" type="button" id="hrAgeOk">OK</button></div>`}`;
+  }
+  if(hr.msg) h += `<p class="note hrmsg">${esc(hr.msg)}</p>`;
+  if(hr.state==='off' && !canBT && !hr.msg) h += `<p class="note hrmsg">Il collegamento Bluetooth funziona con Chrome su Android. Puoi comunque vedere come funziona con «Prova senza fascia».</p>`;
+  box.innerHTML = h;
+  const on=(id,f)=>{ const e=document.getElementById(id); if(e) e.onclick=f; };
+  on('hrGo', hrConnect); on('hrSim', hrSimStart); on('hrX', hrOff);
+  on('hrRe', ()=>{ hr.tries=0; if(hr.dev) hrAttach().catch(()=>{ hr.msg='Non trovo la fascia: è accesa e indossata?'; hrPaint(); }); else hrConnect(); });
+  on('hrAgeOk', ()=>{ const a=parseInt(document.getElementById('hrAgeIn').value,10); if(a>=10&&a<=100){ S.body.age=a; saveBody(); hrPaint(); } });
+  hrUpdate();
+}
+function hrUpdate(){
+  const b=document.getElementById('hrB'); if(!b) return;
+  const live=hrLive(), mx=hrMax(), z=live?hrZone(hr.bpm,mx):-1;
+  b.textContent = live ? hr.bpm : '–';
+  const zl=document.getElementById('hrZ'); if(zl){ zl.textContent = !live ? (hr.state==='lost'?'Segnale perso':'Aspetto il battito… (la fascia tocca la pelle?)') : z>=0 ? HRZ[z].n+' · '+Math.round(hr.bpm/mx*100)+'% del massimo' : 'Zone: scrivi la tua età'; zl.style.color = z>=0 ? HRZ[z].c : ''; }
+  const m=document.getElementById('hrM'); if(m){ m.style.width = live&&mx ? Math.min(100,Math.round(hr.bpm/mx*100))+'%' : '0%'; m.style.background = z>=0 ? HRZ[z].c : 'var(--line)'; }
+  const hh=document.getElementById('hrH'); if(hh){ hh.classList.toggle('beat', live); if(live) hh.style.animationDuration=(60/hr.bpm).toFixed(2)+'s'; }
+}
+
 /* ---------------- COMANDI A VOCE (mani libere) ---------------- */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const canListen = !!SR;
@@ -3188,6 +3321,7 @@ function micParse(raw){
   else if(has(/^(si|si si|conferma|confermo|salva|si salva|si chiudi|ok si)\b/)) a.yes = 1;
   else if(has(/^(no|annulla|continuo|no continuo)\b/)) a.no = 1;
   else if(has(/\b(comandi|aiuto|cosa posso dire)\b/)) a.help = 1;
+  else if(has(/\b(battit[oi]|cuore|pulsazion\w*|frequenza)\b/)) a.hr = 1;
   else if(has(/\b(ripeti|cosa devo fare|a che punto)\b/)) a.repeat = 1;
   else if(has(/\bsalta\b.*\besercizio\b/)) a.skipEx = 1;
   else if(has(/\b(pausa|ferma|aspetta|stop)\b/) && !has(/\bmusica\b/)) a.pause = 1;
@@ -3238,7 +3372,8 @@ function micDo(a){
   const tap = id=>{ const b=document.getElementById(id); if(b){ b.click(); return true; } return false; };
   try{ navigator.vibrate && navigator.vibrate(30); }catch(e){}
   if(a.off){ AU.mic=false; saveAU(); micStop(); say('Comandi a voce spenti.', true); return paintMic(); }
-  if(a.help) return say("Puoi dire: fatta. Dodici ripetizioni. Quaranta chili. Salta. Pausa. Riprendi. Altri quindici secondi. Salta esercizio. Ripeti. Musica. Fine.", true);
+  if(a.help) return say("Puoi dire: fatta. Dodici ripetizioni. Quaranta chili. Salta. Pausa. Riprendi. Altri quindici secondi. Salta esercizio. Ripeti. Battito. Musica. Fine.", true);
+  if(a.hr) return say(hrSpoken(), true);
   if(a.repeat){ lastSaid=''; return drawRun(); }
   if(a.music){ if(!music.list.length) return say('Non hai canzoni salvate.', true); if(a.music==='next' && typeof mNext==='function') return mNext(); return mToggle(); }
   if(a.end){ mic.endAsk = Date.now(); tap('endRun'); return say("Vuoi chiudere l'allenamento? Di' sì per confermare, o no per continuare.", true); }
@@ -3628,8 +3763,8 @@ function corsaFinish(save){
   if(save && sec>=30){
     const pts=[]; corsa.pts.forEach(p=>{ if(!pts.length || hav(pts[pts.length-1],p)>=8) pts.push(p); });
     const step=Math.ceil(pts.length/1200)||1, small=pts.filter((p,i)=>i%step===0||i===pts.length-1);
-    const end=Date.now();
-    addWorkout({id:'w'+end.toString(36), sid:'corsa', name:'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10}});
+    const end=Date.now(), hs=hrSummary(corsa.start, end);
+    addWorkout({id:'w'+end.toString(36), sid:'corsa', name:'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10}, ...(hs?{hr:hs}:{})});
     say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`, true);
   }
   gpsOff(); clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
@@ -3657,6 +3792,7 @@ function viewCorsa(){
     <div class="chead"><div><div class="eyebrow">Corsa</div><h1 style="font-size:40px;text-transform:uppercase">All'aperto</h1></div><img src="${RUN_IMG}" alt="" aria-hidden="true"></div>
     <div class="card cspeed"><div id="cGauge"></div><div class="cvnum"><b id="cV">0,0</b><span>km/h</span></div>
       <div class="cvsub"><span>Media <b id="cVavg">0</b> km/h</span><span>Massima <b id="cVmax">0</b> km/h</span></div></div>
+    ${hrBox()}
     <div class="card cstats">
       <div><span>Tempo</span><b id="cT">0:00</b></div>
       <div><span>Km</span><b id="cKm">0,00</b></div>
@@ -3684,7 +3820,7 @@ function viewCorsa(){
   cmapReady=false; mountMap();
   on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
   on('cDrop', ()=>{ const b=document.getElementById('cDrop'); if(b.dataset.sure){ corsaFinish(false); } else { b.dataset.sure='1'; b.textContent='Sicuro? Premi ancora per annullare'; } });
-  corsaPaint();
+  corsaPaint(); hrPaint();
 }
 function runProgress(){
   const R=S.workouts.filter(w=>w.run && w.run.m>=200); if(!R.length) return '';
@@ -3728,6 +3864,7 @@ function viewDiary(){
       const by={}; (w.sets||[]).forEach(s=>{(by[s.ex]=by[s.ex]||[]).push(s)});
       return `<details class="w"><summary><b>${esc(w.name)}</b><span>${df.format(new Date(w.at))} · ${durMin(w)} min</span></summary>
         <div class="body">${w.run?runDetail(w):''}${w.run?'':(Object.keys(by).map(ex=>{ const x=EXMAP[ex]; if(!x) return ''; return `<p><b>${esc(x.name)}</b>: ${isTime(x)?by[ex].length+(by[ex].length===1?' volta':' serie'):by[ex].map(s=>setTxt(s)).join(', ')}</p>`}).join('') || '<p>Nessun dettaglio delle serie.</p>')}
+          ${w.hr?hrDetail(w.hr):''}
           ${w.vol?`<p class="note">Volume: ${kgf(w.vol)} kg</p>`:''}
           <div class="confirm" data-delwrap="${w.id}"><button class="btn ghost small" type="button" data-del="${w.id}">Elimina</button></div></div></details>`}).join('')}</div>`
       : `<div class="empty">Qui compariranno le sessioni completate.<br><a href="#sessioni">Scegli una sessione e premi Inizia</a> per registrare la prima.</div>`}
