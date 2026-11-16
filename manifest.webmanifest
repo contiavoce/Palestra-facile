@@ -1,6 +1,7 @@
 {
  "name": "Palestra Facile",
  "short_name": "Palestra",
+ "description": "Ogni esercizio spiegato: come si fa, quali muscoli lavorano e quando respirare.",
  "lang": "it",
  "start_url": "./",
  "scope": "./",
