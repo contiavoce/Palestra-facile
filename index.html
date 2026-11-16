@@ -431,6 +431,19 @@ body.has-mbar main{padding-bottom:190px}
 .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .photos button{padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:3/4;background:var(--sunk);cursor:pointer}
 .photos img{width:100%;height:100%;object-fit:cover;display:block}
+.bpsafe{display:flex;gap:10px;align-items:flex-start;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;line-height:1.4;margin-bottom:12px}
+.bpcmp{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bpcmp figure{margin:0;display:grid;gap:6px;min-width:0;align-content:start}
+.bpcmp label{display:grid;gap:4px;font-weight:600}
+.bpcmp select{border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);color:var(--fg);font-size:14px;width:100%;min-width:0}
+.bpcmp button{padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:3/4;background:var(--sunk);cursor:pointer}
+.bpcmp img{width:100%;height:100%;object-fit:cover;display:block}
+.bpcmp figcaption{font-size:13px;color:var(--muted);text-align:center}
+.bpall button{position:relative}
+.bpall span{position:absolute;left:0;right:0;bottom:0;background:#000a;color:#fff;font-size:11px;line-height:1.25;padding:3px 4px;text-align:center}
+.bppin{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.bppin input{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);color:var(--fg);font-size:18px;width:8.5em;letter-spacing:.2em}
+.bpset{margin-top:14px}
 .viewer{position:fixed;inset:0;z-index:50;background:#000e;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px}
 .viewer img{max-width:100%;max-height:78vh;object-fit:contain;border-radius:6px;touch-action:pinch-zoom}
 .viewer .confirm{justify-content:center;color:#fff}
@@ -4427,6 +4440,7 @@ function viewBody(){
         ${lineChart(pts, 'var(--blue)', M[1]+' nel tempo', 'Il grafico compare dopo almeno due misurazioni.')}`
       : '<p class="note">Salva la prima misurazione: qui vedrai i grafici di peso e misure nel tempo.</p>'}
     </section>
+    ${bodyPhotosHTML()}
     <section class="card"><h2>Profilo</h2>
       <form id="pForm" class="mgrid">
         <label>Altezza (cm)<input id="pHeight" inputmode="decimal" value="${h?kgf(h):''}" placeholder="es. 175"></label>
@@ -4468,7 +4482,114 @@ function viewBody(){
     wrap.querySelector('[data-yes]').onclick=()=>{ S.body.entries=S.body.entries.filter(x=>x.id!==id); saveBody(); keepScroll(viewBody); };
     wrap.querySelector('[data-no]').onclick=()=>keepScroll(viewBody);
   });
+  bpPaint();
   bindBackup();
+}
+
+/* ---------------- FOTO DEI PROGRESSI ----------------
+   Restano solo sul telefono (IndexedDB 'pf-video', chiave 'body-photos'). Nessun upload.
+   PIN facoltativo: blocca la sezione se si presta il telefono (non è crittografia). */
+const BPKEY = 'body-photos', POSES = [['fronte','Di fronte'],['fianco','Di fianco'],['schiena','Di schiena']];
+let bpURLs = [], bpOpen = false, bpPose = 'fronte', bpA = null, bpB = null;
+async function bodyPhotos(){ return (await vdb.get(BPKEY)) || []; }
+const bpPin = () => { try{ return localStorage.getItem('pf-bppin')||''; }catch(e){ return ''; } };
+async function bpHash(s){ const t='pf-bp:'+s; try{ const b=await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''); }catch(e){ let h=7; for(const c of t) h=(h*31+c.charCodeAt(0))|0; return 'h'+h; } }
+const bpLocked = () => !!bpPin() && !bpOpen;
+const poseName = k => (POSES.find(p=>p[0]===k)||[,''])[1];
+const bpURL = b => { const u=URL.createObjectURL(b); bpURLs.push(u); return u; };
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden' && bpPin() && bpOpen){ bpOpen=false; if(document.getElementById('bpBox')) bpPaint(); } });
+function bodyPhotosHTML(){
+  return `<section class="card" id="bfoto"><h2>Foto dei progressi</h2>
+    <div class="bpsafe">🔒 <span><b>Le foto restano solo su questo telefono.</b> Non vanno su internet, non vengono inviate a nessuno e nessuno le può vedere: né chi ha fatto l'app né altri. Le vedi solo tu, qui dentro.</span></div>
+    <div id="bpBox"><p class="note">Carico le foto…</p></div>
+  </section>`;
+}
+async function bpPaint(){
+  const box = document.getElementById('bpBox'); if(!box) return;
+  bpURLs.forEach(u=>URL.revokeObjectURL(u)); bpURLs=[];
+  if(bpLocked()){
+    box.innerHTML = `<p class="lead">Le foto sono bloccate con il PIN.</p>
+      <form id="bpUnlock" class="bppin"><input id="bpPinIn" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="PIN" aria-label="PIN"><button class="btn" type="submit">Sblocca</button></form>
+      <p class="err" id="bpErr" hidden></p>
+      <div class="confirm" id="bpForgotW"><button class="btn ghost small" type="button" id="bpForgot">Ho dimenticato il PIN</button></div>`;
+    document.getElementById('bpUnlock').onsubmit = async e=>{ e.preventDefault(); const v=document.getElementById('bpPinIn').value.trim();
+      if(v && await bpHash(v)===bpPin()){ bpOpen=true; bpPaint(); } else { const er=document.getElementById('bpErr'); er.textContent='PIN sbagliato. Riprova.'; er.hidden=false; } };
+    document.getElementById('bpForgot').onclick = ()=>{ const w=document.getElementById('bpForgotW');
+      w.innerHTML='<span>Per proteggere le foto, l\'unico modo è <b>cancellarle tutte</b> e togliere il PIN. Procedo?</span><button class="btn small" type="button" data-yes>Sì, cancella tutto</button><button class="btn ghost small" type="button" data-no>Annulla</button>';
+      w.querySelector('[data-no]').onclick=bpPaint;
+      w.querySelector('[data-yes]').onclick=async()=>{ await vdb.del(BPKEY); try{ localStorage.removeItem('pf-bppin'); }catch(e){} bpOpen=false; bpPaint(); }; };
+    return;
+  }
+  const list = (await bodyPhotos()).slice().sort((a,b)=>a.at-b.at);
+  if(!document.getElementById('bpBox')) return;
+  const kg0 = myKg();
+  const byId = id => list.find(p=>p.id===id);
+  if(!byId(bpA)) bpA = list.length ? list[0].id : null;
+  if(!byId(bpB)){ const a=byId(bpA); const same=list.filter(p=>p.id!==bpA && (!a || p.pose===a.pose)); bpB = (same.length?same:list.filter(p=>p.id!==bpA)).slice(-1)[0]?.id || null; }
+  const A = byId(bpA), B = byId(bpB);
+  const cap = p => `${df.format(new Date(p.at))} · ${poseName(p.pose)}${p.kg?` · ${kgf(p.kg)} kg`:''}`;
+  const opt = sel => list.map(p=>`<option value="${p.id}"${p.id===sel?' selected':''}>${cap(p)}</option>`).join('');
+  let sum = '';
+  if(A && B){ const d=Math.round(Math.abs(B.at-A.at)/864e5), first=A.at<=B.at?A:B, last=first===A?B:A;
+    sum = `In <b>${d} ${d===1?'giorno':'giorni'}</b>` + (first.kg && last.kg ? `: <b>${(last.kg-first.kg>0?'+':last.kg-first.kg<0?'−':'')+kgf(Math.abs(last.kg-first.kg))} kg</b>` : '') + '.'; }
+  box.innerHTML = `
+    <div class="eyebrow" style="margin-top:4px">Aggiungi una foto</div>
+    <div class="mgrid">
+      <label>Data<input id="bpDate" type="date" value="${isoDay(Date.now())}"></label>
+      <label>Peso (kg)<input id="bpKg" inputmode="decimal" value="${kg0?kgf(kg0):''}" placeholder="facoltativo"></label>
+    </div>
+    <div class="chips" role="group" aria-label="Posa" style="margin-top:8px">${POSES.map(p=>`<button class="chip" type="button" data-pose="${p[0]}" aria-pressed="${p[0]===bpPose}">${p[1]}</button>`).join('')}</div>
+    <div class="links"><label class="btn small" style="cursor:pointer">📷 Scatta ora<input type="file" accept="image/*" capture="user" id="bpCam" hidden></label>
+      <label class="btn ghost small" style="cursor:pointer">🖼 Dalla galleria<input type="file" accept="image/*" id="bpGal" multiple hidden></label></div>
+    <p class="note">Consiglio: stessa luce, stesso posto, stessa distanza, possibilmente la mattina. Così il confronto è fedele. Se la prendi dalla galleria, una copia resta anche lì: puoi cancellarla dalla galleria dopo averla aggiunta.</p>
+    <p class="err" id="bpErr" hidden></p>
+    ${list.length>=2 ? `<div class="eyebrow" style="margin-top:14px">Confronto</div>
+      <div class="bpcmp">
+        <figure><label class="note">Prima<select id="bpSelA">${opt(bpA)}</select></label>${A?`<button type="button" data-bpv="${A.id}"><img src="${bpURL(A.blob)}" alt="Foto prima"></button><figcaption>${cap(A)}</figcaption>`:''}</figure>
+        <figure><label class="note">Ora<select id="bpSelB">${opt(bpB)}</select></label>${B?`<button type="button" data-bpv="${B.id}"><img src="${bpURL(B.blob)}" alt="Foto ora"></button><figcaption>${cap(B)}</figcaption>`:''}</figure>
+      </div>
+      ${sum?`<p class="lead" style="text-align:center">${sum}</p>`:''}` : list.length===1 ? '<p class="note" style="margin-top:12px">Quando aggiungi la seconda foto, qui compare il confronto <b>prima / ora</b> affiancato.</p>' : ''}
+    ${list.length ? `<div class="eyebrow" style="margin-top:14px">Tutte le foto (${list.length})</div>
+      <div class="photos bpall">${list.slice().reverse().map(p=>`<button type="button" data-bpv="${p.id}" aria-label="Apri foto del ${df.format(new Date(p.at))}"><img src="${bpURL(p.blob)}" alt=""><span>${df.format(new Date(p.at))}${p.kg?'<br>'+kgf(p.kg)+' kg':''}</span></button>`).join('')}</div>`
+      : '<p class="note" style="margin-top:12px">Nessuna foto. È del tutto facoltativo: aggiungile solo se ti va, servono solo a te per vedere i progressi.</p>'}
+    <details class="bpset"><summary class="note">${bpPin()?'🔒 PIN attivo':'Vuoi bloccare le foto con un PIN?'}</summary>
+      ${bpPin() ? `<p class="note">Le foto si bloccano da sole quando esci dall'app.</p><div class="links"><button class="btn small" type="button" id="bpLockNow">Blocca adesso</button><button class="btn ghost small" type="button" id="bpPinOff">Togli il PIN</button></div>`
+      : `<p class="note">Utile se presti il telefono a qualcuno. Scegli un PIN di 4 cifre (o più) e ricordalo: se lo dimentichi, per sbloccare bisogna cancellare le foto.</p>
+        <form id="bpPinSet" class="bppin"><input id="bpNew" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Nuovo PIN" aria-label="Nuovo PIN"><input id="bpNew2" type="password" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="Ripeti" aria-label="Ripeti il PIN"><button class="btn small" type="submit">Attiva</button></form>`}
+      <p class="note" id="bpPinMsg" aria-live="polite"></p>
+    </details>`;
+  const err = t => { const e=document.getElementById('bpErr'); if(e){ e.textContent=t; e.hidden=!t; } };
+  box.querySelectorAll('[data-pose]').forEach(b=>b.onclick=()=>{ bpPose=b.dataset.pose; box.querySelectorAll('[data-pose]').forEach(x=>x.setAttribute('aria-pressed', x===b)); });
+  const add = async e=>{ const files=[...e.target.files]; e.target.value=''; if(!files.length) return;
+    const ds=document.getElementById('bpDate').value, at=ds?new Date(ds+'T12:00:00').getTime():Date.now(), kg=num(document.getElementById('bpKg').value);
+    err(''); const box2=document.getElementById('bpBox'); if(box2) box2.style.opacity='.5';
+    try{ const l=await bodyPhotos(); let i=0; for(const f of files){ l.push({id:'f'+Date.now().toString(36)+Math.random().toString(36).slice(2,5), at:at+(i++), pose:bpPose, kg:kg&&kg>20&&kg<300?kg:null, blob:await shrink(f,1400,.82)}); }
+      await vdb.set(BPKEY,l); const nl=l.slice().sort((a,b)=>a.at-b.at); const last=nl[nl.length-1]; if(nl.length>=2){ bpB=last.id; const same=nl.filter(p=>p.pose===last.pose && p.id!==last.id); bpA=(same[0]||nl.find(p=>p.id!==last.id)).id; } }
+    catch(x){ err('Non sono riuscito a salvare la foto: forse il telefono è pieno.'); }
+    if(box2) box2.style.opacity=''; bpPaint(); };
+  document.getElementById('bpCam').onchange = add; document.getElementById('bpGal').onchange = add;
+  const sa=document.getElementById('bpSelA'), sb=document.getElementById('bpSelB');
+  if(sa) sa.onchange=()=>{ bpA=sa.value; bpPaint(); }; if(sb) sb.onchange=()=>{ bpB=sb.value; bpPaint(); };
+  box.querySelectorAll('[data-bpv]').forEach(b=>b.onclick=()=>openBodyPhoto(byId(b.dataset.bpv)));
+  const pm = t => { const m=document.getElementById('bpPinMsg'); if(m) m.textContent=t; };
+  const ps=document.getElementById('bpPinSet');
+  if(ps) ps.onsubmit = async e=>{ e.preventDefault(); const a=document.getElementById('bpNew').value.trim(), b=document.getElementById('bpNew2').value.trim();
+    if(!/^\d{4,8}$/.test(a)){ pm('Il PIN deve avere da 4 a 8 cifre.'); return; } if(a!==b){ pm('I due PIN non sono uguali.'); return; }
+    try{ localStorage.setItem('pf-bppin', await bpHash(a)); }catch(x){} bpOpen=true; await bpPaint(); const d=document.querySelector('.bpset'); if(d) d.open=true; pm('PIN attivato. Le foto si bloccano quando esci dall\'app.'); };
+  const ln=document.getElementById('bpLockNow'); if(ln) ln.onclick=()=>{ bpOpen=false; bpPaint(); };
+  const po=document.getElementById('bpPinOff'); if(po) po.onclick=()=>{ try{ localStorage.removeItem('pf-bppin'); }catch(x){} bpPaint(); };
+}
+function openBodyPhoto(p){
+  if(!p) return;
+  const v=document.createElement('div'); v.className='viewer'; v.setAttribute('role','dialog'); v.setAttribute('aria-label','Foto dei progressi');
+  const u=URL.createObjectURL(p.blob), wh='background:transparent;color:#fff;border-color:#fff8';
+  const close=()=>{ URL.revokeObjectURL(u); v.remove(); };
+  const base=()=>{ v.innerHTML=`<img src="${u}" alt="Foto dei progressi"><div class="confirm" style="color:#fff">${df.format(new Date(p.at))} · ${poseName(p.pose)}${p.kg?` · ${kgf(p.kg)} kg`:''}</div><div class="confirm"><button class="btn small" type="button" data-close>Chiudi</button><button class="btn ghost small" type="button" data-del style="${wh}">Elimina foto</button></div>`;
+    v.querySelector('[data-close]').onclick=close;
+    v.querySelector('[data-del]').onclick=()=>{ const c=v.querySelectorAll('.confirm')[1]; c.innerHTML=`<span>Eliminare questa foto?</span><button class="btn small" type="button" data-yes>Sì, elimina</button><button class="btn ghost small" type="button" data-no style="${wh}">Annulla</button>`;
+      c.querySelector('[data-no]').onclick=base;
+      c.querySelector('[data-yes]').onclick=async()=>{ await vdb.set(BPKEY,(await bodyPhotos()).filter(x=>x.id!==p.id)); close(); bpPaint(); }; }; };
+  base(); v.onclick=e=>{ if(e.target===v) close(); }; document.body.appendChild(v);
 }
 
 
@@ -4479,7 +4600,7 @@ const todayKey = () => DAYS[(new Date().getDay()+6)%7][0];
 let foodDay = todayKey(), foodTimer = null, photoURLs = [];
 const photoKey = 'diet-photos';
 async function dietPhotos(){ return (await vdb.get(photoKey)) || []; }
-function shrink(file){ return new Promise(res=>{ try{ const u=URL.createObjectURL(file), im=new Image(); im.onload=()=>{ const m=1800, k=Math.min(1,m/Math.max(im.width,im.height)); const c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(u); c.toBlob(b=>res(b||file),'image/jpeg',.85); }; im.onerror=()=>{ URL.revokeObjectURL(u); res(file); }; im.src=u; }catch(e){ res(file); } }); }
+function shrink(file,M,Q){ return new Promise(res=>{ try{ const u=URL.createObjectURL(file), im=new Image(); im.onload=()=>{ const m=M||1800, k=Math.min(1,m/Math.max(im.width,im.height)); const c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); URL.revokeObjectURL(u); c.toBlob(b=>res(b||file),'image/jpeg',Q||.85); }; im.onerror=()=>{ URL.revokeObjectURL(u); res(file); }; im.src=u; }catch(e){ res(file); } }); }
 function viewFood(){
   view='food'; brand(); setTab('dieta');
   const F = S.food; F.days=F.days||{}; F.pro=F.pro||{}; F.water=F.water||{};
@@ -4584,17 +4705,20 @@ function openPhoto(list, i){
 
 /* ---------------- BACKUP ---------------- */
 /* Il backup è un file salvato sul telefono (cartella Download). Nessun server, nessun account. */
-const BK_SKIP = k => k==='pf-run' || k==='pf-corsa' || k.startsWith('pf-up-') || k==='pf-bklast' || k==='pf-bksnooze';
+const BK_SKIP = k => k==='pf-run' || k==='pf-corsa' || k.startsWith('pf-up-') || k==='pf-bklast' || k==='pf-bksnooze' || k==='pf-bppin';
 const bkGet = k => { try{ return +localStorage.getItem(k)||0; }catch(e){ return 0; } };
 const bkSetT = (k,v) => { try{ localStorage.setItem(k,String(v)); }catch(e){} };
 const blobToURL = b => new Promise(res=>{ try{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>res(null); r.readAsDataURL(b); }catch(e){ res(null); } });
 const urlToBlob = async u => { try{ return await (await fetch(u)).blob(); }catch(e){ return null; } };
 async function bkBuild(){
+  const withBP = !!(document.getElementById('bkBP')||{}).checked;
   const ls = {};
   try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.startsWith('pf-') && !BK_SKIP(k)) ls[k]=localStorage.getItem(k); } }catch(e){}
   let photos = [];
   try{ for(const p of await dietPhotos()){ if(!p || !p.blob) continue; const u = typeof p.blob==='string' ? p.blob : await blobToURL(p.blob); if(u) photos.push({id:p.id, at:p.at, img:u}); } }catch(e){}
-  return {app:'palestra-facile', v:2, at:Date.now(), ls, photos};
+  let bodyPh = [];
+  if(withBP){ try{ for(const p of await bodyPhotos()){ if(!p || !p.blob) continue; const u = await blobToURL(p.blob); if(u) bodyPh.push({id:p.id, at:p.at, pose:p.pose, kg:p.kg, img:u}); } }catch(e){} }
+  return {app:'palestra-facile', v:2, at:Date.now(), ls, photos, bodyPhotos:bodyPh};
 }
 const bkName = () => { const d=new Date(), p=n=>String(n).padStart(2,'0'); return `PalestraFacile-backup-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}.json`; };
 async function bkSave(){
@@ -4642,6 +4766,11 @@ async function bkRestore(d){
         for(const p of d.photos){ if(p && p.id && !ids.has(p.id) && p.img){ const b = await urlToBlob(p.img); if(b) list.push({id:p.id, at:p.at, blob:b}); } }
         await vdb.set(photoKey, list); }catch(e){}
     }
+    if(Array.isArray(d.bodyPhotos) && d.bodyPhotos.length){
+      try{ const list = await bodyPhotos(), ids = new Set(list.map(p=>p.id));
+        for(const p of d.bodyPhotos){ if(p && p.id && !ids.has(p.id) && p.img){ const b = await urlToBlob(p.img); if(b) list.push({id:p.id, at:p.at, pose:p.pose, kg:p.kg, blob:b}); } }
+        await vdb.set(BPKEY, list); }catch(e){}
+    }
     let after = before; try{ after = (JSON.parse(localStorage.getItem('pf-workouts'))||[]).length; }catch(e){}
     bkSetT('pf-bklast', Date.now());
     return {ok:true, n:after-before};
@@ -4663,6 +4792,8 @@ function bkAgo(){ const t=bkGet('pf-bklast'); if(!t) return 'Non hai ancora fatt
 function backupHTML(){
   return `<section class="card" id="backup"><h2>Backup dei dati</h2>
     <p class="note">Il backup è un file che resta <b>sul tuo telefono</b>, nella cartella <b>Download</b>. Non va su internet e non costa niente. Dentro ci sono allenamenti, corse, battiti, misure del corpo, schede, alimentazione e mental coach. I video e le canzoni caricati non sono inclusi.</p>
+    <label class="cagree"><input type="checkbox" id="bkBP"> Includi anche le foto del corpo</label>
+    <p class="note">Di solito è meglio lasciarlo spento: chi ha il file potrebbe vedere le foto. Accendilo solo se il file resta tuo (per esempio quando cambi telefono). Il file diventa più grande.</p>
     <p class="note" id="bkAgo"><b>${bkAgo()}</b></p>
     <div class="links"><button class="btn" type="button" id="bkSave">⬇ Salva backup sul telefono</button></div>
     <div class="links"><button class="btn ghost small" type="button" id="bkShare">Invialo a te stesso (WhatsApp, email, Drive)</button></div>
@@ -4683,13 +4814,16 @@ function bkDone(r){
 function bindBackup(){
   const msg = t => { const m=document.getElementById('bkMsg'); if(m) m.textContent=t; };
   try{ const t=sessionStorage.getItem('pf-bkmsg'); if(t){ sessionStorage.removeItem('pf-bkmsg'); msg(t); } }catch(e){}
+  const bpBlock = () => { const c=document.getElementById('bkBP'); if(c && c.checked && bpLocked()){ msg('Per includere le foto del corpo, prima sbloccale con il PIN (qui sopra, in "Foto dei progressi").'); return true; } return false; };
   document.getElementById('bkSave').onclick = async ()=>{
+    if(bpBlock()) return;
     msg('Preparo il file…');
     try{ await bkSave(); msg(`Fatto. Il file "${bkName()}" è nella cartella Download del telefono. Tienilo: serve se cambi telefono o cancelli i dati.`);
       const a=document.getElementById('bkAgo'); if(a) a.innerHTML='<b>'+bkAgo()+'</b>'; }
     catch(e){ msg('Non sono riuscito a salvare il file. Prova con "Invialo a te stesso".'); }
   };
   document.getElementById('bkShare').onclick = async ()=>{
+    if(bpBlock()) return;
     try{ if(await bkShare()){ msg('Backup inviato.'); const a=document.getElementById('bkAgo'); if(a) a.innerHTML='<b>'+bkAgo()+'</b>'; }
       else msg('Questo telefono non permette di inviare file da qui. Usa "Salva backup sul telefono".'); }
     catch(e){ if(e && e.name!=='AbortError') msg('Invio non riuscito. Usa "Salva backup sul telefono".'); }
