@@ -556,6 +556,7 @@ body.noscroll{overflow:hidden}
 .crow{display:flex;align-items:center;gap:10px}.crow input{border:1px solid var(--line);border-radius:999px;padding:8px 14px;background:var(--bg);color:var(--fg);font:inherit;font-size:16px}
 .cplans{display:grid;gap:8px}.cplan{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--sunk);border-radius:10px;padding:6px 6px 6px 12px;font-size:15px}
 .coachl{border-left:4px solid #7a3fb0}
+.silrow{display:grid;grid-template-columns:repeat(9,1fr);gap:3px}.silb{border:2px solid transparent;background:var(--sunk);border-radius:10px;padding:4px 1px 2px;cursor:pointer;display:grid;justify-items:center;gap:1px;color:var(--muted);min-width:0}.silb b{font-size:12px;color:var(--fg)}.silb svg{width:100%;height:auto;max-height:84px}.silb[aria-pressed="true"]{border-color:#7a3fb0;color:#7a3fb0;background:color-mix(in srgb,#7a3fb0 12%,var(--surface))}
 .cagree{display:flex;gap:10px;align-items:flex-start;font-weight:600;font-size:16px;padding:12px;background:var(--sunk);border-radius:12px}.cagree input{width:22px;height:22px;flex:none;margin-top:2px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .coachc{position:relative}.coachc.off{border-left-color:var(--line);opacity:.95}.coachc a.cgo{text-decoration:none}
@@ -5249,6 +5250,51 @@ function adviceHTML(){
     <p class="note">Solo consigli con studi solidi: <i class="pill s">Dimostrato</i> molti studi concordano, <i class="pill m">Prove medie</i> buoni studi ma meno numerosi. Non sostituiscono medico e nutrizionista.</p></section>`;
 }
 
+/* ---------------- COACH: la tua sagoma (scala di figure, scelta da te) ----------------
+   Scala a 9 figure come quella di Stunkard, Sørensen e Schulsinger (1983), disegnata qui da zero. Nessuna foto viene analizzata.
+   Corrispondenza figura → IMC medio: stima da Bulik e coll., Int J Obes 2001 (adulti; le figure seguono l'IMC con buona correlazione). */
+const SIL_BMI = [17, 19, 21, 23, 25.5, 28, 31, 35, 40];
+function silSVG(i, sex, cls){
+  const t=(i-1)/8, F=sex==='f';
+  const sh=F?9+5*t:10.5+6*t, ch=F?7.8+8*t:8.8+9*t, wa=F?5.6+17*t:7+19*t, hi=F?9.4+14*t:8.2+13*t, th=F?5.2+8*t:4.8+7.5*t, ar=F?1.8+2.8*t:2.2+3*t;
+  const inner=Math.max(.6,1.2-t), cy=72-3*t, cx=ch+(wa>ch?(wa-ch)*.6:0);
+  const S=[['M',[3,20]],['Q',[sh,21],[sh,27]],['L',[ch,38]],['Q',[cx,46],[wa,54]],['Q',[hi+1,60],[hi,67]],['Q',[th+3,84],[th,100]],['L',[4.8,133]],['L',[1.6,133]],['L',[inner,cy]]];
+  const P=(q,sg)=>(30+sg*q[0]).toFixed(1)+','+q[1].toFixed(1);
+  let d = S.map(([c,...q])=>c+q.map(v=>P(v,1)).join(' ')).join(' ') + ` L30,${(cy-2).toFixed(1)}`;
+  const E=S.map(x=>x[x.length-1]); d += ' L'+P(E[E.length-1],-1);
+  for(let k=S.length-1;k>=1;k--){ const sg=S[k]; d += ' '+sg[0]+(sg[0]==='Q'?P(sg[1],-1)+' ':'')+P(E[k-1],-1); }
+  d += ' Z';
+  const ax = Math.max(ch, wa, hi*.92)+ar*.6+.6;
+  const arm = s => `<path d="M${(30+s*(sh-ar*.5)).toFixed(1)},27 Q${(30+s*(ax+1)).toFixed(1)},44 ${(30+s*ax).toFixed(1)},66" fill="none" stroke="currentColor" stroke-width="${(ar*2).toFixed(1)}" stroke-linecap="round"/>`;
+  return `<svg class="${cls||'sil'}" viewBox="-4 0 68 140" aria-hidden="true"><circle cx="30" cy="11" r="7.5" fill="currentColor"/><rect x="27" y="16" width="6" height="6" fill="currentColor"/>${arm(1)}${arm(-1)}<path d="${d}" fill="currentColor"/></svg>`;
+}
+function silFromBmi(bmi){ if(!bmi) return 0; let k=0, best=1e9; SIL_BMI.forEach((v,i)=>{ const d=Math.abs(v-bmi); if(d<best){best=d;k=i+1;} }); return k; }
+// cosa dice il coach mettendo insieme sagoma, sagoma desiderata, IMC e giro vita
+function silAdvice(){ const s=COACH.sil||{}, b=bodyNow(), out=[]; if(!s.now) return out;
+  const est=silFromBmi(b.bmi), O=objs();
+  if(est && Math.abs(est-s.now)>=2) out.push(s.now>est
+    ? {k:'m', t:'Ti vedi più robusto di quanto dicono i numeri', x:`Hai scelto la figura ${s.now}, ma con il tuo peso e la tua altezza (IMC ${kgs(b.bmi)}) la figura più vicina è la ${est}. Capita spesso: tendiamo a vederci diversi da come siamo. Se il tuo corpo ti preoccupa molto, parlane con il medico.`, c:'Bulik e coll., Int J Obes 2001 · Stunkard e coll. 1983'}
+    : {k:'m', t:'Ti vedi più magro di quanto dicono i numeri', x:`Hai scelto la figura ${s.now}, ma con il tuo peso e la tua altezza (IMC ${kgs(b.bmi)}) la figura più vicina è la ${est}. Se hai molti muscoli può essere normale; altrimenti guarda anche il giro vita.`, c:'Bulik e coll., Int J Obes 2001 · Stunkard e coll. 1983'});
+  if(s.want){ const gap=s.now-s.want, high = b.bmi ? b.bmi>=25 : s.now>=5, low = b.bmi ? b.bmi<20 : s.now<=2, bellyHi = b.whtr>=0.5;
+    if(gap>=1 && (high || bellyHi)) out.push({k:'s', t:'Per arrivare alla sagoma che vuoi', x:`Il primo traguardo utile è perdere il 5–10% del peso${b.kg?` (per te ${kgs(b.kg*.05)}–${kgs(b.kg*.1)} kg)`:''}: già così migliorano pressione, zuccheri e grassi nel sangue.${bellyHi?` E porta il giro vita sotto ${Math.round(b.h/2)} cm.`:''} Fallo con calma, 0,5–1% a settimana, insieme al nutrizionista. ${O.includes('dim')?'':'Ti consiglio di aggiungere l\'obiettivo Dimagrire.'}`, c:'Wing e coll., Diabetes Care 2011 (Look AHEAD) · NICE 2022', add:O.includes('dim')?'':'dim'});
+    else if(gap>=1) out.push({k:'m', t:'Cambiare forma senza dimagrire troppo', x:'Il tuo peso è già nella norma. Più che perdere chili, gli esercizi con i pesi e abbastanza proteine cambiano la forma del corpo: meno grasso e più muscolo allo stesso peso.', c:'Barakat e coll., Strength Cond J 2020 (revisione) · Morton e coll., Br J Sports Med 2018', add:O.includes('mus')?'':'mus'});
+    else if(gap<=-1 && low) out.push({k:'s', t:'Per una sagoma più piena', x:'Per mettere su peso in modo sano servono muscoli, non solo calorie: allenamento con i pesi 2–3 volte a settimana, almeno 10 serie per muscolo e proteine a sufficienza.', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi) · Morton e coll., Br J Sports Med 2018', add:O.includes('mus')?'':'mus'});
+    else if(gap<=-1) out.push({k:'m', t:'Per una sagoma più grande', x:'Se vuoi sembrare più grosso senza ingrassare, punta sui muscoli: pesi, almeno 10 serie per muscolo a settimana e proteine. Il grasso in più non serve.', c:'Schoenfeld e coll., J Sports Sci 2017 (meta-analisi)', add:O.includes('mus')?'':'mus'});
+    else out.push({k:'m', t:'Ti piaci così', x:'La sagoma che vuoi è quella che hai già: ottimo. Allenati per stare bene, diventare più forte e mantenere quello che hai.', c:'Bull e coll., OMS, Br J Sports Med 2020', add:O.includes('sal')?'':'sal'});
+    if(gap>=2 && !high && !bellyHi && b.bmi) out.push({k:'s', t:'Attenzione a non esagerare', x:'Vorresti una sagoma molto più magra, ma il tuo peso è già nella norma. Diete drastiche possono far male: se il pensiero del peso ti pesa, parlane con il medico.', c:'NICE 2017 (disturbi alimentari) · OMS'}); }
+  return out; }
+function silHTML(){ const s=COACH.sil||{}, sex=s.sex||'m', A=silAdvice();
+  const row=(key,label)=>`<h3 class="subh">${label}</h3><div class="silrow" role="group" aria-label="${label}">${[1,2,3,4,5,6,7,8,9].map(i=>`<button type="button" class="silb" data-sil="${key}" data-n="${i}" aria-pressed="${s[key]===i}" aria-label="Figura ${i}">${silSVG(i,sex)}<b>${i}</b></button>`).join('')}</div>`;
+  return `<section class="card" id="cSil"><h2>La tua sagoma</h2>
+    <p class="note">Facoltativo. Tocca la figura più simile a te oggi e quella che vorresti. Nessuna foto: scegli tu, e resta solo sul telefono. Il coach la unisce a peso, altezza e giro vita.</p>
+    <div class="chips" role="group" aria-label="Figure"><button class="chip" type="button" data-silsex="m" aria-pressed="${sex==='m'}">Figure uomo</button><button class="chip" type="button" data-silsex="f" aria-pressed="${sex==='f'}">Figure donna</button></div>
+    ${row('now','Come sei oggi')}${row('want','Come vorresti essere')}
+    ${A.length?`<div class="sci">${A.map(a=>`<p>${pill(a.k)}<b>${a.t}.</b> ${a.x}<cite>${a.c}</cite>${a.add?`<button class="btn small" type="button" data-objadd="${a.add}" style="margin-top:6px">+ Aggiungi obiettivo ${OBJ[a.add].n}</button>`:''}${fbBtns(a.t)}</p>`).join('')}</div>`
+      : s.now ? '' : ''}
+    ${s.now||s.want?'<div class="links"><button class="btn ghost small" type="button" id="silClear">Cancella le sagome</button></div>':''}
+    <p class="note">Le figure servono a orientarti, non a misurarti: la corrispondenza con il peso è una ${pill('w')} dagli studi sulla scala di Stunkard.</p>
+  </section>`; }
+
 function learnHTML(){ const F=COACH.fb||{}, T=COACH.fbt||{}, ks=Object.keys(F); if(!ks.length) return '';
   const up=ks.filter(k=>F[k]>0).sort((a,b)=>F[b]-F[a]).map(k=>T[k]).filter(Boolean), dn=ks.filter(k=>F[k]<0).map(k=>T[k]).filter(Boolean);
   return `<section class="card"><h2>Cosa ho imparato da te</h2>
@@ -5306,6 +5352,7 @@ function viewCoach(){
     </section>
 
     ${adviceHTML()}
+    ${silHTML()}
 
     <section class="card"><h2>Il tuo perché</h2>
       <p class="note">Una frase vera, tua. Il coach te la ricorda all'inizio di ogni allenamento.</p>
@@ -5353,6 +5400,10 @@ function viewCoach(){
   </section>`;
   const redraw = ()=>keepScroll(viewCoach), $ = id=>document.getElementById(id);
   const fr=$('fbReset'); if(fr) fr.onclick=()=>{ if(fr.dataset.sure){ COACH.fb={}; COACH.fbt={}; coachSave(); redraw(); } else { fr.dataset.sure='1'; fr.textContent='Sicuro? Tocca ancora'; } };
+  $app.querySelectorAll('[data-sil]').forEach(b=>b.onclick=()=>{ COACH.sil=COACH.sil||{}; const k=b.dataset.sil, n=+b.dataset.n; COACH.sil[k] = COACH.sil[k]===n ? 0 : n; coachSave(); redraw(); });
+  $app.querySelectorAll('[data-silsex]').forEach(b=>b.onclick=()=>{ COACH.sil=COACH.sil||{}; COACH.sil.sex=b.dataset.silsex; coachSave(); redraw(); });
+  $app.querySelectorAll('[data-objadd]').forEach(b=>b.onclick=()=>{ const k=b.dataset.objadd, a=objs(); if(!a.includes(k)) COACH.objs=a.concat(k); coachSave(); redraw(); });
+  const sc=$('silClear'); if(sc) sc.onclick=()=>{ COACH.sil={sex:(COACH.sil||{}).sex}; coachSave(); redraw(); };
   $app.querySelectorAll('[data-obj]').forEach(b=>b.onclick=()=>{ const k=b.dataset.obj, a=objs(); COACH.objs = a.includes(k)?a.filter(x=>x!==k):a.concat(k); delete COACH.obj; coachSave(); redraw(); });
   $('cWhy').oninput=e=>{ COACH.why=e.target.value; coachSave(); };
   $app.querySelectorAll('[data-why]').forEach(b=>b.onclick=()=>{ COACH.why=COACH_WHY[+b.dataset.why]; coachSave(); $('cWhy').value=COACH.why; });
