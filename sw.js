@@ -1,5 +1,5 @@
-const CACHE='palestra-muscoli-1';
-const ASSETS=["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-maskable.png", "apple-touch-icon.png", "v-chest-press.mp4", "v-croci-cavi.mp4", "v-lat-machine.mp4", "v-leg-curl.mp4", "v-leg-extension.mp4", "v-leg-press.mp4", "v-panca-piana.mp4", "v-piegamenti.mp4", "v-pulley.mp4", "v-rematore-manubrio.mp4", "v-squat.mp4", "v-trazioni-assistite.mp4"];
+const CACHE='palestra-muscoli-2';
+const ASSETS=["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-maskable.png", "apple-touch-icon.png", "omino-mappa.webp", "v-chest-press.mp4", "v-croci-cavi.mp4", "v-lat-machine.mp4", "v-leg-curl.mp4", "v-leg-extension.mp4", "v-leg-press.mp4", "v-panca-piana.mp4", "v-piegamenti.mp4", "v-pulley.mp4", "v-rematore-manubrio.mp4", "v-squat.mp4", "v-trazioni-assistite.mp4"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',e=>{
