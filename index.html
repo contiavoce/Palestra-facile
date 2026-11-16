@@ -211,6 +211,7 @@ nav.tabs a[aria-current="page"] svg{stroke-width:2.4}
 /* sessioni */
 .sessions{display:grid;gap:12px}
 .lvlbox{display:grid;gap:12px}
+.clcover{display:block;width:100%;height:auto;aspect-ratio:1280/714;object-fit:cover;border-radius:16px;background:var(--sunk)}
 .sess{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px}
 .sess-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
 .sess h2{font-size:26px;text-transform:uppercase}
@@ -2884,6 +2885,7 @@ function viewSessions(){
     ${Object.keys(LIVELLI).map(k=>`<div class="lvlbox" data-box="${k}" ${k===lvlSel?'':'hidden'}><p class="lead">${esc(LIVELLI[k].info)}</p>
       <div class="sessions">${SESS.filter(s=>s.lvl===k).map(s=>sessCard(s,false)).join('')}</div></div>`).join('')}
     <div class="group-title"><h2>Senza palestra</h2><span class="count">${SESS.filter(s=>s.cl).length}</span></div>
+    <img class="clcover" src="cl-copertina.webp" alt="Uomo che fa i piegamenti su un tappetino in soggiorno" width="1280" height="714" decoding="async">
     <p class="lead">Allenamento a corpo libero per casa, parco o vacanza. Ti servono solo una sedia, un tavolo robusto, un asciugamano e un gradino.</p>
     <div class="chips" role="group" aria-label="Livello senza palestra">${Object.keys(LIVELLI_CL).map(k=>`<button class="chip" type="button" data-cll="${k}" aria-pressed="${k===clSel}">${LIVELLI_CL[k].name}</button>`).join('')}</div>
     ${Object.keys(LIVELLI_CL).map(k=>`<div class="lvlbox" data-clbox="${k}" ${k===clSel?'':'hidden'}><p class="lead">${esc(LIVELLI_CL[k].info)}</p>
