@@ -5691,6 +5691,7 @@ function viewCoach(){
   </section>`;
   const redraw = ()=>keepScroll(viewCoach), $ = id=>document.getElementById(id);
   const fr=$('fbReset'); if(fr) fr.onclick=()=>{ if(fr.dataset.sure){ COACH.fb={}; COACH.fbt={}; coachSave(); redraw(); } else { fr.dataset.sure='1'; fr.textContent='Sicuro? Tocca ancora'; } };
+  $app.querySelectorAll('.silrow.big').forEach(r=>{ const b=r.querySelector('[aria-pressed="true"]'); if(b) r.scrollLeft = b.offsetLeft - r.offsetLeft - (r.clientWidth-b.clientWidth)/2; });
   $app.querySelectorAll('[data-sil]').forEach(b=>b.onclick=()=>{ COACH.sil=COACH.sil||{}; const k=b.dataset.sil, n=+b.dataset.n; COACH.sil[k] = COACH.sil[k]===n ? 0 : n; coachSave(); redraw(); });
   $app.querySelectorAll('[data-silsex]').forEach(b=>b.onclick=()=>{ COACH.sil=COACH.sil||{}; COACH.sil.sex=b.dataset.silsex; coachSave(); redraw(); });
   $app.querySelectorAll('[data-objadd]').forEach(b=>b.onclick=()=>{ const k=b.dataset.objadd, a=objs(); if(!a.includes(k)) COACH.objs=a.concat(k); coachSave(); redraw(); });
