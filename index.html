@@ -2626,6 +2626,7 @@ function viewList(){
   const hadFocus = document.activeElement && document.activeElement.id==='q';
   $app.innerHTML = `<section class="view">
     ${runBanner()}
+    ${bkReminder()}
     ${heroHTML()}
     ${coachCardHTML()}
     ${corsaCard()}
@@ -4212,6 +4213,7 @@ function viewDiary(){
   $app.innerHTML = `<section class="view">
     <div><div class="eyebrow">Questa settimana</div><h1 style="font-size:40px;text-transform:uppercase">${thisWeek.length} ${thisWeek.length===1?'allenamento':'allenamenti'}</h1></div>
     ${runBanner()}
+    ${bkReminder()}
     <div class="week">${days.map(d=>`<div><i class="${d.on?'on':''} ${d.today?'today':''}"></i>${d.l}</div>`).join('')}</div>
     <div class="stats"><div><b>${wSets}</b><span>Serie</span></div><div><b>${kgf(wVol)}</b><span>Kg sollevati</span></div><div><b>${log.length}</b><span>Totale sessioni</span></div></div>
     ${muscleMap(log.filter(w=>w.at>=Date.now()-7*864e5))}
@@ -4435,39 +4437,147 @@ function openPhoto(list, i){
 }
 
 /* ---------------- BACKUP ---------------- */
+/* Il backup è un file salvato sul telefono (cartella Download). Nessun server, nessun account. */
+const BK_SKIP = k => k==='pf-run' || k==='pf-corsa' || k.startsWith('pf-up-') || k==='pf-bklast' || k==='pf-bksnooze';
+const bkGet = k => { try{ return +localStorage.getItem(k)||0; }catch(e){ return 0; } };
+const bkSetT = (k,v) => { try{ localStorage.setItem(k,String(v)); }catch(e){} };
+const blobToURL = b => new Promise(res=>{ try{ const r=new FileReader(); r.onload=()=>res(r.result); r.onerror=()=>res(null); r.readAsDataURL(b); }catch(e){ res(null); } });
+const urlToBlob = async u => { try{ return await (await fetch(u)).blob(); }catch(e){ return null; } };
+async function bkBuild(){
+  const ls = {};
+  try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(k && k.startsWith('pf-') && !BK_SKIP(k)) ls[k]=localStorage.getItem(k); } }catch(e){}
+  let photos = [];
+  try{ for(const p of await dietPhotos()){ if(!p || !p.blob) continue; const u = typeof p.blob==='string' ? p.blob : await blobToURL(p.blob); if(u) photos.push({id:p.id, at:p.at, img:u}); } }catch(e){}
+  return {app:'palestra-facile', v:2, at:Date.now(), ls, photos};
+}
+const bkName = () => { const d=new Date(), p=n=>String(n).padStart(2,'0'); return `PalestraFacile-backup-${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}.json`; };
+async function bkSave(){
+  const data = await bkBuild();
+  const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+  const url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = bkName(); document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 60000);
+  bkSetT('pf-bklast', Date.now());
+  return data;
+}
+async function bkShare(){
+  const data = await bkBuild();
+  const file = new File([JSON.stringify(data)], bkName(), {type:'application/json'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:'Backup Palestra Facile'}); bkSetT('pf-bklast', Date.now()); return true; }
+  return false;
+}
+/* unisce senza cancellare niente: aggiunge ciò che manca, le liste con id vengono unite */
+function bkMerge(cur, add){
+  if(cur===undefined || cur===null || cur==='') return add;
+  if(Array.isArray(cur) && Array.isArray(add)){
+    if(add.every(x=>x && typeof x==='object' && 'id' in x) && cur.every(x=>x && typeof x==='object' && 'id' in x)){
+      const ids = new Set(cur.map(x=>x.id)); return cur.concat(add.filter(x=>!ids.has(x.id)));
+    }
+    return cur.length ? cur : add;
+  }
+  if(typeof cur==='object' && typeof add==='object' && add && !Array.isArray(cur) && !Array.isArray(add)){
+    const out = Object.assign({}, cur); Object.keys(add).forEach(k=>{ out[k] = bkMerge(cur[k], add[k]); }); return out;
+  }
+  return cur;
+}
+async function bkRestore(d){
+  if(!d || d.app!=='palestra-facile') return 'Questo file non è un backup di Palestra Facile.';
+  let before = S.workouts.length;
+  if(d.ls){
+    Object.keys(d.ls).forEach(k=>{ if(!k.startsWith('pf-') || BK_SKIP(k)) return;
+      let cur=null, add=null; try{ cur = localStorage.getItem(k); }catch(e){}
+      if(cur===null){ try{ localStorage.setItem(k, d.ls[k]); }catch(e){} return; }
+      try{ cur = JSON.parse(cur); add = JSON.parse(d.ls[k]); }catch(e){ return; }
+      let m = bkMerge(cur, add); if(k==='pf-workouts' && Array.isArray(m)) m = m.slice().sort((a,b)=>(b.at||0)-(a.at||0));
+      try{ localStorage.setItem(k, JSON.stringify(m)); }catch(e){}
+    });
+    if(Array.isArray(d.photos) && d.photos.length){
+      try{ const list = await dietPhotos(), ids = new Set(list.map(p=>p.id));
+        for(const p of d.photos){ if(p && p.id && !ids.has(p.id) && p.img){ const b = await urlToBlob(p.img); if(b) list.push({id:p.id, at:p.at, blob:b}); } }
+        await vdb.set(photoKey, list); }catch(e){}
+    }
+    let after = before; try{ after = (JSON.parse(localStorage.getItem('pf-workouts'))||[]).length; }catch(e){}
+    bkSetT('pf-bklast', Date.now());
+    return {ok:true, n:after-before};
+  }
+  /* vecchio backup copiato come testo (versione 1) */
+  let nw=0; const have = new Set(S.workouts.map(w=>w.id));
+  (d.workouts||[]).forEach(w=>{ if(w && w.id && !have.has(w.id)){ addWorkout(w); nw++; } });
+  S.workouts.sort((a,b)=>b.at-a.at); store.set('workouts',S.workouts);
+  const rids = new Set(S.routines.map(r=>r.id)); (d.routines||[]).forEach(r=>{ if(r && r.id && !rids.has(r.id)) S.routines.push(r); }); saveRoutines();
+  Object.assign(S.videos, d.videos||{}); saveVideos();
+  if(d.coach && !whyTxt() && !(COACH.days||[]).length){ Object.assign(COACH, d.coach); coachSave(); }
+  if(d.body){ const ids=new Set((S.body.entries||[]).map(e=>e.id)); S.body.entries=(S.body.entries||[]).concat((d.body.entries||[]).filter(e=>e&&!ids.has(e.id)));
+    ['height','goal','age'].forEach(k=>{ if(!S.body[k] && d.body[k]) S.body[k]=d.body[k]; }); saveBody(); }
+  if(d.food && !Object.keys(S.food.days||{}).length && !S.food.notes){ S.food=Object.assign({days:{},pro:{},notes:'',water:{}}, d.food); saveFood(); }
+  return {ok:true, n:nw};
+}
+function bkAgo(){ const t=bkGet('pf-bklast'); if(!t) return 'Non hai ancora fatto nessun backup.';
+  const g=Math.floor((Date.now()-t)/864e5); return 'Ultimo backup: '+(g<1?'oggi':g===1?'ieri':g+' giorni fa')+'.'; }
 function backupHTML(){
-  return `<section class="card"><h2>Backup dei dati</h2>
-    <p class="note">Copia il backup e incollalo in un posto sicuro (una nota o un messaggio a te stesso). Se cambi telefono, lo incolli qui sotto e ritrovi tutto. I video caricati non sono inclusi.</p>
-    <div class="links"><button class="btn ghost small" type="button" id="bkCopy">Copia backup</button></div>
-    <textarea id="bkText" rows="3" placeholder="Incolla qui un backup per ripristinarlo"></textarea>
-    <div class="links"><button class="btn small" type="button" id="bkLoad">Ripristina dal backup</button></div>
+  return `<section class="card" id="backup"><h2>Backup dei dati</h2>
+    <p class="note">Il backup è un file che resta <b>sul tuo telefono</b>, nella cartella <b>Download</b>. Non va su internet e non costa niente. Dentro ci sono allenamenti, corse, battiti, misure del corpo, schede, alimentazione e mental coach. I video e le canzoni caricati non sono inclusi.</p>
+    <p class="note" id="bkAgo"><b>${bkAgo()}</b></p>
+    <div class="links"><button class="btn" type="button" id="bkSave">⬇ Salva backup sul telefono</button></div>
+    <div class="links"><button class="btn ghost small" type="button" id="bkShare">Invialo a te stesso (WhatsApp, email, Drive)</button></div>
+    <div class="links" style="margin-top:6px"><button class="btn ghost" type="button" id="bkOpen">↺ Ripristina da un file di backup</button>
+      <input type="file" id="bkFile" hidden></div>
     <p class="note" id="bkMsg" aria-live="polite"></p>
+    <details><summary class="note">Hai un vecchio backup copiato come testo?</summary>
+      <textarea id="bkText" rows="3" placeholder="Incolla qui il testo del backup"></textarea>
+      <div class="links"><button class="btn small" type="button" id="bkLoad">Ripristina dal testo</button></div></details>
   </section>`;
+}
+function bkDone(r){
+  const m=document.getElementById('bkMsg');
+  if(typeof r==='string'){ if(m) m.textContent=r; return; }
+  try{ sessionStorage.setItem('pf-bkmsg', `Ripristino fatto: ${r.n} ${r.n===1?'allenamento aggiunto':'allenamenti aggiunti'}. Niente di quello che avevi è stato cancellato.`); }catch(e){}
+  location.hash='corpo'; location.reload();
 }
 function bindBackup(){
   const msg = t => { const m=document.getElementById('bkMsg'); if(m) m.textContent=t; };
-  document.getElementById('bkCopy').onclick = ()=>{
-    const txt = JSON.stringify({app:'palestra-facile', v:1, at:Date.now(), routines:S.routines, videos:S.videos, workouts:S.workouts, body:S.body, food:S.food, coach:COACH});
-    const ta = document.getElementById('bkText');
-    const fallback = ()=>{ ta.value = txt; ta.focus(); ta.select(); msg('Il testo del backup è nel riquadro ed è selezionato: copialo a mano.'); };
-    try{ navigator.clipboard.writeText(txt).then(()=>msg('Backup copiato. Incollalo in una nota per conservarlo.'), fallback); }catch(e){ fallback(); }
+  try{ const t=sessionStorage.getItem('pf-bkmsg'); if(t){ sessionStorage.removeItem('pf-bkmsg'); msg(t); } }catch(e){}
+  document.getElementById('bkSave').onclick = async ()=>{
+    msg('Preparo il file…');
+    try{ await bkSave(); msg(`Fatto. Il file "${bkName()}" è nella cartella Download del telefono. Tienilo: serve se cambi telefono o cancelli i dati.`);
+      const a=document.getElementById('bkAgo'); if(a) a.innerHTML='<b>'+bkAgo()+'</b>'; }
+    catch(e){ msg('Non sono riuscito a salvare il file. Prova con "Invialo a te stesso".'); }
   };
-  document.getElementById('bkLoad').onclick = ()=>{
+  document.getElementById('bkShare').onclick = async ()=>{
+    try{ if(await bkShare()){ msg('Backup inviato.'); const a=document.getElementById('bkAgo'); if(a) a.innerHTML='<b>'+bkAgo()+'</b>'; }
+      else msg('Questo telefono non permette di inviare file da qui. Usa "Salva backup sul telefono".'); }
+    catch(e){ if(e && e.name!=='AbortError') msg('Invio non riuscito. Usa "Salva backup sul telefono".'); }
+  };
+  const inp = document.getElementById('bkFile');
+  document.getElementById('bkOpen').onclick = ()=>{ inp.value=''; inp.click(); };
+  inp.onchange = async ()=>{
+    const f = inp.files && inp.files[0]; if(!f) return;
+    msg('Leggo il backup…');
+    let d=null; try{ d = JSON.parse(await f.text()); }catch(e){}
+    bkDone(await bkRestore(d));
+  };
+  document.getElementById('bkLoad').onclick = async ()=>{
     let d; try{ d = JSON.parse(document.getElementById('bkText').value.trim()); }catch(e){ d=null; }
     if(!d || d.app!=='palestra-facile'){ msg('Questo testo non è un backup di Palestra Facile. Incolla tutto il testo copiato.'); return; }
-    let nw=0;
-    const have = new Set(S.workouts.map(w=>w.id));
-    (d.workouts||[]).forEach(w=>{ if(w && w.id && !have.has(w.id)){ addWorkout(w); nw++; } });
-    S.workouts.sort((a,b)=>b.at-a.at); store.set('workouts',S.workouts);
-    const rids = new Set(S.routines.map(r=>r.id)); (d.routines||[]).forEach(r=>{ if(r && r.id && !rids.has(r.id)) S.routines.push(r); }); saveRoutines();
-    Object.assign(S.videos, d.videos||{}); saveVideos();
-    if(d.coach && !whyTxt() && !(COACH.days||[]).length){ Object.assign(COACH, d.coach); coachSave(); }
-    if(d.body){ const ids=new Set((S.body.entries||[]).map(e=>e.id)); S.body.entries=(S.body.entries||[]).concat((d.body.entries||[]).filter(e=>e&&!ids.has(e.id)));
-      ['height','goal','age'].forEach(k=>{ if(!S.body[k] && d.body[k]) S.body[k]=d.body[k]; }); saveBody(); }
-    if(d.food && !Object.keys(S.food.days||{}).length && !S.food.notes){ S.food=Object.assign({days:{},pro:{},notes:'',water:{}}, d.food); saveFood(); }
-    keepScroll(viewBody); const m=document.getElementById('bkMsg'); if(m) m.textContent = `Ripristino fatto: ${nw} allenamenti aggiunti.`;
+    bkDone(await bkRestore(d));
   };
 }
+/* promemoria gentile: ogni 2 settimane, solo se ci sono dati da salvare */
+function bkReminder(){
+  const n = S.workouts.length + ((S.body&&S.body.entries)||[]).length; if(n<2) return '';
+  const now=Date.now(), last=bkGet('pf-bklast'), snooze=bkGet('pf-bksnooze');
+  if(now<snooze) return '';
+  if(last && now-last < 14*864e5) return '';
+  return `<div class="banner" id="bkBanner"><span><b>Fai un backup dei tuoi dati</b><br>${last?'L\'ultimo è di più di 2 settimane fa.':'Così non li perdi se cambi telefono.'} Resta sul tuo telefono.</span>
+    <span class="minor links"><button class="btn small" type="button" data-bksave>Salva ora</button><button class="btn ghost small" type="button" data-bklater>Più tardi</button></span></div>`;
+}
+document.addEventListener('click', async e=>{
+  const b = e.target.closest && e.target.closest('[data-bksave],[data-bklater]'); if(!b) return;
+  const ban = document.getElementById('bkBanner');
+  if(b.hasAttribute('data-bklater')){ bkSetT('pf-bksnooze', Date.now()+7*864e5); if(ban) ban.remove(); return; }
+  try{ await bkSave(); if(ban) ban.innerHTML='<span><b>Backup salvato</b><br>Il file è nella cartella Download del telefono.</span>'; setTimeout(()=>{ const x=document.getElementById('bkBanner'); if(x) x.remove(); }, 6000); }
+  catch(err){ location.hash='corpo'; }
+});
 
 /* ---------------- NAVIGAZIONE ---------------- */
 let explaining=false;
