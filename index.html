@@ -479,6 +479,14 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .cmap{padding:6px}.cpath{width:100%;height:auto;display:block}
 .cempty{padding:40px 10px;text-align:center;opacity:.6}
 .cbtns{display:grid;gap:10px}
+.rplans .chips{display:flex;gap:8px;flex-wrap:wrap}
+.rpnext{display:grid;gap:4px;background:var(--sunk);border-radius:14px;padding:12px;margin:0 0 10px}.rpnext span{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.rpnext b{font-size:19px}.rpnext i{font-style:normal;color:var(--muted);font-size:14px;margin-bottom:6px}
+.rpweeks{display:grid;gap:12px}.rpw{display:grid;gap:4px}.rpw>b{font-size:15px}
+.rpd{display:grid;grid-template-columns:30px 1fr auto auto;align-items:center;gap:6px;border-top:1px solid var(--line);padding-top:4px}.rpd>span{font-weight:700;color:var(--muted);font-size:13px}.rpd p{margin:0;font-size:14px}.rpd small{color:var(--muted)}.rpd.ok>span{color:#1f8a50}.rpd.ok p{opacity:.65}.rpd .btn{min-width:40px;padding:4px 8px}
+.rpleg{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);margin:10px 0 4px}.rpleg u{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+.rpguide{display:grid;gap:6px;border-left:6px solid #d6341e}.rpgh{display:grid}.rpgh span{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}.rpgh small{font-size:14px}
+.rpnow{display:flex;align-items:baseline;justify-content:space-between;gap:10px}.rpnow b{font-size:28px;line-height:1.1;font-family:var(--display);text-transform:uppercase}.rpnow span{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums}
+.rpz{margin:0;font-weight:600}.rpbar{position:relative;display:flex;height:14px;border-radius:7px;overflow:hidden;gap:1px}.rpbar i{display:block;height:100%}.rpbar u{position:absolute;top:-2px;bottom:-2px;width:3px;background:var(--fg,#111);border-radius:2px;margin-left:-1px}
 .hero .hero-desc{font-size:13px;color:#ffffffc8;margin:0 0 8px}
 .gtile{min-height:96px}
 .card .player{padding:10px 8px 14px;margin-inline:-6px}
@@ -3771,7 +3779,7 @@ function fmtDur(s){ s=Math.max(0,Math.round(s)); const h=Math.floor(s/3600), m=M
 const kmTxt = m => (m/1000).toLocaleString('it-IT',{minimumFractionDigits:2,maximumFractionDigits:2});
 const paceTxt = (sec,m) => m<50 ? '–' : fmtDur(sec/(m/1000));
 const RUN_IMG='data:image/webp;base64,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';
-const corsaCard = () => `<a class="card ccard" href="#corsa"><div><b>Corsa all'aperto</b><span>${corsa?'Corsa in corso: tocca per tornare':'Tempo, km, passo, calorie e percorso col GPS'}</span><i class="cgo">${corsa?'Torna alla corsa':'Inizia'} →</i></div><img src="${RUN_IMG}" alt="" aria-hidden="true"></a>`;
+const corsaCard = () => `<a class="card ccard" href="#corsa"><div><b>Corsa all'aperto</b><span>${corsa?'Corsa in corso: tocca per tornare':'Piani per livello con guida a voce, GPS, tempo e km'}</span><i class="cgo">${corsa?'Torna alla corsa':'Inizia'} →</i></div><img src="${RUN_IMG}" alt="" aria-hidden="true"></a>`;
 const myKg = () => { const E=(S.body.entries||[]).filter(e=>e.weight!=null).sort((a,b)=>a.at-b.at); const w=E.length?+E[E.length-1].weight:0; return w>30&&w<250 ? w : 0; };
 const kcalOf = m => Math.round((myKg()||75) * m/1000 * 1.0);
 const corsaSec = () => !corsa ? 0 : (corsa.acc + (corsa.paused ? 0 : Date.now()-corsa.t0))/1000;
@@ -3848,7 +3856,7 @@ function onFix(pos){
 function onGpsErr(e){ corsaMsg = e && e.code===1 ? 'Il telefono non dà il permesso alla posizione. Attivalo per questo sito nelle impostazioni di Chrome (Impostazioni sito → Posizione).' : 'Sto cercando il segnale GPS… meglio all\'aperto, lontano da palazzi alti.'; corsaPaint(); }
 function gpsOn(){ if(gpsWatch!=null || !('geolocation' in navigator)) return; gpsWatch = navigator.geolocation.watchPosition(onFix, onGpsErr, {enableHighAccuracy:true, maximumAge:1000, timeout:20000}); }
 function gpsOff(){ if(gpsWatch!=null){ try{ navigator.geolocation.clearWatch(gpsWatch); }catch(e){} gpsWatch=null; } }
-function corsaStart(){ corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0, kms:[]}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn(); say('Corsa iniziata. Buona corsa!', true); corsaLoop(); viewCorsa(); }
+function corsaStart(plan){ corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0, kms:[], ...(plan?{plan}:{})}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn(); if(plan) rpTick(); else say('Corsa iniziata. Buona corsa!', true); corsaLoop(); viewCorsa(); window.scrollTo(0,0); }
 function corsaPause(){ if(!corsa||corsa.paused) return; corsa.acc += Date.now()-corsa.t0; corsa.paused=true; corsa.gap=true; corsaSave(); say('Pausa.', true); viewCorsa(); }
 function corsaResume(){ if(!corsa||!corsa.paused) return; corsa.t0=Date.now(); corsa.paused=false; corsaSave(); gpsOn(); corsaWakeOn(); say('Si riparte.', true); viewCorsa(); }
 function corsaFinish(save){
@@ -3857,13 +3865,14 @@ function corsaFinish(save){
     const pts=[]; corsa.pts.forEach(p=>{ if(!pts.length || hav(pts[pts.length-1],p)>=8) pts.push(p); });
     const step=Math.ceil(pts.length/1200)||1, small=pts.filter((p,i)=>i%step===0||i===pts.length-1);
     const end=Date.now(), hs=hrSummary(corsa.start, end);
-    addWorkout({id:'w'+end.toString(36), sid:'corsa', name:'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10}, ...(hs?{hr:hs}:{})});
+    const pl=corsa.plan; if(pl && (pl.fin || corsaSec()>=rpTot(pl)*0.8)){ rplan.done[rpKey(pl.lv,pl.w,pl.d)]=end; rpSave(); }
+    addWorkout({id:'w'+end.toString(36), sid:'corsa', name: pl ? 'Corsa · '+RUNPLANS[pl.lv].name+' sett. '+(pl.w+1)+' giorno '+(pl.d+1) : 'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10}, ...(hs?{hr:hs}:{})});
     say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`, true);
   }
   gpsOff(); clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
   corsa=null; store.del('corsa'); location.hash = save ? 'diario' : 'sessioni'; if(!save) viewCorsa();
 }
-function corsaLoop(){ clearInterval(corsaTick); corsaTick=setInterval(()=>{ if(view==='corsa') corsaPaint(); }, 1000); }
+function corsaLoop(){ clearInterval(corsaTick); corsaTick=setInterval(()=>{ rpTick(); if(view==='corsa') corsaPaint(); }, 500); }
 function corsaPaint(){
   if(view!=='corsa') return; const sec=corsaSec(), m=corsa?corsa.m:0;
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
@@ -3873,7 +3882,7 @@ function corsaPaint(){
   const g=document.getElementById('cGauge'); if(g) g.innerHTML=gaugeSVG(live);
   const cl=document.getElementById('cLaps'), L=corsa?(corsa.laps||[]):[]; if(cl){ cl.hidden=!L.length; cl.innerHTML=`<b>Tempi per chilometro</b>${lapRows(L, corsa&&corsa.kms)}`; }
   set('cGps', !corsa ? '' : corsa.paused ? 'In pausa' : corsa.acc_m ? (corsa.acc_m<=35?`GPS ok (±${corsa.acc_m} m)`:`GPS debole (±${corsa.acc_m} m)`) : 'Cerco il GPS…');
-  set('cMsg', corsaMsg);
+  set('cMsg', corsaMsg); rpPaint();
   const mp=document.getElementById('cMap'); if(mp && !cmapReady) mp.innerHTML = pathSVG(corsa?corsa.pts:[],340,230,corsa?corsa.kms:[]);
   updMap();
 }
@@ -3883,6 +3892,8 @@ function viewCorsa(){
   const past = S.workouts.filter(w=>w.run).slice(0,5);
   $app.innerHTML = `<section class="view">
     <div class="chead"><div><div class="eyebrow">Corsa</div><h1 style="font-size:40px;text-transform:uppercase">All'aperto</h1></div><img src="${RUN_IMG}" alt="" aria-hidden="true"></div>
+    ${corsa ? rpGuideHTML() : rpPlansHTML()}
+    <div class="group-title" ${corsa?'hidden':''}><h2>Oppure corsa libera</h2></div>
     <div class="card cspeed"><div id="cGauge"></div><div class="cvnum"><b id="cV">0,0</b><span>km/h</span></div>
       <div class="cvsub"><span>Media <b id="cVavg">0</b> km/h</span><span>Massima <b id="cVmax">0</b> km/h</span></div></div>
     ${hrBox()}
@@ -3913,7 +3924,142 @@ function viewCorsa(){
   cmapReady=false; mountMap();
   on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
   on('cDrop', ()=>{ const b=document.getElementById('cDrop'); if(b.dataset.sure){ corsaFinish(false); } else { b.dataset.sure='1'; b.textContent='Sicuro? Premi ancora per annullare'; } });
-  corsaPaint(); hrPaint();
+  rpBind(); corsaPaint(); hrPaint();
+}
+/* ---------------- PIANI DI CORSA PER LIVELLO (guida a tempo con voce) ----------------
+   Segmenti: [tipo, secondi]. Zone in % della FC max (Tanaka). 80/20 (Seiler), 4x4 (Helgerud 2007),
+   aumenti graduali (Nielsen 2014; Frandsen 2025: il lungo non supera di oltre il 10% il più lungo recente). */
+const RSEG = {
+ cam:{n:'Cammina a passo svelto', s:'Cammina a passo svelto', z:[.50,.65], c:'#2f6fd6'},
+ fac:{n:'Corsa facile', s:'Corri piano, devi riuscire a parlare', z:[.60,.75], c:'#1f8a5b'},
+ rec:{n:'Recupero', s:'Recupero: corri lentissimo o cammina', z:[.55,.70], c:'#6b8aa8'},
+ sog:{n:'Ritmo soglia', s:'Ritmo soglia: comodamente faticoso, riesci a dire solo poche parole', z:[.80,.88], c:'#E8833A'},
+ int:{n:'Veloce', s:'Veloce! Forte ma costante, senza scatti', z:[.85,.95], c:'#d6341e'},
+ all:{n:'Allungo', s:'Allungo: veloce e sciolto, non uno sprint', z:null, c:'#b06d00'}
+};
+const M_ = m=>Math.round(m*60);
+function rRep(n, a, b){ const o=[]; for(let i=0;i<n;i++){ o.push(a.slice()); if(b && i<n-1) o.push(b.slice()); } return o; }
+function rSess(t, segs){ return {t, segs}; }
+// PRINCIPIANTE: corsa-camminata, 3 volte a settimana, 9 settimane fino a 30 minuti di corsa
+const RP_P = [[1,1.5,8],[2,2,5],[3,2,4],[5,2.5,3],[6,2,3],[10,2,2],[12,2,2],[25,0,1],[30,0,1]].map(([r,w,n],i)=>{
+  const core = w ? rRep(n,['fac',M_(r)],['cam',M_(w)]) : [['fac',M_(r)]];
+  const t = w ? `${n} × (${r}' corsa + ${String(w).replace('.5','\'30"').replace(/^(\d+)$/,'$1\'')} cammino)` : `${r}' di corsa senza fermarti`;
+  const s = rSess(t, [['cam',M_(5)], ...core, ['cam',M_(5)]]);
+  return [s, s, s];
+});
+// INTERMEDIO: 4 uscite, 8 settimane (4ª e 8ª più leggere). 1 seduta intensa su 4 = 80/20
+const RP_I = (()=>{ const fac=[30,30,35,25,35,35,40,30], lun=[40,44,48,35,48,52,56,40];
+  const iv=[[6,1,2],[5,2,2],[4,3,3],[4,2,2],[4,4,3],[4,4,3],[5,4,3],[3,3,3]];
+  return fac.map((f,w)=>{ const [n,a,b]=iv[w];
+    return [ rSess(`Facile ${f}'`, [['fac',M_(f)]]),
+      rSess(`Intervalli ${n} × ${a}' veloce (recupero ${b}')`, [['fac',M_(10)], ...rRep(n,['int',M_(a)],['rec',M_(b)]), ['fac',M_(10)]]),
+      rSess(`Facile 30' + 6 allunghi`, [['fac',M_(30)], ...rRep(6,['all',20],['rec',60])]),
+      rSess(`Lungo facile ${lun[w]}'`, [['fac',M_(lun[w])]]) ]; }); })();
+// ESPERTO: 5 uscite, 8 settimane. 4x4 di Helgerud + soglia, il resto facile
+const RP_E = (()=>{ const fac=[40,40,45,30,45,45,50,35], lun=[70,75,80,60,80,85,90,65];
+  const x4=[4,4,4,3,4,4,5,3], sg=[[2,10],[3,8],[3,10],[2,8],[2,15],[3,12],[3,12],[2,8]];
+  return fac.map((f,w)=>[ rSess(`Facile ${f}'`, [['fac',M_(f)]]),
+    rSess(`${x4[w]} × 4' veloce (recupero 3') di Helgerud`, [['fac',M_(12)], ...rRep(x4[w],['int',M_(4)],['rec',M_(3)]), ['fac',M_(10)]]),
+    rSess(`Facile ${Math.max(30,f-5)}' + 8 allunghi`, [['fac',M_(Math.max(30,f-5))], ...rRep(8,['all',20],['rec',60])]),
+    rSess(`Soglia ${sg[w][0]} × ${sg[w][1]}' (recupero 2')`, [['fac',M_(15)], ...rRep(sg[w][0],['sog',M_(sg[w][1])],['rec',M_(2)]), ['fac',M_(10)]]),
+    rSess(`Lungo facile ${lun[w]}'`, [['fac',M_(lun[w])]]) ]); })();
+const RUNPLANS = {
+ principiante:{name:'Principiante', weeks:RP_P, days:'3 uscite a settimana con un giorno di riposo in mezzo (es. lun-mer-ven)',
+  info:'Per chi parte da zero. Alterni corsa lenta e camminata: in 9 settimane arrivi a correre 30 minuti di fila. Corri così piano da riuscire a parlare. Se una settimana ti è sembrata dura, ripetila: va benissimo.'},
+ intermedio:{name:'Intermedio', weeks:RP_I, days:'4 uscite a settimana (es. lun, mer, ven, dom col lungo)',
+  info:'Per chi corre già 30 minuti di fila. 3 uscite su 4 sono facili e 1 è veloce: è la regola 80/20. Le settimane 4 e 8 sono più leggere per recuperare. Il lungo cresce al massimo del 10%.'},
+ esperto:{name:'Esperto', weeks:RP_E, days:'5 uscite a settimana, mai due sedute dure di fila',
+  info:'Per chi corre già 4–5 volte a settimana con un lungo di almeno 65 minuti. Due sedute dure (intervalli 4×4 e soglia), il resto facile: circa 80% facile e 20% duro. Settimane 4 e 8 più leggere.'}
+};
+const SCI_RUN = `<div class="sci">
+  <p>${pill('s')}<b>80% facile, 20% duro.</b> Gli atleti di resistenza più forti fanno circa l'80% degli allenamenti piano e il 20% duro. Negli studi questo schema migliora il fiato almeno quanto, o più, di fare tutto a ritmo medio.<cite>Seiler e Kjerland, Scand J Med Sci Sports 2006 · Stöggl e Sperlich, Front Physiol 2014 · Rosenblat e coll., J Strength Cond Res 2019 (meta-analisi)</cite></p>
+  <p>${pill('s')}<b>Intervalli 4 × 4 minuti.</b> 4 minuti forte (85–95% del battito massimo) con 3 minuti di recupero leggero: hanno migliorato il VO2max più della corsa lunga e lenta a parità di fatica.<cite>Helgerud e coll., Med Sci Sports Exerc 2007 · Milanović e coll., Sports Med 2015 (meta-analisi)</cite></p>
+  <p>${pill('m')}<b>Crescere piano.</b> Nei principianti chi aumentava i km di oltre il 30% in due settimane si infortunava di più. Una singola uscita più lunga del 10% rispetto alla più lunga dell'ultimo mese aumenta il rischio: per questo il lungo cresce poco alla volta.<cite>Nielsen e coll., J Orthop Sports Phys Ther 2014 · Frandsen e coll., Br J Sports Med 2025</cite></p>
+  <p>${pill('m')}<b>La "regola del 10% a settimana" non è magica.</b> In uno studio un programma che cresceva del 10% non ha dato meno infortuni di uno un po' più veloce. Conta soprattutto non fare salti grandi e ascoltare il corpo.<cite>Buist e coll., Am J Sports Med 2008</cite></p>
+  <p>${pill('s')}<b>Corsa-camminata per iniziare.</b> Alternare corsa e camminata e allungare piano la corsa è il modo consigliato per partire in sicurezza; per la salute bastano 75–150 minuti a settimana di attività intensa come la corsa.<cite>OMS, linee guida 2020 · ACSM, Guidelines for Exercise Testing and Prescription</cite></p>
+  <p>${pill('s')}<b>Il test della parola.</b> Se riesci a parlare in frasi complete sei nella zona facile; quando riesci a dire solo poche parole sei vicino alla soglia.<cite>Reed e Pipe, Phys Sportsmed 2014 (revisione)</cite></p>
+  <p>${pill('m')}<b>Battito massimo stimato</b> = 208 − 0,7 × età. È una stima: per alcune persone sbaglia anche di 10 battiti, quindi conta anche come ti senti.<cite>Tanaka, Monahan e Seals, J Am Coll Cardiol 2001</cite></p>
+  <p>${pill('w')}<b>Allunghi e settimane leggere.</b> Pratiche diffuse tra gli allenatori per tecnica e recupero, con poche prove dirette.</p>
+  <p class="note">Se hai problemi di cuore, pressione alta, dolori o non ti alleni da tanto, senti prima il medico. Se senti dolore al petto, giramenti di testa o fiato che non torna, fermati.</p>
+</div>`;
+let rplan = Object.assign({lv:'principiante', done:{}}, store.get('runplan',{}));
+if(!RUNPLANS[rplan.lv]) rplan.lv='principiante';
+const rpSave = ()=>store.set('runplan', rplan);
+const rpKey = (lv,w,d)=>lv+'|'+w+'|'+d;
+const rpGet = (lv,w,d)=>{ const P=RUNPLANS[lv]; return P && P.weeks[w] && P.weeks[w][d]; };
+const rpTot = s => s.segs.reduce((a,x)=>a+x[1],0);
+function rpNext(lv){ const P=RUNPLANS[lv]; for(let w=0;w<P.weeks.length;w++) for(let d=0;d<P.weeks[w].length;d++) if(!rplan.done[rpKey(lv,w,d)]) return [w,d]; return null; }
+const rpZoneTxt = z => { if(!z) return ''; const mx=hrMax(); return `${Math.round(z[0]*100)}–${Math.round(z[1]*100)}%`+(mx?` · ${Math.round(z[0]*mx)}–${Math.round(z[1]*mx)} bpm`:''); };
+function rpStart(lv,w,d){
+  if(!('geolocation' in navigator)){ corsaMsg='Questo telefono non dà la posizione al browser.'; corsaPaint(); return; }
+  const s=rpGet(lv,w,d); if(!s) return;
+  corsaStart({lv,w,d,t:s.t,segs:s.segs,i:-1,warn:0,push:-1});
+}
+// dove sono nel piano: indice del segmento, secondi passati e rimasti
+function rpPos(){ const p=corsa&&corsa.plan; if(!p) return null; const t=corsaSec(); let a=0;
+  for(let i=0;i<p.segs.length;i++){ const L=p.segs[i][1]; if(t<a+L) return {i, el:t-a, left:a+L-t, t}; a+=L; } return {i:p.segs.length, el:0, left:0, t, end:true}; }
+function rpCue(p, i){ const sg=p.segs[i], T=RSEG[sg[0]];
+  const hard = p.segs.filter(x=>x[0]===sg[0]).length, k = p.segs.slice(0,i+1).filter(x=>x[0]===sg[0]).length;
+  let txt = T.s+' per '+spokenRest(sg[1])+'.';
+  if((sg[0]==='int'||sg[0]==='sog'||sg[0]==='all') && hard>1) txt = (sg[0]==='all'?'Allungo ':'Ripetizione ')+k+' di '+hard+'. '+txt;
+  if(sg[0]==='int'||sg[0]==='sog'){ const mx=hrMax(); if(mx) txt += ' Battito tra '+Math.round(T.z[0]*mx)+' e '+Math.round(T.z[1]*mx)+'.'; }
+  const nx=p.segs[i+1]; if(i===0) txt = 'Settimana '+(p.w+1)+', giorno '+(p.d+1)+'. '+txt;
+  if(!nx) txt += ' È l\'ultima parte.';
+  return txt; }
+function rpTick(){
+  const p=corsa&&corsa.plan; if(!p || corsa.paused || p.fin) return;
+  const q=rpPos(); if(!q) return;
+  if(q.end){ p.fin=1; beep('done'); say('Allenamento del piano finito, bravo! Cammina qualche minuto, poi premi Fine e salva.', true); corsaSave(); return; }
+  if(q.i!==p.i){ p.i=q.i; p.push=-1; beep('go'); say(rpCue(p,q.i), true); corsaSave(); return; }
+  const sg=p.segs[q.i], L=Math.round(q.left);
+  if(L<=3 && L>=1 && p.cd!==q.i+'-'+L){ p.cd=q.i+'-'+L; beep('tick'); }
+  if(sg[1]>=240 && L===60 && p.min!==q.i){ p.min=q.i; say('Ancora un minuto.', true); }
+  if(sg[1]>=1200 && Math.abs(q.el-sg[1]/2)<0.6 && p.half!==q.i){ p.half=q.i; say('Sei a metà. Continua così, piano.', true); }
+  // consigli dal battito (solo con la fascia o l'orologio collegati)
+  const T=RSEG[sg[0]], mx=hrMax();
+  if(T.z && mx && hrLive() && q.el>60){ const b=hr.bpm, now=Date.now();
+    if(['cam','fac','rec'].includes(sg[0]) && b>T.z[1]*mx+3){ if(!p.hiAt) p.hiAt=now; if(now-p.hiAt>20000 && now-(p.warn||0)>60000){ p.warn=now; say('Rallenta: battito '+b+', sei sopra la zona facile.', true); } }
+    else p.hiAt=0;
+    if(sg[0]==='int' && q.el>100 && b<T.z[0]*mx-3 && p.push!==q.i){ p.push=q.i; say('Puoi spingere un po\' di più.', true); }
+  }
+}
+function rpGuideHTML(){ const p=corsa&&corsa.plan; if(!p) return '';
+  return `<div class="card rpguide" id="rpG"><div class="rpgh"><span>${esc(RUNPLANS[p.lv].name)} · Sett. ${p.w+1} · Giorno ${p.d+1}</span><small>${esc(p.t)}</small></div>
+    <div class="rpnow"><b id="rpN">–</b><span id="rpL">0:00</span></div><p class="rpz" id="rpZ"></p>
+    <div class="rpbar" aria-hidden="true">${p.segs.map(x=>`<i style="flex:${x[1]};background:${RSEG[x[0]].c}"></i>`).join('')}<u id="rpC"></u></div>
+    <p class="note" id="rpX"></p></div>`; }
+function rpPaint(){ const p=corsa&&corsa.plan, el=document.getElementById('rpG'); if(!p||!el) return; const q=rpPos(); if(!q) return;
+  const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
+  const tot=rpTot(p);
+  if(q.end){ set('rpN','Finito!'); set('rpL',''); set('rpZ',''); set('rpX','Hai completato la seduta. Premi «Fine e salva».'); }
+  else { const sg=p.segs[q.i], T=RSEG[sg[0]], nx=p.segs[q.i+1];
+    set('rpN', T.n); set('rpL', fmtDur(q.left)); document.getElementById('rpN').style.color=T.c;
+    set('rpZ', T.z ? 'Zona: '+rpZoneTxt(T.z) : '20 secondi veloce e sciolto');
+    set('rpX', `Parte ${q.i+1} di ${p.segs.length}`+(nx?` · poi ${RSEG[nx[0]].n.toLowerCase()} ${fmtDur(nx[1])}`:' · ultima parte')+` · mancano ${fmtDur(Math.max(0,tot-q.t))}`); }
+  const c=document.getElementById('rpC'); if(c) c.style.left=Math.min(100,q.t/tot*100)+'%';
+}
+function rpPlansHTML(){
+  const lv=rplan.lv, P=RUNPLANS[lv], nx=rpNext(lv);
+  const ns = nx && rpGet(lv,nx[0],nx[1]);
+  const doneN = Object.keys(rplan.done).filter(k=>k.startsWith(lv+'|')).length, totN=P.weeks.reduce((a,w)=>a+w.length,0);
+  return `<div class="card rplans"><h2 style="font-size:22px;text-transform:uppercase;margin:0 0 4px">Piani di corsa</h2>
+    <p class="note" style="margin:0 0 10px">Basati sugli studi più recenti. La voce ti guida: quando correre, camminare o spingere.</p>
+    <div class="chips" role="group" aria-label="Livello corsa">${Object.keys(RUNPLANS).map(k=>`<button class="chip" type="button" data-rpl="${k}" aria-pressed="${k===lv}">${RUNPLANS[k].name}</button>`).join('')}</div>
+    <p class="lead" style="margin:10px 0 4px">${esc(P.info)}</p><p class="note" style="margin:0 0 10px"><b>${esc(P.days)}</b> · fatte ${doneN} di ${totN}</p>
+    ${ns ? `<div class="rpnext"><span>Prossima: settimana ${nx[0]+1}, giorno ${nx[1]+1}</span><b>${esc(ns.t)}</b><i>Circa ${Math.round(rpTot(ns)/60)} minuti</i>
+      <button class="btn big" type="button" data-rpgo="${nx[0]}|${nx[1]}">▶ Inizia con la guida</button></div>`
+      : `<div class="rpnext"><b>Piano completato! 🎉</b><span>Puoi passare al livello successivo o ricominciare.</span><button class="btn ghost small" type="button" id="rpReset">Ricomincia questo piano</button></div>`}
+    <details class="more"><summary>Tutte le settimane</summary><div class="rpweeks">${P.weeks.map((W,w)=>`<div class="rpw"><b>Settimana ${w+1}</b>${W.map((s,d)=>{ const k=rpKey(lv,w,d), dn=rplan.done[k];
+      return `<div class="rpd${dn?' ok':''}"><span>${dn?'✓':'G'+(d+1)}</span><p>${esc(s.t)} <small>· ${Math.round(rpTot(s)/60)}'</small></p><button class="btn ghost small" type="button" data-rpgo="${w}|${d}" aria-label="Inizia settimana ${w+1} giorno ${d+1}">▶</button><button class="btn ghost small" type="button" data-rpok="${k}" aria-label="${dn?'Segna da fare':'Segna come fatta'}">${dn?'↺':'✓'}</button></div>`; }).join('')}</div>`).join('')}</div></details>
+    <div class="rpleg">${['cam','fac','rec','sog','int','all'].map(k=>`<span><u style="background:${RSEG[k].c}"></u>${RSEG[k].n}${RSEG[k].z?' '+Math.round(RSEG[k].z[0]*100)+'–'+Math.round(RSEG[k].z[1]*100)+'%':''}</span>`).join('')}</div>
+    ${hrAge()?'':'<p class="note">Scrivi la tua età nella scheda <a href="#corpo">Corpo</a> (o collega il cardio): così l\'app calcola i tuoi battiti per ogni zona.</p>'}
+    <details class="more"><summary>Da dove vengono questi piani</summary>${SCI_RUN}</details></div>`;
+}
+function rpBind(){
+  $app.querySelectorAll('[data-rpl]').forEach(b=>b.onclick=()=>{ rplan.lv=b.dataset.rpl; rpSave(); keepScroll(viewCorsa); });
+  $app.querySelectorAll('[data-rpgo]').forEach(b=>b.onclick=()=>{ const [w,d]=b.dataset.rpgo.split('|').map(Number); rpStart(rplan.lv,w,d); });
+  $app.querySelectorAll('[data-rpok]').forEach(b=>b.onclick=()=>{ const k=b.dataset.rpok; if(rplan.done[k]) delete rplan.done[k]; else rplan.done[k]=Date.now(); rpSave(); keepScroll(viewCorsa); });
+  const r=document.getElementById('rpReset'); if(r) r.onclick=()=>{ Object.keys(rplan.done).forEach(k=>{ if(k.startsWith(rplan.lv+'|')) delete rplan.done[k]; }); rpSave(); keepScroll(viewCorsa); };
 }
 function runProgress(){
   const R=S.workouts.filter(w=>w.run && w.run.m>=200); if(!R.length) return '';
