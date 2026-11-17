@@ -498,6 +498,7 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .cmap{padding:6px}.cpath{width:100%;height:auto;display:block}
 .cempty{padding:40px 10px;text-align:center;opacity:.6}
 .cbtns{display:grid;gap:10px}
+.view.cpre{gap:12px}.cpre .chead img{height:48px}.cpre .chead h1{font-size:28px!important}.cpre .rplans .rpgl{margin:10px 0 6px}.cpre .rplans .rpgl:first-child{margin-top:0}.cpre .rplans .chip{padding:5px 11px;font-size:14px}.cpre .rpnext{margin:0}.rpnext .rpnm{font-family:var(--display);text-transform:uppercase;font-size:22px}.cpre .rpch{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--line);font-weight:700}.cpre .rplans .chips{gap:6px}.cpre .hrbt{display:none}.cpre .hrrow{flex-wrap:nowrap}.cpre .hrrow .btn{flex:1 1 0;min-width:0;justify-content:center;white-space:nowrap;padding-left:8px;padding-right:8px;font-size:14px}.cpre .hrbox{margin-top:10px}.cpre .seg button{padding:9px}.cfree .cbtns{margin-top:12px}.cfree #cGps:empty,.cfree #cMsg:empty{display:none}
 .view.crun{gap:8px;margin-top:-8px}.crun .cspeed:not([hidden])+.cstats{margin-top:-8px;border-top:1px solid var(--line);border-top-left-radius:0;border-top-right-radius:0}.crun .cspeed{border-bottom-left-radius:0;border-bottom-right-radius:0}.crun>*{margin-top:0;margin-bottom:0}
 .crun .cspeed{display:grid;grid-template-columns:44% 1fr;align-items:center;column-gap:6px;padding:4px 10px 4px}
 .crun .cspeed #cGauge{grid-row:1/4}.crun .gauge{max-width:135px}
@@ -506,7 +507,7 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .crun .cstats{grid-template-columns:repeat(4,1fr);gap:2px 4px;padding:6px 6px 8px}.crun .cstats span{font-size:10px;letter-spacing:.02em}.crun .cstats b{font-size:22px;line-height:1.15}
 .crun .cpar{display:flex;align-items:center;justify-content:center;gap:10px;padding:3px 8px;margin-top:4px}.crun .cpar span{display:inline;font-size:11px}.crun .cpar b{font-size:22px}
 .crun .cbtns{grid-template-columns:1fr 1fr;gap:8px}.crun .cbtns .btn{padding-top:8px;padding-bottom:8px;min-height:0;font-size:18px}
-.crun .hrrow{flex-wrap:nowrap}.crun .hrrow .btn{flex:1;justify-content:center;white-space:nowrap}
+.crun .hrrow{flex-wrap:nowrap}.crun .hrrow .btn{flex:1 1 0;min-width:0;justify-content:center;white-space:nowrap;padding-left:8px;padding-right:8px;font-size:14px}
 .crun .hrbox .hrbt{display:none}
 .crun .hrlive{flex-wrap:nowrap;padding:6px 10px;gap:8px}.crun .hrico.big{width:30px;height:30px}.crun .hrlive>b{font-size:30px;flex:none;min-width:0}.crun .hrunit{flex:none}.crun .hrinfo{flex:1 1 auto;font-size:13px;gap:2px}.crun .hrinfo>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.crun .hrlive .btn{white-space:nowrap;flex:none;padding:6px 10px}.crun .hrage{margin-top:4px}
 .crun .rpguide{gap:2px;padding-top:6px;padding-bottom:6px}.crun .rpnow b{font-size:20px}.crun .rpnow span{font-size:30px;line-height:1.1}.crun .rpgh span{font-size:11px}.crun .rpgh small{display:none}.crun .rpz{font-size:13px}.crun .rpbar{height:10px;margin:2px 0}.crun .rpguide .note{font-size:12px;margin:0;line-height:1.3}.crun .rpguide .note:empty,.crun .rpz:empty{display:none}
@@ -606,8 +607,8 @@ body.noscroll{overflow:hidden}
 .qtile b{font-size:16px}.qtile span{font-size:13px;color:var(--muted)}
 .hero .hero-2{margin-top:8px;display:inline-flex;background:transparent;color:inherit;border:1.5px solid currentColor}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:999px;background:var(--sunk)}
-.seg a{text-align:center;padding:10px;border-radius:999px;font-weight:700;text-decoration:none;color:var(--fg)}
-.seg a[aria-selected="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.seg a,.seg button{border:0;background:transparent;font:inherit;font-size:16px;cursor:pointer;text-align:center;padding:10px;border-radius:999px;font-weight:700;text-decoration:none;color:var(--fg)}
+.seg a[aria-selected="true"],.seg button[aria-selected="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .mico{font-size:24px;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:12px;background:var(--sunk);flex:none}
 .setlink{display:block;text-align:center;padding:14px;color:var(--muted);font-weight:600}
 #langSlot:empty{display:none}
@@ -4350,11 +4351,12 @@ function viewCorsa(){
   const cBtns = `<div class="cbtns">${!corsa ? `<button class="btn big" id="cGo">▶ Inizia la corsa</button>`
       : corsa.paused ? `<button class="btn big" id="cRes">▶ Riprendi</button><button class="btn ghost big" id="cEnd">■ Fine e salva</button>`
       : `<button class="btn ghost big" id="cPau">❚❚ Pausa</button><button class="btn big" id="cEnd">■ Fine e salva</button>`}</div>`;
-  $app.innerHTML = `<section class="view${corsa?' crun':''}">
-    <div class="chead" ${corsa?'hidden':''}><div><div class="eyebrow">Corsa</div><h1 style="font-size:40px;text-transform:uppercase">${TM?'Tapis roulant':'All\'aperto'}</h1></div><img src="${RUN_IMG}" alt="" aria-hidden="true"></div>
-    ${corsa ? rpGuideHTML() : rpPlansHTML()}
-    <div class="group-title" ${corsa?'hidden':''}><h2>Oppure corsa libera</h2></div>
-    <div class="card cspeed" ${TM?'hidden':''}><div id="cGauge"></div><div class="cvnum"><b id="cV">0,0</b><span>km/h</span></div>
+  const PRE = !corsa, FREE = PRE && rplan.mode==='libera';
+  $app.innerHTML = `<section class="view${corsa?' crun':' cpre'}">
+    <div class="chead" ${corsa?'hidden':''}><h1 style="font-size:34px;text-transform:uppercase;margin:0">Corsa</h1><img src="${RUN_IMG}" alt="" aria-hidden="true"></div>
+    ${PRE?`<div class="seg" role="tablist" aria-label="Corsa"><button type="button" role="tab" data-cmode="piani" aria-selected="${!FREE}">Piani di corsa</button><button type="button" role="tab" data-cmode="libera" aria-selected="${FREE}">Corsa libera</button></div>`:''}
+    ${corsa ? rpGuideHTML() : FREE ? `<div class="card cfree"><p style="margin:0"><strong>Corri come vuoi, senza un programma.</strong></p>${cBtns}<p class="note" id="cGps"></p><p class="err" id="cMsg"></p>${hrBox()}<p class="note" style="margin:10px 0 0">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>${myKg()?'':`<p class="note" style="margin:6px 0 0">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}</div>` : rpPlansHTML()}
+    ${PRE?'':`<div class="card cspeed" ${TM?'hidden':''}><div id="cGauge"></div><div class="cvnum"><b id="cV">0,0</b><span>km/h</span></div>
       <div class="cvsub"><span>Media <b id="cVavg">0</b> km/h</span><span>Massima <b id="cVmax">0</b> km/h</span></div>${corsa?'<p class="note" id="cGps"></p>':''}</div>
     ${corsa?'':hrBox()}
     <div class="card cstats">
@@ -4364,16 +4366,15 @@ function viewCorsa(){
       <div><span>Calorie</span><b id="cK">0</b></div>
       <div class="cpar"><span>Parziale km in corso</span><b id="cPar">0:00</b></div>
     </div>
-    ${corsa?cBtns+hrBox():''}
+    ${cBtns+hrBox()}
     ${myKg()?'':`<p class="note">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}
     <div class="cmapgl" id="cMapGL" ${TM?'hidden':''}><button class="btn small" id="cCenter" type="button" hidden>◎ Segui la mia posizione</button></div>
     <div class="card cmap" id="cMap" ${TM?'hidden':''}></div>
     <div class="card" id="cLaps" hidden></div>
-    ${corsa?'':'<p class="note" id="cGps"></p>'}<p class="err" id="cMsg"></p>
+    <p class="err" id="cMsg"></p>`}
     ${corsa&&canListen?`<div class="chips wrapchips qa" role="group" aria-label="Comandi a voce"><button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button></div><div class="micbar" id="micBar" hidden></div>`:''}
-    ${corsa?'':cBtns}
-    ${corsa?`<button class="btn ghost small" id="cDrop" style="margin-top:6px">Annulla senza salvare</button>`:''}
-    <p class="lead" style="margin-top:14px">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>
+    ${corsa?`<button class="btn ghost small" id="cDrop" style="margin-top:6px">Annulla senza salvare</button>
+    <p class="lead" style="margin-top:14px">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>`:''}
     ${runProgress()}
     ${past.length?`<div class="group-title"><h2>Ultime corse</h2></div>${past.map(w=>`<div class="card"><p style="margin:0 0 4px"><strong>${df.format(new Date(w.at))}</strong></p><p style="margin:0">${kmTxt(w.run.m)} km · ${fmtDur(w.run.sec)} · passo ${paceTxt(w.run.sec,w.run.m)} · ${w.run.kcal!=null?w.run.kcal:kcalOf(w.run.m)} kcal</p>${pathSVG(w.run.pts,340,160,w.run.kms)}<div class="confirm"><button class="btn ghost small" type="button" data-delrun="${w.id}">Elimina</button></div></div>`).join('')}${delAllHTML('run')}`:''}
   </section>`;
@@ -4382,6 +4383,7 @@ function viewCorsa(){
   bindDelOne(()=>keepScroll(viewCorsa)); bindDelAll(()=>keepScroll(viewCorsa));
   on('cCenter', ()=>{ cmapFollow=true; document.getElementById('cCenter').hidden=true; updMap(); });
   cmapReady=false; mountMap();
+  $app.querySelectorAll('[data-cmode]').forEach(b=>b.onclick=()=>{ rplan.mode=b.dataset.cmode; rpSave(); viewCorsa(); });
   on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
   on('cDrop', ()=>{ const b=document.getElementById('cDrop'); if(b.dataset.sure){ corsaFinish(false); } else { b.dataset.sure='1'; b.textContent='Sicuro? Premi ancora per annullare'; } });
   rpBind(); corsaPaint(); hrPaint();
@@ -4565,22 +4567,22 @@ function rpPlansHTML(){
   const lv=rplan.lv, P=RUNPLANS[lv], nx=rpNext(lv);
   const ns = nx && rpGet(lv,nx[0],nx[1]);
   const doneN = Object.keys(rplan.done).filter(k=>k.startsWith(lv+'|')).length, totN=P.weeks.reduce((a,w)=>a+w.length,0);
-  return `<div class="card rplans"><h2 style="font-size:22px;text-transform:uppercase;margin:0 0 4px">Piani di corsa</h2>
-    <p class="note" style="margin:0 0 10px">Basati sugli studi più recenti. La voce ti guida: quando correre, camminare o spingere.</p>
-    <p class="rpgl">Per livello</p><div class="chips" role="group" aria-label="Livello corsa">${Object.keys(RUNPLANS).filter(k=>!RUNPLANS[k].g).map(k=>`<button class="chip" type="button" data-rpl="${k}" aria-pressed="${k===lv}">${RUNPLANS[k].name}</button>`).join('')}</div>
-    <p class="rpgl">Per obiettivo</p><div class="chips" role="group" aria-label="Obiettivo corsa">${Object.keys(RUNPLANS).filter(k=>RUNPLANS[k].g).map(k=>`<button class="chip" type="button" data-rpl="${k}" aria-pressed="${k===lv}">${RUNPLANS[k].name}</button>`).join('')}</div>
-    <p class="rpgl">Dove corri</p><div class="chips" role="group" aria-label="Dove corri"><button class="chip" type="button" data-rptm="0" aria-pressed="${!rplan.tm}">All'aperto (GPS)</button><button class="chip" type="button" data-rptm="1" aria-pressed="${!!rplan.tm}">Tapis roulant</button></div>
-    ${rplan.tm?`<div class="hrage" style="margin-top:8px"><label for="rpVf">La tua velocità facile (km/h), quella a cui riesci a parlare</label><input id="rpVf" inputmode="decimal" value="${kmh(rplan.vf)}"></div>
-    <p class="note" style="margin:6px 0 0">Metti la pendenza all'1%. La voce ti dice la velocità di ogni parte: veloce ${tmSpeed('int')} · soglia ${tmSpeed('sog')} · facile ${tmSpeed('fac')} · recupero ${tmSpeed('rec')} · camminata 5,5–6,5 km/h.</p>`:''}
-    <div class="chips" style="margin-top:8px"><button class="chip" type="button" id="rpMot" aria-pressed="${motOn()}">📣 Voce che motiva</button></div>
-    <p class="lead" style="margin:10px 0 4px">${esc(P.info)}</p><p class="note" style="margin:0 0 10px"><b>${esc(P.days)}</b> · fatte ${doneN} di ${totN}</p>
-    ${ns ? `<div class="rpnext"><span>Prossima: settimana ${nx[0]+1}, giorno ${nx[1]+1}</span><b>${esc(ns.t)}</b><i>Circa ${Math.round(rpTot(ns)/60)} minuti</i>
+  return `<div class="card rplans">
+    ${ns ? `<div class="rpnext"><b class="rpnm">${esc(P.name)}</b><span>Prossima: settimana ${nx[0]+1}, giorno ${nx[1]+1}</span><b>${esc(ns.t)}</b><i>Circa ${Math.round(rpTot(ns)/60)} minuti · fatte ${doneN} di ${totN}</i>
       <button class="btn big" type="button" data-rpgo="${nx[0]}|${nx[1]}">▶ Inizia con la guida</button></div>`
       : `<div class="rpnext"><b>Piano completato! 🎉</b><span>Puoi passare al livello successivo o ricominciare.</span><button class="btn ghost small" type="button" id="rpReset">Ricomincia questo piano</button></div>`}
+    ${hrBox()}
+    <p class="rpgl">Dove corri</p><div class="chips" role="group" aria-label="Dove corri"><button class="chip" type="button" data-rptm="0" aria-pressed="${!rplan.tm}">All'aperto (GPS)</button><button class="chip" type="button" data-rptm="1" aria-pressed="${!!rplan.tm}">Tapis roulant</button><button class="chip" type="button" id="rpMot" aria-pressed="${motOn()}">📣 Voce che motiva</button></div>
+    ${rplan.tm?`<div class="hrage" style="margin-top:8px"><label for="rpVf">La tua velocità facile (km/h), quella a cui riesci a parlare</label><input id="rpVf" inputmode="decimal" value="${kmh(rplan.vf)}"></div>
+    <p class="note" style="margin:6px 0 0">Metti la pendenza all'1%. La voce ti dice la velocità di ogni parte: veloce ${tmSpeed('int')} · soglia ${tmSpeed('sog')} · facile ${tmSpeed('fac')} · recupero ${tmSpeed('rec')} · camminata 5,5–6,5 km/h.</p>`:''}
+    <p class="rpch">Scegli un altro piano</p>
+    <p class="rpgl">Per livello</p><div class="chips" role="group" aria-label="Livello corsa">${Object.keys(RUNPLANS).filter(k=>!RUNPLANS[k].g).map(k=>`<button class="chip" type="button" data-rpl="${k}" aria-pressed="${k===lv}">${RUNPLANS[k].name}</button>`).join('')}</div>
+    <p class="rpgl">Per obiettivo</p><div class="chips" role="group" aria-label="Obiettivo corsa">${Object.keys(RUNPLANS).filter(k=>RUNPLANS[k].g).map(k=>`<button class="chip" type="button" data-rpl="${k}" aria-pressed="${k===lv}">${RUNPLANS[k].name}</button>`).join('')}</div>
+    <details class="more"><summary>Com'è fatto questo piano</summary><p class="note" style="margin:8px 0 0">Basati sugli studi più recenti. La voce ti guida: quando correre, camminare o spingere.</p><p class="lead" style="margin:8px 0 4px">${esc(P.info)}</p><p class="note" style="margin:0 0 8px"><b>${esc(P.days)}</b></p>
+    <div class="rpleg">${['cam','fac','rec','sog','int','all','pro'].map(k=>`<span><u style="background:${RSEG[k].c}"></u>${RSEG[k].n}${RSEG[k].z?' '+Math.round(RSEG[k].z[0]*100)+'–'+Math.round(RSEG[k].z[1]*100)+'%':''}</span>`).join('')}</div>
+    ${hrAge()?'':'<p class="note">Scrivi la tua età nella scheda <a href="#corpo">Corpo</a> (o collega il cardio): così l\'app calcola i tuoi battiti per ogni zona.</p>'}</details>
     <details class="more"><summary>Tutte le settimane</summary><div class="rpweeks">${P.weeks.map((W,w)=>`<div class="rpw"><b>Settimana ${w+1}</b>${W.map((s,d)=>{ const k=rpKey(lv,w,d), dn=rplan.done[k];
       return `<div class="rpd${dn?' ok':''}"><span>${dn?'✓':'G'+(d+1)}</span><p>${esc(s.t)} <small>· ${Math.round(rpTot(s)/60)}'</small></p><button class="btn ghost small" type="button" data-rpgo="${w}|${d}" aria-label="Inizia settimana ${w+1} giorno ${d+1}">▶</button><button class="btn ghost small" type="button" data-rpok="${k}" aria-label="${dn?'Segna da fare':'Segna come fatta'}">${dn?'↺':'✓'}</button></div>`; }).join('')}</div>`).join('')}</div></details>
-    <div class="rpleg">${['cam','fac','rec','sog','int','all','pro'].map(k=>`<span><u style="background:${RSEG[k].c}"></u>${RSEG[k].n}${RSEG[k].z?' '+Math.round(RSEG[k].z[0]*100)+'–'+Math.round(RSEG[k].z[1]*100)+'%':''}</span>`).join('')}</div>
-    ${hrAge()?'':'<p class="note">Scrivi la tua età nella scheda <a href="#corpo">Corpo</a> (o collega il cardio): così l\'app calcola i tuoi battiti per ogni zona.</p>'}
     <details class="more"><summary>Da dove vengono questi piani</summary>${SCI_RUN}</details></div>`;
 }
 function rpBind(){

@@ -4264,5 +4264,10 @@ window.PF_EN={
 "Il piano del nutrizionista, acqua, consigli": "Your nutritionist's plan, water, tips",
 "Lingua, voce e musica, coach, backup": "Language, voice and music, coach, backup",
 "Il PIN per bloccare le foto si mette nella pagina delle foto.": "You set the PIN to lock your photos on the photos page.",
-"Vai alle foto →": "Go to photos →"
+"Vai alle foto →": "Go to photos →",
+/* pagina corsa */
+"Corsa libera": "Free run",
+"Corri come vuoi, senza un programma.": "Run however you like, with no program.",
+"Scegli un altro piano": "Choose another plan",
+"Com'è fatto questo piano": "How this plan works"
 };
