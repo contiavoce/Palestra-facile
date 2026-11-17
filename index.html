@@ -498,6 +498,18 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .cmap{padding:6px}.cpath{width:100%;height:auto;display:block}
 .cempty{padding:40px 10px;text-align:center;opacity:.6}
 .cbtns{display:grid;gap:10px}
+.view.crun{gap:8px;margin-top:-8px}.crun .cspeed:not([hidden])+.cstats{margin-top:-8px;border-top:1px solid var(--line);border-top-left-radius:0;border-top-right-radius:0}.crun .cspeed{border-bottom-left-radius:0;border-bottom-right-radius:0}.crun>*{margin-top:0;margin-bottom:0}
+.crun .cspeed{display:grid;grid-template-columns:44% 1fr;align-items:center;column-gap:6px;padding:4px 10px 4px}
+.crun .cspeed #cGauge{grid-row:1/4}.crun .gauge{max-width:135px}
+.crun .cvnum{margin-top:0}.crun .cvnum b{font-size:40px;line-height:1;display:inline-block;margin-right:4px}.crun .cvsub{flex-direction:column;gap:0;margin-top:0;font-size:13px;line-height:1.3}
+.crun .cspeed #cGps{margin:0;font-size:11px;line-height:1.2}
+.crun .cstats{grid-template-columns:repeat(4,1fr);gap:2px 4px;padding:6px 6px 8px}.crun .cstats span{font-size:10px;letter-spacing:.02em}.crun .cstats b{font-size:22px;line-height:1.15}
+.crun .cpar{display:flex;align-items:center;justify-content:center;gap:10px;padding:3px 8px;margin-top:4px}.crun .cpar span{display:inline;font-size:11px}.crun .cpar b{font-size:22px}
+.crun .cbtns{grid-template-columns:1fr 1fr;gap:8px}.crun .cbtns .btn{padding-top:8px;padding-bottom:8px;min-height:0;font-size:18px}
+.crun .hrrow{flex-wrap:nowrap}.crun .hrrow .btn{flex:1;justify-content:center;white-space:nowrap}
+.crun .hrbox .hrbt{display:none}
+.crun .hrlive{flex-wrap:nowrap;padding:6px 10px;gap:8px}.crun .hrico.big{width:30px;height:30px}.crun .hrlive>b{font-size:30px;flex:none;min-width:0}.crun .hrunit{flex:none}.crun .hrinfo{flex:1 1 auto;font-size:13px;gap:2px}.crun .hrinfo>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.crun .hrlive .btn{white-space:nowrap;flex:none;padding:6px 10px}.crun .hrage{margin-top:4px}
+.crun .rpguide{gap:2px;padding-top:6px;padding-bottom:6px}.crun .rpnow b{font-size:20px}.crun .rpnow span{font-size:30px;line-height:1.1}.crun .rpgh span{font-size:11px}.crun .rpgh small{display:none}.crun .rpz{font-size:13px}.crun .rpbar{height:10px;margin:2px 0}.crun .rpguide .note{font-size:12px;margin:0;line-height:1.3}.crun .rpguide .note:empty,.crun .rpz:empty{display:none}
 .rplans .chips{display:flex;gap:8px;flex-wrap:wrap}.rpgl{margin:8px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .rpnext{display:grid;gap:4px;background:var(--sunk);border-radius:14px;padding:12px;margin:0 0 10px}.rpnext span{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.rpnext b{font-size:19px}.rpnext i{font-style:normal;color:var(--muted);font-size:14px;margin-bottom:6px}
 .rpweeks{display:grid;gap:12px}.rpw{display:grid;gap:4px}.rpw>b{font-size:15px}
@@ -3654,7 +3666,7 @@ function hrPaint(){
       ${hrAge()?'':`<div class="hrage"><label for="hrAgeIn">Per le zone scrivi la tua età</label><input id="hrAgeIn" inputmode="numeric" maxlength="2" placeholder="anni"><button class="btn small" type="button" id="hrAgeOk">OK</button></div>`}`;
   }
   if(hr.msg) h += `<p class="note hrmsg">${esc(hr.msg)}</p>`;
-  if(hr.state==='off' && !canBT && !hr.msg) h += `<p class="note hrmsg">Il collegamento Bluetooth funziona con Chrome su Android. Puoi comunque vedere come funziona con «Prova senza fascia».</p>`;
+  if(hr.state==='off' && !canBT && !hr.msg) h += `<p class="note hrmsg hrbt">Il collegamento Bluetooth funziona con Chrome su Android. Puoi comunque vedere come funziona con «Prova senza fascia».</p>`;
   box.innerHTML = h;
   const on=(id,f)=>{ const e=document.getElementById(id); if(e) e.onclick=f; };
   on('hrGo', hrConnect); on('hrSim', hrSimStart); on('hrX', hrOff);
@@ -4335,13 +4347,16 @@ function viewCorsa(){
   if(corsa && !corsa.paused){ gpsOn(); corsaLoop(); }
   const past = S.workouts.filter(w=>w.run).slice(0,5);
   const TM = !!(corsa&&corsa.plan&&corsa.plan.tm);
-  $app.innerHTML = `<section class="view">
-    <div class="chead"><div><div class="eyebrow">Corsa</div><h1 style="font-size:40px;text-transform:uppercase">${TM?'Tapis roulant':'All\'aperto'}</h1></div><img src="${RUN_IMG}" alt="" aria-hidden="true"></div>
+  const cBtns = `<div class="cbtns">${!corsa ? `<button class="btn big" id="cGo">▶ Inizia la corsa</button>`
+      : corsa.paused ? `<button class="btn big" id="cRes">▶ Riprendi</button><button class="btn ghost big" id="cEnd">■ Fine e salva</button>`
+      : `<button class="btn ghost big" id="cPau">❚❚ Pausa</button><button class="btn big" id="cEnd">■ Fine e salva</button>`}</div>`;
+  $app.innerHTML = `<section class="view${corsa?' crun':''}">
+    <div class="chead" ${corsa?'hidden':''}><div><div class="eyebrow">Corsa</div><h1 style="font-size:40px;text-transform:uppercase">${TM?'Tapis roulant':'All\'aperto'}</h1></div><img src="${RUN_IMG}" alt="" aria-hidden="true"></div>
     ${corsa ? rpGuideHTML() : rpPlansHTML()}
     <div class="group-title" ${corsa?'hidden':''}><h2>Oppure corsa libera</h2></div>
     <div class="card cspeed" ${TM?'hidden':''}><div id="cGauge"></div><div class="cvnum"><b id="cV">0,0</b><span>km/h</span></div>
-      <div class="cvsub"><span>Media <b id="cVavg">0</b> km/h</span><span>Massima <b id="cVmax">0</b> km/h</span></div></div>
-    ${hrBox()}
+      <div class="cvsub"><span>Media <b id="cVavg">0</b> km/h</span><span>Massima <b id="cVmax">0</b> km/h</span></div>${corsa?'<p class="note" id="cGps"></p>':''}</div>
+    ${corsa?'':hrBox()}
     <div class="card cstats">
       <div><span>Tempo</span><b id="cT">0:00</b></div>
       <div><span>Km</span><b id="cKm">0,00</b></div>
@@ -4349,15 +4364,14 @@ function viewCorsa(){
       <div><span>Calorie</span><b id="cK">0</b></div>
       <div class="cpar"><span>Parziale km in corso</span><b id="cPar">0:00</b></div>
     </div>
+    ${corsa?cBtns+hrBox():''}
     ${myKg()?'':`<p class="note">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}
     <div class="cmapgl" id="cMapGL" ${TM?'hidden':''}><button class="btn small" id="cCenter" type="button" hidden>◎ Segui la mia posizione</button></div>
     <div class="card cmap" id="cMap" ${TM?'hidden':''}></div>
     <div class="card" id="cLaps" hidden></div>
-    <p class="note" id="cGps"></p><p class="err" id="cMsg"></p>
+    ${corsa?'':'<p class="note" id="cGps"></p>'}<p class="err" id="cMsg"></p>
     ${corsa&&canListen?`<div class="chips wrapchips qa" role="group" aria-label="Comandi a voce"><button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button></div><div class="micbar" id="micBar" hidden></div>`:''}
-    <div class="cbtns">${!corsa ? `<button class="btn big" id="cGo">▶ Inizia la corsa</button>`
-      : corsa.paused ? `<button class="btn big" id="cRes">▶ Riprendi</button><button class="btn ghost big" id="cEnd">■ Fine e salva</button>`
-      : `<button class="btn ghost big" id="cPau">❚❚ Pausa</button><button class="btn big" id="cEnd">■ Fine e salva</button>`}</div>
+    ${corsa?'':cBtns}
     ${corsa?`<button class="btn ghost small" id="cDrop" style="margin-top:6px">Annulla senza salvare</button>`:''}
     <p class="lead" style="margin-top:14px">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>
     ${runProgress()}
