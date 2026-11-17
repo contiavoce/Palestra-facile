@@ -4268,6 +4268,8 @@ window.PF_EN={
 /* pagina corsa */
 "Corsa libera": "Free run",
 "Obiettivi": "Goals",
+"🗑 Elimina senza salvare": "🗑 Delete without saving",
+"Sicuro? Premi ancora per eliminare la corsa": "Sure? Press again to delete the run",
 "Corri come vuoi, senza un programma.": "Run however you like, with no program.",
 "Scegli un altro piano": "Choose another plan",
 "Com'è fatto questo piano": "How this plan works"
