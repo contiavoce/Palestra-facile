@@ -4267,6 +4267,7 @@ window.PF_EN={
 "Vai alle foto →": "Go to photos →",
 /* pagina corsa */
 "Corsa libera": "Free run",
+"Obiettivi": "Goals",
 "Corri come vuoi, senza un programma.": "Run however you like, with no program.",
 "Scegli un altro piano": "Choose another plan",
 "Com'è fatto questo piano": "How this plan works"
