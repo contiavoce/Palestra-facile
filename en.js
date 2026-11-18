@@ -2,6 +2,12 @@
 window.PF_EN={
 /* come prendere le misure + massa grassa stimata (metodo Marina USA) */
 "Collo": "Neck",
+"Sei": "You are",
+"👤 Il mio profilo": "👤 My profile",
+"Il mio profilo": "My profile",
+"{*} anni": "{*} years",
+"manca l'altezza": "height missing",
+"altezza (in «Il mio profilo», in alto)": "height (in «My profile», at the top)",
 "Sesso": "Sex",
 "Uomo": "Man",
 "Donna": "Woman",

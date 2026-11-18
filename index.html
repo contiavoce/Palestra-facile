@@ -364,6 +364,19 @@ nav.tabs a[aria-current="page"] svg{background:var(--sunk)}
 .mgrid .wide{grid-column:1/-1}
 #bForm,#pForm{grid-auto-flow:row dense}
 .mgrid select{border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--bg);font-size:17px;width:100%;min-width:0;color:var(--fg)}
+details.card.prof{padding:0;gap:0}
+.psex{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.psex .chip{flex:1;font-size:16px;padding:10px;justify-content:center;text-align:center}
+.psex .chips{display:flex;gap:8px}
+.prof summary{list-style:none;display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer}
+.prof summary::-webkit-details-marker{display:none}
+.prof summary span{font-weight:600;color:var(--fg);white-space:nowrap}
+.prof summary small{flex:1;min-width:0;color:var(--muted);font-size:14px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prof summary b{font-size:22px;color:var(--muted);transition:transform .2s}
+.prof[open] summary b{transform:rotate(90deg)}
+.prof form,.prof .note{padding:0 16px}
+.prof form{padding-top:4px}
+.prof .note{padding-bottom:14px}
 .comp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:6px 0 10px}
 .comp div{background:var(--sunk);border-radius:10px;padding:10px 8px;text-align:center}
 .comp b small{font-size:17px}
@@ -4729,7 +4742,7 @@ function compHTML(C, sex, h){
   const eE = last('fatEst'), eF = last('fat'), w = last('weight');
   const miss = [];
   if(!last('waist')) miss.push('vita'); if(!last('neck')) miss.push('collo'); if(sex==='f' && !last('hips')) miss.push('fianchi');
-  if(!h) miss.push('altezza (nel Profilo qui sotto)'); if(!w) miss.push('peso');
+  if(!h) miss.push('altezza (in «Il mio profilo», in alto)'); if(!w) miss.push('peso');
   const gr = x => { const g = Math.round(x*10)*100; return `${Math.floor(g/1000)} kg <small>${g%1000} g</small>`; };
   const box = (f, src) => { const kg = w ? w.weight : null;
     return `<div class="comp"><div><b>${kgf(f)}%</b><span>Massa grassa</span></div><div><b>${kg?gr(kg*f/100):'—'}</b><span>Grasso</span></div><div><b>${kg?gr(kg*(100-f)/100):'—'}</b><span>Massa magra</span></div></div><p class="note">${src}</p>`; };
@@ -4769,6 +4782,16 @@ function viewBody(){
       <div><b>${bmi?kgf(bmi):'—'}</b><span>${cat||'IMC'}</span></div>
       <div><b>${diff!=null?sign(diff):'—'}</b><span>Dall'inizio</span></div>
     </div>
+    <details class="card prof"><summary><span>👤 Il mio profilo</span><small>${[sex==='f'?'Donna':'Uomo', age?Math.round(age)+' anni':'', h?kgf(h)+' cm':''].filter(Boolean).join(' · ')}${h?'':' · manca l\'altezza'}</small><b aria-hidden="true">›</b></summary>
+      <form id="pForm" class="mgrid">
+        <div class="wide psex"><span>Sei</span><div class="chips" role="group" aria-label="Sesso"><button class="chip" type="button" data-psex="m" aria-pressed="${sex!=='f'}">Uomo</button><button class="chip" type="button" data-psex="f" aria-pressed="${sex==='f'}">Donna</button></div><input type="hidden" id="pSex" value="${sex==='f'?'f':'m'}"></div>
+        <label>Età<input id="pAge" inputmode="numeric" value="${age?Math.round(age):''}" placeholder="es. 30"></label>
+        <label>Altezza (cm)<input id="pHeight" inputmode="decimal" value="${h?kgf(h):''}" placeholder="es. 175"></label>
+        <label class="wide">Peso obiettivo (kg)<input id="pGoal" inputmode="decimal" value="${goal?kgf(goal):''}" placeholder="es. 72"></label>
+        <button class="btn ghost wide" type="submit">Salva profilo</button>
+      </form>
+      <p class="note" id="pMsg">L'altezza serve per calcolare l'IMC (indice di massa corporea) e la massa grassa. Il sesso serve per la formula della massa grassa.</p>
+    </details>
     ${goal && lw ? `<p class="lead">Obiettivo ${kgf(goal)} kg: ${Math.abs(lw.weight-goal)<0.05?'<b>raggiunto!</b>':`mancano <b>${kgf(Math.abs(lw.weight-goal))} kg</b>`}.</p>` : ''}
     <section class="card"><h2>Nuova misurazione</h2>
       <form id="bForm" class="mgrid">
@@ -4787,16 +4810,6 @@ function viewBody(){
       : '<p class="note">Salva la prima misurazione: qui vedrai i grafici di peso e misure nel tempo.</p>'}
     </section>
     ${bodyPhotosHTML()}
-    <section class="card"><h2>Profilo</h2>
-      <form id="pForm" class="mgrid">
-        <label>Altezza (cm)<input id="pHeight" inputmode="decimal" value="${h?kgf(h):''}" placeholder="es. 175"></label>
-        <label>Peso obiettivo (kg)<input id="pGoal" inputmode="decimal" value="${goal?kgf(goal):''}" placeholder="es. 72"></label>
-        <label>Età<input id="pAge" inputmode="numeric" value="${age?Math.round(age):''}" placeholder="es. 30"></label>
-        <label>Sesso<select id="pSex"><option value="m"${sex!=='f'?' selected':''}>Uomo</option><option value="f"${sex==='f'?' selected':''}>Donna</option></select></label>
-        <button class="btn ghost wide" type="submit">Salva profilo</button>
-      </form>
-      <p class="note" id="pMsg">L'altezza serve per calcolare l'IMC (indice di massa corporea) e la massa grassa. Il sesso serve per la formula della massa grassa.</p>
-    </section>
     ${E.length ? `<h2 style="font-size:22px;text-transform:uppercase">Storico misure</h2>
     <div class="log2">${E.slice().reverse().slice(0,40).map(e=>`<details class="w"><summary><b>${df.format(new Date(e.at))}</b><span>${e.weight!=null?kgf(e.weight)+' kg':''}</span></summary>
       <div class="body">${MEAS.filter(m=>e[m[0]]!=null).map(m=>`<p><b>${m[1]}</b>: ${kgf(e[m[0]])} ${m[2]}</p>`).join('')}
@@ -4818,6 +4831,7 @@ function viewBody(){
     if(same) Object.assign(same, vals); else (S.body.entries=S.body.entries||[]).push(Object.assign({id:'b'+Date.now().toString(36), at:day}, vals));
     saveBody(); keepScroll(viewBody);
   };
+  $app.querySelectorAll('[data-psex]').forEach(b=>b.onclick=()=>{ document.getElementById('pSex').value=b.dataset.psex; $app.querySelectorAll('[data-psex]').forEach(x=>x.setAttribute('aria-pressed', String(x===b))); S.body.sex=b.dataset.psex; saveBody(); const mh=document.getElementById('mHelp'); if(mh) mh.remove(); const sm=$app.querySelector('.prof summary small'); if(sm) sm.textContent=sm.textContent.replace(/^(Uomo|Donna)/, b.dataset.psex==='f'?'Donna':'Uomo'); });
   document.getElementById('pForm').onsubmit = e=>{
     e.preventDefault();
     S.body.height = num(document.getElementById('pHeight').value) || '';
