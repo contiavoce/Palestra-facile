@@ -168,6 +168,11 @@ nav.tabs a[aria-current="page"] svg{stroke-width:2.4}
 .pill{display:inline-block;font-style:normal;font-family:var(--display);font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:1px 8px;border-radius:999px;margin-right:6px;vertical-align:1px}
 .pill.s{background:#2FA86622;color:#1f8a50}.pill.m{background:#F0A03026;color:#b06d00}.pill.w{background:var(--sunk);color:var(--muted)}
 .next.adv{display:grid;gap:6px}.next.adv p{margin:0}
+.testcta{border-left:4px solid #E0483A}.testcta .cgo{color:#E0483A}
+.tsteps ol{margin:0;padding-left:20px;display:grid;gap:6px}
+.tres{background:var(--sunk);border-radius:12px;padding:14px;display:grid;gap:2px;border-left:4px solid #2FA866}.tres.warn{border-left-color:#F0A030}.tres b{font-family:var(--display);font-size:30px;line-height:1.1}.tres span{color:var(--muted);font-size:15px}
+.tintro p{margin:0}
+.tdone{font-weight:700;color:var(--muted);padding-right:4px}
 .advline{background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:15px}
 .errs .fx{display:block;color:var(--muted);font-size:14px;margin-top:2px}
 .errs .fx b{color:var(--green,#1f9d55)}
@@ -3172,7 +3177,7 @@ function progressCard(x){
     return `<section class="card"><h2>I tuoi progressi</h2><div class="hist">${h.slice(-5).reverse().map(s=>`<div><b>${s.sets.length} ${s.sets.length===1?'volta':'serie'}</b><span>${df.format(new Date(s.at))}</span></div>`).join('')}</div></section>`;
   }
   const h = histFor(x.id), G = GROUPS[x.g];
-  if(!h.length) return `<section class="card"><h2>I tuoi progressi</h2><p class="note">Quando registri una serie durante una sessione, qui vedrai record, grafico e storico di questo esercizio.</p></section>`;
+  if(!h.length) return `<section class="card"><h2>I tuoi progressi</h2><p class="note">Quando registri una serie durante una sessione, qui vedrai record, grafico e storico di questo esercizio.</p>${nextTip(x)}${testable(x)&&!TST[x.id]?`<a class="btn ghost small" href="#test-${x.id}">Trova il peso di partenza con il test</a>`:''}</section>`;
   const r = recordsOf(h);
   return `<section class="card"><h2>I tuoi progressi</h2>
     <div class="dose rec"><div><b>${kgf(r.kg)}</b><span>Peso max kg</span><small>× ${r.kgReps}</small></div><div><b>${kgf(r.best)}</b><span>Massimale stimato</span><small>kg per 1 rip.</small></div><div><b>${r.reps}</b><span>Più ripetizioni</span><small>in una serie</small></div></div>
@@ -3275,7 +3280,7 @@ function viewSessions(sub){
     <div class="group-title"><h2>Piani per livello</h2><span class="count">${SESS.filter(s=>s.lvl).length}</span></div>
     <p class="lead">Basati sulle linee guida 2026 e sugli studi scientifici più recenti. Scegli il tuo livello.</p>
     <div class="chips" role="group" aria-label="Livello">${Object.keys(LIVELLI).map(k=>`<button class="chip" type="button" data-lvl="${k}" aria-pressed="${k===lvlSel}">${LIVELLI[k].name}</button>`).join('')}</div>
-    ${Object.keys(LIVELLI).map(k=>`<div class="lvlbox" data-box="${k}" ${k===lvlSel?'':'hidden'}><p class="lead">${esc(LIVELLI[k].info)}</p>
+    ${Object.keys(LIVELLI).map(k=>`<div class="lvlbox" data-box="${k}" ${k===lvlSel?'':'hidden'}><p class="lead">${esc(LIVELLI[k].info)}</p>${testCard(k)}
       <div class="sessions">${SESS.filter(s=>s.lvl===k).map(s=>sessCard(s,false)).join('')}</div></div>`).join('')}
     <div class="group-title"><h2>Schede pronte</h2><span class="count">${SESS.filter(s=>!s.lvl&&!s.cl).length}</span></div>
     <p class="lead">Premi Inizia: l'app ti guida esercizio per esercizio, registra peso e ripetizioni e fa partire il recupero.</p>
@@ -3418,7 +3423,7 @@ function startRun(id){
     return;
   }
   if(!run){
-    run = {id, name:s.name, plan:s.items.map(i=>({ex:i[0], sets:+i[1]||1, reps:String(i[2]), rest:+i[3]||0})), i:0, set:1, restEnd:0, start:Date.now(), sets:[]};
+    run = {id, name:s.name, plan:s.items.map(i=>{ const r=String(goalReps(i[0], String(i[2]), s.lvl)), heavy=tGoal()==='for' && r!==String(i[2]) && !/^8/.test(r); return {ex:i[0], sets:+i[1]||1, reps:r, rest: heavy ? Math.max(+i[3]||0, 150) : (+i[3]||0)}; }), i:0, set:1, restEnd:0, start:Date.now(), sets:[]};
     saveRun();
   }
   try{ navigator.wakeLock && navigator.wakeLock.request('screen').then(w=>wake=w).catch(()=>{}) }catch(e){}
@@ -4171,12 +4176,132 @@ function muscleMap(ws){
   </section>`;
 }
 
+/* ---------- TEST DEI PESI DI PARTENZA ----------
+   Serie di prova fino a 1–2 ripetizioni dalla fatica (massimo 15), massimale stimato con Epley
+   (contando anche le ripetizioni rimaste), peso di partenza prudente per il limite alto delle ripetizioni del piano con 2–3 di riserva. */
+let TST = store.get('start', {});
+const saveTST = ()=>store.set('start', TST);
+const testable = x => x && !isTime(x) && x.e!=='corpo' && x.id!=='trazioni-assistite' && x.g!=='cardio';
+const testSess = () => SESS.filter(s=>s.lvl);
+const tMax = () => ((getSess(testSid)||{}).lvl==='esperto') ? 10 : 15;
+let testSid = store.get('testSid', 'liv-p-a');
+function testPlan(sid){ const s=getSess(sid)||testSess()[0]; return {s, items:(s.items||[]).filter(it=>testable(EXMAP[it[0]])).map(it=>({ex:it[0], reps:goalReps(it[0], it[2], s.lvl)}))}; }
+const tStep = (x,kg) => x.e==='manubri' ? (kg<10?1:2) : 2.5;
+function testCalc(x, kg, reps, repsTxt){
+  const R = repRange(repsTxt || (x.dose&&x.dose[1])) || [10,12], hi = R[1];
+  const step = tStep(x,kg);
+  if(reps>tMax()){ let n=Math.ceil(kg*(1+(reps+1.5)/30)/(1+10/30)/step)*step; if(n<=kg) n=kg+step; return {retry:'up', kg:n}; }
+  if(reps<4){ let n=Math.floor(kg*(1+(reps+1.5)/30)/(1+10/30)/step)*step; if(n>=kg) n=kg-step; return {retry:'down', kg:Math.max(step,n)}; }
+  const e1 = kg*(1+(reps+1.5)/30);
+  const start = Math.min(startKg(x, e1, hi), kg);
+  return {kg:start, e1, lo:R[0], hi};
+}
+const SCI_T = `<div class="sci">
+  <p>${pill('s')}<b>Una serie di prova basta per stimare la forza.</b> Con una serie fino a 10 ripetizioni circa, le formule stimano il massimale con un errore di circa 5–10%. Oltre le 10 ripetizioni sono meno precise: per questo il test si ferma a 15.<cite>LeSuer e coll., J Strength Cond Res 1997 · Reynolds e coll., J Strength Cond Res 2006</cite></p>
+  <p>${pill('m')}<b>Fermarsi a 1–2 dalla fine.</b> Chi inizia di solito sbaglia di circa una ripetizione quando stima quante gliene restano, ma l'errore diminuisce vicino alla fatica. Il test chiede di arrivare quasi alla fine e aggiunge le ripetizioni rimaste al calcolo.<cite>Halperin e coll., Sports Medicine 2022 (meta-analisi) · Zourdos e coll., J Strength Cond Res 2016</cite></p>
+  <p>${pill('s')}<b>Si parte dal 60–70% del massimo.</b> Per chi inizia la linea guida consiglia pesi tra il 60 e il 70% del massimale. Il peso di partenza è calcolato perché tu faccia le ripetizioni del piano lasciandone 2–3 di riserva, quindi resta in questa zona.<cite>ACSM, Progression models in resistance training, Med Sci Sports Exerc 2009</cite></p>
+  <p>${pill('m')}<b>Chi riprende dopo una pausa perde poco e recupera in fretta.</b> La forza cala poco nelle prime 3–4 settimane di stop e torna più velocemente di quanto ci era voluto la prima volta. Se non ti alleni da più di un mese, l'app ti propone di rifare il test.<cite>Bosquet e coll., Scand J Med Sci Sports 2013 (meta-analisi) · Mujika e Padilla, Sports Medicine 2000</cite></p>
+  <p>${pill('w')}<b>Un punto di partenza prudente, non un voto.</b> Nelle prime settimane migliori soprattutto perché impari il movimento, e la doppia progressione alzerà il peso da sola. Ogni macchina è diversa: il risultato vale per la macchina che hai usato. La formula è quella di Epley.<cite>Moritani e deVries, Am J Phys Med 1979</cite></p></div>`;
+const TCARD = {principiante:'Prima volta in palestra? In 20 minuti trovi il peso giusto per ogni macchina, senza rischiare carichi troppo pesanti.',
+  intermedio:'Riprendi dopo una pausa o hai cambiato palestra? Ritrova i pesi giusti prima di ripartire con il piano.',
+  esperto:'Dopo una pausa o con macchine nuove: serie di prova fino a 10 ripetizioni, la stima più precisa.'};
+/* obiettivo: cambia le ripetizioni (e quindi il peso) degli esercizi con i pesi */
+const TGOALS = {
+  mus:{n:'Più muscoli', d:'Le ripetizioni del piano, di solito 8–15, con 1–3 di riserva.'},
+  for:{n:'Più forza', d:'Pesi più alti e meno ripetizioni sui grandi esercizi, recuperi più lunghi.'},
+  dim:{n:'Dimagrire e tonificare', d:'10–15 ripetizioni con pesi impegnativi: servono a tenere i muscoli mentre perdi grasso.'},
+  res:{n:'Resistenza', d:'15–20 ripetizioni con pesi più leggeri.'} };
+const ISO = new Set(['alzate-laterali','alzate-frontali','reverse-fly','face-pull','leg-extension','leg-curl','polpacci','abductor','adductor','croci-cavi','pectoral-machine','kickback','pullover-cavo']);
+function tGoal(){ const g=store.get('tgoal',''); if(TGOALS[g]) return g; try{ const o=objs(); return ['for','mus','dim','res'].find(k=>o.includes(k))||'mus'; }catch(e){ return 'mus'; } }
+function goalReps(id, planReps, lvl){
+  const x=EXMAP[id]; if(!testable(x)) return planReps;
+  const g=tGoal(), iso = ISO.has(id) || x.g==='braccia' || x.g==='core';
+  if(g==='for') return iso ? '8–12' : lvl==='esperto' ? '3–6' : lvl==='intermedio' ? '5–8' : '8–10';
+  if(g==='dim') return '10–15';
+  if(g==='res') return '15–20';
+  return planReps;
+}
+const startKg = (x, e1, hi) => { const st=tStep(x,e1*.6); return Math.max(st, Math.floor(e1/(1+(hi+2.5)/30)/st)*st); };
+const SCI_G = `<div class="sci">
+  <p>${pill('s')}<b>Forza: pesi più alti.</b> I muscoli crescono in modo simile con pesi alti o bassi, ma la forza massima cresce di più con pesi alti e poche ripetizioni. Chi inizia parte comunque da 8–10 ripetizioni, per imparare il movimento in sicurezza. Recuperi di 2–3 minuti sui grandi esercizi aiutano a mantenere i carichi.<cite>Schoenfeld e coll., J Strength Cond Res 2017 · Lopez e coll., Med Sci Sports Exerc 2021 · Schoenfeld e coll., J Strength Cond Res 2016 · ACSM 2009 e 2026</cite></p>
+  <p>${pill('s')}<b>Muscoli: conta arrivare vicino alla fatica.</b> Da 6 a 30 ripetizioni la crescita è simile, se la serie finisce con poche ripetizioni di riserva. Per questo l'app usa le ripetizioni del piano.<cite>Schoenfeld e coll., J Strength Cond Res 2017 · Robinson e coll., Sports Medicine 2024</cite></p>
+  <p>${pill('m')}<b>Dimagrire e "tonificare".</b> Tonificare vuol dire tenere o aumentare i muscoli mentre cala il grasso. Il grasso si perde soprattutto con l'alimentazione. I pesi impegnativi servono a non perdere muscolo: pesi troppo leggeri non bastano. Quando si mangia meno del necessario, i muscoli crescono meno.<cite>Murphy e Koehler, Scand J Med Sci Sports 2022 (meta-analisi) · ACSM 2026</cite></p>
+  <p>${pill('m')}<b>Resistenza: più ripetizioni.</b> Serie da 15–20 o più, con pesi più leggeri, migliorano la capacità del muscolo di lavorare a lungo.<cite>Campos e coll., Eur J Appl Physiol 2002 · ACSM 2009</cite></p></div>`;
+function testCard(k){
+  return `<a class="card ccard testcta" href="#testlvl-${k}"><div><b>Test dei pesi di partenza</b><span>${TCARD[k]||TCARD.principiante}</span><i class="cgo">Fai il test →</i></div></a>`;
+}
+function viewTest(){
+  view='test'; brand(); setTab('sessioni'); backBar('In palestra','#sessioni-palestra');
+  const P = testPlan(testSid);
+  $app.innerHTML = `<section class="view">
+    <div><div class="eyebrow">Allenati</div><h1 style="font-size:36px;text-transform:uppercase">Test dei pesi di partenza</h1></div>
+    <section class="card tintro"><h2>A cosa serve</h2>
+      <p>Il primo giorno è difficile sapere quanto caricare. Con un peso troppo alto rischi di farti male o di muoverti male. Con uno troppo basso il muscolo non riceve lo stimolo per crescere.</p>
+      <p>Con questo test fai <b>una sola serie di prova</b> per ogni macchina del piano, senza mai arrivare allo sfinimento. Dal numero di ripetizioni l'app stima la tua forza, come negli studi scientifici, e ti dice <b>con quanti chili partire</b> per ogni esercizio. Il peso proposto è volutamente prudente.</p>
+      <p>${{principiante:'Se è la prima volta, chiedi all\'istruttore di guardarti nei primi esercizi.', intermedio:'Se non ti alleni da più di un mese, la forza torna in fretta: meglio ripartire da qui che dai pesi di una volta.', esperto:'Per te la serie di prova si ferma a 10 ripetizioni: la stima è più precisa e adatta ai pesi più alti.'}[(getSess(testSid)||{}).lvl]||''}</p>
+      <p>Dopo il test, l'app <b>aumenta i pesi da sola</b>: quando fai tutte le ripetizioni previste in ogni serie, ti dice di salire un po' la volta dopo. Ci vogliono circa 20 minuti.</p></section>
+    <section class="card"><h2>Il tuo obiettivo</h2>
+      <p class="note" style="margin:0">Il peso di partenza cambia in base al risultato che vuoi ottenere.</p>
+      <div class="chips wrapchips" role="group" aria-label="Obiettivo">${Object.keys(TGOALS).map(k=>`<button class="chip" type="button" data-tgoal="${k}" aria-pressed="${k===tGoal()}">${TGOALS[k].n}</button>`).join('')}</div>
+      <p style="margin:0">${TGOALS[tGoal()].d}</p>
+      <details class="more"><summary>Perché queste ripetizioni?</summary>${SCI_G}</details></section>
+    <section class="card tsteps"><h2>Come si fa</h2><ol>
+      <li><b>Riscaldati</b> con 5 minuti di cardio leggero.</li>
+      <li>Per ogni esercizio fai prima <b>10 ripetizioni molto leggere</b>.</li>
+      <li>Scegli un peso che ti sembra <b>medio</b> e fai più ripetizioni che puoi, con il movimento perfetto. <b>Fermati quando senti che ne potresti fare ancora solo 1 o 2.</b> Al massimo ${tMax()}.</li>
+      <li>Scrivi peso e ripetizioni. Se il peso era troppo leggero o troppo pesante, l'app ti dice con quale riprovare dopo <b>2 minuti di riposo</b>.</li></ol>
+      <p class="note">Non arrivare mai a cedimento e non sacrificare la tecnica. Se senti dolore (non fatica), fermati.</p></section>
+    
+    <h2 style="font-size:22px;text-transform:uppercase;margin-top:4px">Scegli la scheda</h2>
+    <div class="chips wrapchips" role="group" aria-label="Scheda">${testSess().filter(s=>s.lvl===P.s.lvl).map(s=>`<button class="chip" type="button" data-tsid="${s.id}" aria-pressed="${s.id===P.s.id}">${esc(s.name)}</button>`).join('')}</div>
+    <div class="list">${P.items.map(it=>{ const x=EXMAP[it.ex], t=TST[it.ex]; return `<a class="row" href="#test-${it.ex}"><span class="bar" style="background:${GROUPS[x.g].color}"></span><div><strong>${esc(x.name)}</strong><small>${t?`Partenza: <b>${kgf(startKg(x,t.e1,(repRange(it.reps)||[0,12])[1]))} kg</b> × ${esc(it.reps)} ripetizioni`:`Da fare · ${esc(it.reps)} ripetizioni`}</small></div><span class="tdone">${t?'✓':'→'}</span></a>`; }).join('')}</div>
+    <details class="more"><summary>Su cosa si basa il test</summary>${SCI_T}</details>
+  </section>`;
+  $app.querySelectorAll('[data-tsid]').forEach(b=>b.onclick=()=>{ testSid=b.dataset.tsid; store.set('testSid',testSid); keepScroll(viewTest); });
+  $app.querySelectorAll('[data-tgoal]').forEach(b=>b.onclick=()=>{ store.set('tgoal',b.dataset.tgoal); keepScroll(viewTest); });
+}
+function viewTestEx(id, res, inp){
+  const x = EXMAP[id]; if(!testable(x)) return viewTest();
+  view='testex'; brand(); setTab('sessioni'); backBar('Test','#test');
+  const P = testPlan(testSid), it = P.items.find(q=>q.ex===id), repsTxt = it ? it.reps : goalReps(id, x.dose[1], P.s.lvl);
+  const k = P.items.findIndex(q=>q.ex===id), nx = k>=0 ? P.items.slice(k+1).find(q=>!TST[q.ex]) || P.items.find(q=>!TST[q.ex] && q.ex!==id) : null;
+  const t = TST[id];
+  const out = !res ? (t ? `<div class="tres"><div class="eyebrow">Peso di partenza</div><b>${kgf(startKg(x,t.e1,(repRange(repsTxt)||[0,t.hi])[1]))} kg</b><span>per ${esc(repsTxt)} ripetizioni (${TGOALS[tGoal()].n.toLowerCase()}) · test del ${dshort.format(new Date(t.at))}</span></div>` : '')
+    : res.retry ? `<div class="tres warn"><div class="eyebrow">${res.retry==='up'?'Troppo leggero':'Troppo pesante'}</div><b>Riprova con ${kgf(res.kg)} kg</b><span>Riposa 2 minuti, poi rifai la serie di prova.</span></div>`
+    : `<div class="tres"><div class="eyebrow">Peso di partenza</div><b>${kgf(res.kg)} kg</b><span>per ${res.lo}–${res.hi} ripetizioni (${TGOALS[tGoal()].n.toLowerCase()}). Forza massima stimata (1 ripetizione): ${kgf(res.e1)} kg.</span></div>`;
+  $app.innerHTML = `<section class="view">
+    <div><div class="eyebrow">Test dei pesi di partenza${k>=0?` · ${k+1} di ${P.items.length}`:''}</div><h1 style="font-size:34px;text-transform:uppercase">${esc(x.name)}</h1></div>
+    <div class="remind"><span><b>1.</b> 10 ripetizioni molto leggere. <b>2.</b> Con un peso medio, più ripetizioni che puoi: fermati quando te ne restano 1 o 2 (massimo ${tMax()}).</span></div>
+    <div class="logger">
+      <div class="stepper"><label for="tKg">Peso kg</label><div class="ctl"><button type="button" data-tstep="tKg" data-d="-${tStep(x,99)}" aria-label="Meno">−</button><input id="tKg" inputmode="decimal" value="${res&&res.retry?kgf(res.kg):inp?kgf(inp.kg):''}" placeholder="0"><button type="button" data-tstep="tKg" data-d="${tStep(x,99)}" aria-label="Più">+</button></div></div>
+      <div class="stepper"><label for="tReps">Ripetizioni</label><div class="ctl"><button type="button" data-tstep="tReps" data-d="-1" aria-label="Una in meno">−</button><input id="tReps" inputmode="numeric" value="${res&&!res.retry&&inp?inp.reps:''}" placeholder="0"><button type="button" data-tstep="tReps" data-d="1" aria-label="Una in più">+</button></div></div>
+    </div>
+    <p class="err" id="tErr" hidden></p>
+    <button class="btn big" id="tGo" type="button">Calcola il peso di partenza</button>
+    ${out}
+    <div class="links">${nx?`<a class="btn ${res&&!res.retry||t?'':'ghost'}" href="#test-${nx.ex}">Prossimo: ${esc(EXMAP[nx.ex].name)} →</a>`:''}<a class="btn ghost" href="#test">Tutti gli esercizi</a><a class="btn ghost" href="#ex-${x.id}">Come si fa</a></div>
+  </section>`;
+  $app.querySelectorAll('[data-tstep]').forEach(b=>b.onclick=()=>{ const inp=document.getElementById(b.dataset.tstep); const cur=parseFloat(String(inp.value).replace(',','.'))||0; const nv=Math.max(0,cur+parseFloat(b.dataset.d)); inp.value = b.dataset.tstep==='tKg'?kgf(nv):Math.round(nv); });
+  document.getElementById('tGo').onclick=()=>{
+    const kg=parseFloat(document.getElementById('tKg').value.replace(',','.')), reps=parseInt(document.getElementById('tReps').value,10);
+    const e=document.getElementById('tErr');
+    if(!(kg>0) || !(reps>0)){ e.textContent='Scrivi il peso che hai usato e quante ripetizioni hai fatto.'; e.hidden=false; return; }
+    const r = testCalc(x, kg, reps, repsTxt);
+    if(!r.retry){ TST[id]={kg:r.kg, e1:Math.round(r.e1*10)/10, lo:r.lo, hi:r.hi, at:Date.now()}; saveTST(); say(`Peso di partenza: ${kgf(r.kg)} chili.`); }
+    else say(r.retry==='up' ? `Troppo leggero. Riposa due minuti e riprova con ${kgf(r.kg)} chili.` : `Troppo pesante. Riposa due minuti e riprova con ${kgf(r.kg)} chili.`);
+    viewTestEx(id, r, {kg, reps});
+  };
+}
+
 /* ---------- PESO CONSIGLIATO (doppia progressione) ---------- */
 function repRange(r){ r=String(r||''); if(/["″']/.test(r)) return null; const n=r.match(/\d+/g); if(!n) return null; const a=+n[0], b=+(n[1]||n[0]); return [Math.min(a,b),Math.max(a,b)]; }
 function advise(x, repsTxt){
   if(!x || isTime(x)) return null;
   const R = repRange(repsTxt || (x.dose&&x.dose[1])); if(!R) return null; const [lo,hi]=R;
   const h = histFor(x.id), last = h[h.length-1];
+  const T = testable(x) && TST[x.id];
+  if(T && (!last || T.at > last.at)){ const k0=startKg(x, T.e1, hi);
+    return {kg:k0, reps:hi, act:'start', lo, hi, was:'', msg:`Dal test del ${dshort.format(new Date(T.at))}: parti con <b>${kgf(k0)} kg</b> e fai ${lo}–${hi} ripetizioni. Quando arrivi a ${hi} in tutte le serie, l'app ti dirà di salire.`, short:`Peso di partenza dal test: <b>${kgf(k0)} kg</b>, ${lo}–${hi} ripetizioni.`}; }
   if(!last) return {first:true, lo, hi, short: x.e==='corpo' ? `Prima volta: fai fino a ${hi} ripetizioni sentendo che ne avresti ancora 2 o 3. Se ne faresti molte di più, usa la versione più difficile.` : `Prima volta: scegli un peso con cui arrivi a ${hi} ripetizioni sentendo che ne avresti ancora 2 o 3.`};
   const S2 = last.sets.filter(s=>+s.reps>0); if(!S2.length) return null;
   const assist = x.id==='trazioni-assistite';
@@ -4206,12 +4331,14 @@ function advise(x, repsTxt){
   }
   if(!assist && h.length>=4){ const b=h.map(s=>Math.max(0,...s.sets.map(t=>e1rm(+t.kg||0,+t.reps||0)))), L=b.length;
     if(b[L-4]>0 && Math.max(b[L-1],b[L-2],b[L-3]) <= b[L-4]+.01 && last.at-h[L-4].at >= 10*864e5) a.stall=true; }
+  const wk = Math.floor((Date.now()-last.at)/(7*864e5));
+  if(wk>=4 && kg>0 && !assist){ const n=Math.max(step, Math.floor(kg*.9/step)*step); a={kg:n, reps:lo, act:'back', msg:`Sono passate ${wk} settimane dall'ultima volta: riparti da <b>${kgf(n)} kg</b> (10% in meno) oppure <a href="#test-${x.id}">rifai il test</a>.`, short:`Sono passate ${wk} settimane: riparti da <b>${kgf(n)} kg</b> (10% in meno) o rifai il test.`}; }
   a.was = `L'ultima volta: ${S2.map(s=>setTxt(s)).join(', ')}.`; a.lo=lo; a.hi=hi;
   return a;
 }
 const STALL_TXT = 'Da 3 allenamenti non migliori su questo esercizio. Capita: fai una settimana leggera (metà delle serie, stesso peso) e poi riparti.';
 function nextTip(x){
-  const a = advise(x); if(!a || a.first) return '';
+  const a = advise(x, goalReps(x.id, x.dose&&x.dose[1])); if(!a || a.first) return '';
   return `<div class="next adv"><b>💡 Peso consigliato per la prossima volta</b><p>${esc(a.was)} ${a.msg}</p>${a.stall?`<p>${STALL_TXT}</p>`:''}
     <details class="more"><summary>Perché questo peso?</summary>${SCI_W}</details></div>`;
 }
@@ -6237,6 +6364,9 @@ function route(soft){
     if(h.startsWith('ex-')) return viewExercise(h.slice(3));
     if(h.startsWith('allena-')) return startRun(h.slice(7));
     if(h.startsWith('scheda-')) return viewEditor(h.slice(7));
+    if(h==='test') return viewTest();
+    if(h.startsWith('testlvl-')){ const f=SESS.find(q=>q.lvl===h.slice(8)); if(f){ testSid=f.id; store.set('testSid',testSid); } history.replaceState(null,'','#test'); return viewTest(); }
+    if(h.startsWith('test-')) return viewTestEx(h.slice(5));
     if(h==='importa') return viewImport();
     if(h==='corsa') return viewCorsa();
     if(h==='sessioni') return viewSessions();
