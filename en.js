@@ -54,6 +54,10 @@ window.PF_EN={
 "Facoltativa. Se hai una bilancia con le placche di metallo (impedenziometrica) o il plicometro, scrivi qui il valore. Se no lascia vuoto: l'app la stima da vita e collo.": "Optional. If you have a scale with metal pads (bioimpedance) or a skinfold caliper, enter the value here. If not, leave it empty: the app estimates it from waist and neck.",
 "È sempre una stima: usa lo stesso strumento, alla stessa ora, e guarda come cambia nel tempo.": "It is always an estimate: use the same tool, at the same time of day, and watch how it changes over time.",
 "Usa un metro morbido da sarta: aderente alla pelle, senza stringere.": "Use a soft tailor's tape: snug against the skin, without squeezing.",
+"In piedi, pancia rilassata. Metro nel punto più stretto del busto (di solito poco sopra l'ombelico), dritto e parallelo al pavimento.": "Standing, belly relaxed. Tape at the narrowest point of your torso (usually just above the navel), straight and parallel to the floor.",
+"Serve, con vita e collo, per stimare la massa grassa. Guardati di lato allo specchio per trovare il punto più sporgente.": "Together with waist and neck, it is used to estimate body fat. Look at yourself sideways in the mirror to find the widest point.",
+"Braccia lungo i fianchi. Metro sulla parte più piena del seno, dritto anche sulla schiena.": "Arms by your sides. Tape across the fullest part of the bust, straight across your back too.",
+"Meglio con un reggiseno senza imbottitura, a respiro normale.": "Best with a non-padded bra, breathing normally.",
 /* esercizi core */
 "Curl-up di McGill": "McGill curl-up",
 "Sdraiato sulla schiena: una gamba piegata con il piede a terra, l'altra distesa.": "Lie on your back: one leg bent with the foot on the floor, the other straight.",

@@ -4703,10 +4703,21 @@ function measFig(k){
   const scale = `<rect x="95" y="868" width="260" height="26" rx="8" fill="var(--yellow)"/>`;
   const F = {waist:ring(225,345,80), hips:ring(225,440,108), chest:ring(225,215,103), arm:ring(98,240,30), thigh:ring(170,492,52), neck:ring(225,135,30), height:`<path d="M440 4V884M426 4h28M426 884h28" stroke="var(--yellow)" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M150 4h290" stroke="var(--yellow)" stroke-width="5" stroke-dasharray="12 10"/>`,
     weight:scale, fat:scale+`<rect x="115" y="874" width="60" height="14" rx="4" fill="var(--muted)"/><rect x="275" y="874" width="60" height="14" rx="4" fill="var(--muted)"/>`};
+  if(bodySex()==='f'){
+    /* donna: quarta sagoma del coach (sil-f.webp, 10 figure da 156x360), ingrandita 2,5 volte */
+    const G = {waist:ring(222,338,70), hips:ring(222,470,100), chest:ring(222,224,82), arm:ring(117,262,20), thigh:ring(177,537,42), neck:ring(222,130,20)};
+    return `<svg viewBox="0 0 450 900" aria-hidden="true"><rect width="450" height="900" rx="28" fill="#fff"/><image href="sil-f.webp" x="-1140" width="3900" height="900"/>${G[k]||F[k]||''}</svg>`;
+  }
   return `<svg viewBox="0 0 450 900" aria-hidden="true"><image href="omino-mappa.webp" width="900" height="887"/>${F[k]||''}</svg>`;
 }
+/* per la donna: vita nel punto più stretto, petto sulla parte più piena del seno */
+const MHELP_F = {
+  waist:{t:'Come misurare la vita', x:"In piedi, pancia rilassata. Metro nel punto più stretto del busto (di solito poco sopra l'ombelico), dritto e parallelo al pavimento.", y:'Misura alla fine di un respiro normale, senza trattenere il fiato né tirare in dentro la pancia.'},
+  hips:{t:'Come misurare i fianchi', x:'In piedi, piedi uniti. Metro nel punto più largo dei glutei, dritto e parallelo al pavimento.', y:'Serve, con vita e collo, per stimare la massa grassa. Guardati di lato allo specchio per trovare il punto più sporgente.'},
+  chest:{t:'Come misurare il petto', x:'Braccia lungo i fianchi. Metro sulla parte più piena del seno, dritto anche sulla schiena.', y:'Meglio con un reggiseno senza imbottitura, a respiro normale.'}
+};
 function measHelp(k){
-  const h = MHELP[k]; if(!h) return '';
+  const h = (bodySex()==='f' && MHELP_F[k]) || MHELP[k]; if(!h) return '';
   return `<div class="mhelp wide" id="mHelp" role="note">${measFig(k)}<div><b>${h.t}</b><p>${h.x}</p><p class="mh2">${h.y}</p>${!['weight','fat','height'].includes(k)?'<p class="mh2">Usa un metro morbido da sarta: aderente alla pelle, senza stringere.</p>':''}</div></div>`;
 }
 function saveBody(){ store.set('body',S.body); if(DB){ const b=clone(S.body); serial('body',()=>DB.doc(BASE+'/body').set(b)); } }
