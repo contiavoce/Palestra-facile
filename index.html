@@ -173,6 +173,11 @@ nav.tabs a[aria-current="page"] svg{stroke-width:2.4}
 .tres{background:var(--sunk);border-radius:12px;padding:14px;display:grid;gap:2px;border-left:4px solid #2FA866}.tres.warn{border-left-color:#F0A030}.tres b{font-family:var(--display);font-size:30px;line-height:1.1}.tres span{color:var(--muted);font-size:15px}
 .tintro p{margin:0}
 .tdone{font-weight:700;color:var(--muted);padding-right:4px}
+.tgtbar{height:16px;border-radius:8px;background:var(--sunk);overflow:hidden}.tgtbar i{display:block;height:100%;border-radius:8px;background:linear-gradient(90deg,#F0A030,#2FA866)}
+.tgtnum{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.tgtnum>b{font-family:var(--display);font-size:34px;line-height:1}.tgtnum span{color:var(--muted)}
+.tgtset{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tgtset label{font-weight:600;font-size:14px}.tgtset input{width:90px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:16px}
+.tgtrec{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:15px}
+.tgtwarn{margin:0;background:#F0A03022;border-radius:10px;padding:10px 12px;font-size:15px}
 .advline{background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:15px}
 .errs .fx{display:block;color:var(--muted);font-size:14px;margin-top:2px}
 .errs .fx b{color:var(--green,#1f9d55)}
@@ -3216,6 +3221,7 @@ function viewExercise(id){
       </form></details>
     </section>
     ${progressCard(x)}
+    ${goalCard(x)}
     <section class="card"><h2>Come si fa</h2><ol class="steps">${x.steps.map(s=>`<li><span>${esc(s)}</span></li>`).join('')}</ol></section>
     <section class="card"><h2>Respirazione</h2>
       <div class="breath"><div class="in"><b>Inspira</b><p>${esc(x.br.in)}</p></div><div class="out"><b>Espira</b><p>${esc(x.br.out)}</p></div></div>
@@ -4190,11 +4196,11 @@ const tStep = (x,kg) => x.e==='manubri' ? (kg<10?1:2) : 2.5;
 function testCalc(x, kg, reps, repsTxt){
   const R = repRange(repsTxt || (x.dose&&x.dose[1])) || [10,12], hi = R[1];
   const step = tStep(x,kg);
-  if(reps>tMax()){ let n=Math.ceil(kg*(1+(reps+1.5)/30)/(1+10/30)/step)*step; if(n<=kg) n=kg+step; return {retry:'up', kg:n}; }
+  if(reps>tMax()){ let n=Math.ceil(kg*(reps>=25?1.6:reps>=20?1.35:(1+(reps+1.5)/30)/(1+10/30))/step)*step; if(n<=kg) n=kg+step; return {retry:'up', kg:n}; }
   if(reps<4){ let n=Math.floor(kg*(1+(reps+1.5)/30)/(1+10/30)/step)*step; if(n>=kg) n=kg-step; return {retry:'down', kg:Math.max(step,n)}; }
   const e1 = kg*(1+(reps+1.5)/30);
   const start = Math.min(startKg(x, e1, hi), kg);
-  return {kg:start, e1, lo:R[0], hi};
+  return {kg:start, e1, lo:R[0], hi, tk:kg};
 }
 const SCI_T = `<div class="sci">
   <p>${pill('s')}<b>Una serie di prova basta per stimare la forza.</b> Con una serie fino a 10 ripetizioni circa, le formule stimano il massimale con un errore di circa 5–10%. Oltre le 10 ripetizioni sono meno precise: per questo il test si ferma a 15.<cite>LeSuer e coll., J Strength Cond Res 1997 · Reynolds e coll., J Strength Cond Res 2006</cite></p>
@@ -4287,11 +4293,57 @@ function viewTestEx(id, res, inp){
     const e=document.getElementById('tErr');
     if(!(kg>0) || !(reps>0)){ e.textContent='Scrivi il peso che hai usato e quante ripetizioni hai fatto.'; e.hidden=false; return; }
     const r = testCalc(x, kg, reps, repsTxt);
-    if(!r.retry){ TST[id]={kg:r.kg, e1:Math.round(r.e1*10)/10, lo:r.lo, hi:r.hi, at:Date.now()}; saveTST(); say(`Peso di partenza: ${kgf(r.kg)} chili.`); }
+    if(!r.retry){ TST[id]={kg:r.kg, e1:Math.round(r.e1*10)/10, lo:r.lo, hi:r.hi, tk:r.tk, at:Date.now()}; saveTST(); say(`Peso di partenza: ${kgf(r.kg)} chili.`); }
     else say(r.retry==='up' ? `Troppo leggero. Riposa due minuti e riprova con ${kgf(r.kg)} chili.` : `Troppo pesante. Riposa due minuti e riprova con ${kgf(r.kg)} chili.`);
     viewTestEx(id, r, {kg, reps});
   };
 }
+
+/* ---------- TRAGUARDO DI PESO PER ESERCIZIO ---------- */
+let TGT = store.get('targets', {});
+const saveTGT = ()=>store.set('targets', TGT);
+const kgOfSess = s => Math.max(0, ...s.sets.map(t=>+t.kg||0));
+function curKg(x){ const h=histFor(x.id); if(h.length) return kgOfSess(h[h.length-1]);
+  const T=TST[x.id]; return T ? startKg(x, T.e1, (repRange(goalReps(x.id, x.dose&&x.dose[1]))||[0,12])[1]) : 0; }
+function tgtInfo(x, now){
+  const T=TGT[x.id]; if(!T || !(T.kg>0)) return null;
+  const cur = now!=null ? now : curKg(x), from = Math.min(T.from||0, cur||T.from||0);
+  const pct = cur>=T.kg ? 100 : T.kg>from ? Math.max(0, Math.min(99, Math.floor((cur-from)/(T.kg-from)*100))) : 0;
+  let weeks = null; const h = histFor(x.id).filter(s=>s.at>=T.at-864e5);
+  if(h.length>=3 && cur<T.kg){ const a=h[0], b=h[h.length-1], d=(b.at-a.at)/864e5, g=kgOfSess(b)-kgOfSess(a);
+    if(d>=10 && g>0) weeks = Math.max(1, Math.round((T.kg-cur)/(g/d)/7)); }
+  return {kg:T.kg, from, cur, pct, weeks};
+}
+const tgtLine = (x, now) => { const t=tgtInfo(x, now); if(!t) return ''; return t.pct>=100 ? ` 🎉 Hai raggiunto il tuo traguardo di ${kgf(t.kg)} kg!` : ` Sei al <b>${t.pct}%</b> del tuo traguardo di ${kgf(t.kg)} kg.`; };
+/* traguardo consigliato: aumenti medi di forza per livello riportati dall'ACSM (2009): ~40% non allenati, ~20% moderatamente allenati, ~10% avanzati */
+const myLvl = () => { try{ return lvlSel || 'principiante'; }catch(e){ return 'principiante'; } };
+const LVLGAIN = {principiante:.40, intermedio:.20, esperto:.10};
+function tgtRec(x, base){ if(!(base>0)) return 0; const st=tStep(x,base), g=LVLGAIN[myLvl()]||.2; return Math.max(base+st, Math.round(base*(1+g)/st)*st); }
+function goalCard(x){
+  if(!testable(x)) return '';
+  const t = tgtInfo(x), cur = curKg(x), rec = tgtRec(x, t ? t.from : cur), lv = myLvl();
+  const recTxt = rec ? `<div class="tgtrec"><span>Traguardo consigliato per te (${lv}): <b>${kgf(rec)} kg</b>, in circa 3–6 mesi.</span>${!t||t.kg!==rec?`<button class="btn ghost small" type="button" onclick="document.getElementById('tgtIn').value='${kgf(rec)}';tgtSave('${x.id}')">Usa questo</button>`:''}</div>` : '';
+  const over = t && rec && t.kg > rec ? `<p class="tgtwarn">⚠️ Il tuo traguardo è più alto del consigliato (${kgf(rec)} kg). Puoi tenerlo, ma ci vorrà più tempo: non saltare i passi e non caricare più di quanto ti dice l'app.</p>` : '';
+  return `<section class="card tgtcard" id="tgtCard"><h2>Il tuo traguardo</h2>
+    ${t ? `<div class="tgtbar" role="img" aria-label="${t.pct}% del traguardo"><i style="width:${t.pct}%"></i></div>
+      <div class="tgtnum"><b>${t.pct}%</b><span>da ${kgf(t.from)} a <b>${kgf(t.kg)} kg</b> · ora ${kgf(t.cur)} kg</span></div>
+      <p class="note" style="margin:0">${t.pct>=100 ? 'Traguardo raggiunto! Puoi sceglierne uno nuovo.' : t.weeks ? `A questo ritmo ci arrivi in circa <b>${t.weeks} ${t.weeks===1?'settimana':'settimane'}</b>. È una stima sui tuoi ultimi allenamenti: col tempo i progressi rallentano, è normale.` : 'Ogni volta che sali di peso la percentuale aumenta. Dopo qualche allenamento ti dico anche quanto manca.'}</p>`
+    : `<p class="note" style="margin:0">Scegli a quanti chili vuoi arrivare in questo esercizio${cur?` (ora sei a ${kgf(cur)} kg)`:''}: l'app ti mostra a che percentuale sei ogni volta che aumenti il peso.</p>`}
+    <div class="tgtset"><label for="tgtIn">Traguardo kg</label><input id="tgtIn" inputmode="decimal" placeholder="es. ${cur?kgf(Math.round(cur*1.5/5)*5||20):'50'}" value="${t?kgf(t.kg):''}">
+      <button class="btn small" type="button" onclick="tgtSave('${x.id}')">${t?'Cambia':'Salva'}</button>${t?`<button class="btn ghost small" type="button" onclick="tgtDel('${x.id}')">Togli</button>`:''}</div>
+    ${recTxt}${over}
+    <p class="err" id="tgtErr" hidden></p>
+    <details class="more"><summary>Come calcolo il traguardo consigliato</summary><div class="sci"><p>${pill('s')}<b>Quanto si migliora.</b> Secondo l'American College of Sports Medicine, in un periodo da qualche settimana a 2 anni la forza aumenta in media del 40% in chi non si allenava, del 20% in chi si allena da un po' e del 10% in chi è avanzato. L'app usa questi numeri sul peso da cui parti, in base al tuo livello.<cite>ACSM, Progression models in resistance training, Med Sci Sports Exerc 2009 · Kraemer e Ratamess, Med Sci Sports Exerc 2004</cite></p>
+      <p>${pill('w')}<b>Sono medie.</b> Ognuno migliora con il suo ritmo, e più ti avvicini al tuo limite più i progressi rallentano. Non ci sono tabelle affidabili per sesso e peso corporeo sulle macchine: per questo il traguardo parte dai tuoi pesi veri e non da una tabella. Raggiunto il traguardo, puoi sceglierne uno nuovo.</p></div></details></section>`;
+}
+function tgtRedraw(id){ const c=document.getElementById('tgtCard'); if(c) c.outerHTML = goalCard(EXMAP[id]); }
+function tgtSave(id){
+  const x=EXMAP[id], v=parseFloat(String(document.getElementById('tgtIn').value).replace(',','.')), cur=curKg(x), e=document.getElementById('tgtErr');
+  if(!(v>0)){ e.textContent='Scrivi a quanti chili vuoi arrivare.'; e.hidden=false; return; }
+  if(cur && v<=cur){ e.textContent=`Il traguardo deve essere più alto del peso di adesso (${kgf(cur)} kg).`; e.hidden=false; return; }
+  const old=TGT[id]; TGT[id]={kg:v, from: old&&old.from!=null&&old.from<v ? old.from : cur, at: old?old.at:Date.now()}; saveTGT(); tgtRedraw(id);
+}
+function tgtDel(id){ delete TGT[id]; saveTGT(); tgtRedraw(id); }
 
 /* ---------- PESO CONSIGLIATO (doppia progressione) ---------- */
 function repRange(r){ r=String(r||''); if(/["″']/.test(r)) return null; const n=r.match(/\d+/g); if(!n) return null; const a=+n[0], b=+(n[1]||n[0]); return [Math.min(a,b),Math.max(a,b)]; }
@@ -4300,7 +4352,7 @@ function advise(x, repsTxt){
   const R = repRange(repsTxt || (x.dose&&x.dose[1])); if(!R) return null; const [lo,hi]=R;
   const h = histFor(x.id), last = h[h.length-1];
   const T = testable(x) && TST[x.id];
-  if(T && (!last || T.at > last.at)){ const k0=startKg(x, T.e1, hi);
+  if(T && (!last || T.at > last.at)){ const k0=Math.min(startKg(x, T.e1, hi), T.tk||Infinity);
     return {kg:k0, reps:hi, act:'start', lo, hi, was:'', msg:`Dal test del ${dshort.format(new Date(T.at))}: parti con <b>${kgf(k0)} kg</b> e fai ${lo}–${hi} ripetizioni. Quando arrivi a ${hi} in tutte le serie, l'app ti dirà di salire.`, short:`Peso di partenza dal test: <b>${kgf(k0)} kg</b>, ${lo}–${hi} ripetizioni.`}; }
   if(!last) return {first:true, lo, hi, short: x.e==='corpo' ? `Prima volta: fai fino a ${hi} ripetizioni sentendo che ne avresti ancora 2 o 3. Se ne faresti molte di più, usa la versione più difficile.` : `Prima volta: scegli un peso con cui arrivi a ${hi} ripetizioni sentendo che ne avresti ancora 2 o 3.`};
   const S2 = last.sets.filter(s=>+s.reps>0); if(!S2.length) return null;
@@ -4319,8 +4371,9 @@ function advise(x, repsTxt){
     else if(manyLow){ const n=kg+step; a={kg:n, reps:lo, act:'down', msg:`Le ripetizioni sono state meno di ${lo}: aggiungi aiuto e sali a <b>${kgf(n)} kg</b> di contrappeso.`, short:`Oggi più aiuto: <b>${kgf(n)} kg</b> di contrappeso.`}; }
     else a={kg, goal, act:'reps', msg:`Resta su <b>${kgf(kg)} kg</b> di contrappeso e prova 1 ripetizione in più per serie (${goal.join(', ')}).`, short:`Oggi stesso aiuto (${kgf(kg)} kg), 1 ripetizione in più per serie.`};
   } else if(allTop){
-    const pct = Math.min(x.g==='gambe'?.10:.05, Math.max(.025, (1+hi/30)/(1+lo/30)-1));
-    let n = rnd(kg*(1+pct)); if(n<=kg) n = kg+step;
+    const lvf = {intermedio:.75, esperto:.5}[typeof lvlSel!=='undefined'?lvlSel:'']||1;
+    const pct = Math.min((x.g==='gambe'?.10:.05)*lvf, Math.max(.025, (1+hi/30)/(1+lo/30)-1));
+    let n = Math.floor(kg*(1+pct)/step+1e-9)*step; if(n<=kg) n = kg+step;
     a={kg:n, reps:lo, act:'up', msg:`Hai fatto ${hi} ripetizioni in tutte le serie: è ora di salire a <b>${kgf(n)} kg</b>. Va bene se all'inizio arrivi a ${lo}.`, short:`Oggi sali a <b>${kgf(n)} kg</b>: la volta scorsa hai chiuso tutte le serie a ${hi}.`};
   } else if(manyLow){
     const avg = reps.reduce((t,r)=>t+r,0)/reps.length, f = Math.min(.95, Math.max(.8, (1+avg/30)/(1+lo/30)));
@@ -4333,6 +4386,7 @@ function advise(x, repsTxt){
     if(b[L-4]>0 && Math.max(b[L-1],b[L-2],b[L-3]) <= b[L-4]+.01 && last.at-h[L-4].at >= 10*864e5) a.stall=true; }
   const wk = Math.floor((Date.now()-last.at)/(7*864e5));
   if(wk>=4 && kg>0 && !assist){ const n=Math.max(step, Math.floor(kg*.9/step)*step); a={kg:n, reps:lo, act:'back', msg:`Sono passate ${wk} settimane dall'ultima volta: riparti da <b>${kgf(n)} kg</b> (10% in meno) oppure <a href="#test-${x.id}">rifai il test</a>.`, short:`Sono passate ${wk} settimane: riparti da <b>${kgf(n)} kg</b> (10% in meno) o rifai il test.`}; }
+  if(a.kg>0 && !assist){ const tl=tgtLine(x, a.kg); if(tl){ a.msg+=tl; if(a.act==='up') a.short+=tl; } }
   a.was = `L'ultima volta: ${S2.map(s=>setTxt(s)).join(', ')}.`; a.lo=lo; a.hi=hi;
   return a;
 }
