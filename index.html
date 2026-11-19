@@ -660,7 +660,8 @@ body.noscroll{overflow:hidden}
 .bcview{display:grid;place-items:center}.bcview video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .bcbox{position:absolute;left:10%;right:10%;top:38%;height:22%;border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 2000px #0007}
 .bcmsg{position:absolute;top:24%;left:16px;right:16px;text-align:center;color:#fff;font-weight:700;font-size:17px;margin:0}
-.bcview .confirm{position:absolute;bottom:32px}
+.bcview .confirm{position:absolute;bottom:32px;left:12px;right:12px;flex-wrap:wrap}
+.bchint{position:absolute;bottom:96px;left:16px;right:16px;text-align:center;color:#fff;font-size:14px;margin:0;text-shadow:0 1px 3px #000}
 
 .igoal{background:var(--sunk);border-radius:12px;padding:12px 14px;display:grid;gap:8px;margin-top:10px}.igoal p{margin:0;display:grid;gap:1px}.igoal small{color:var(--muted);font-size:13px}
 </style>
@@ -6837,22 +6838,41 @@ function bcStop(){ if(!bcam) return; clearInterval(bcam.t); try{ bcam.stream.get
 async function bcScan(){
   bcStop();
   const v = document.createElement('div'); v.className='viewer bcview'; v.setAttribute('role','dialog'); v.setAttribute('aria-label','Leggi il codice a barre');
-  v.innerHTML = `<video playsinline muted></video><i class="bcbox" aria-hidden="true"></i><p class="bcmsg" aria-live="polite">Inquadra il codice a barre dentro il riquadro</p><div class="confirm"><button class="btn small" type="button" data-close>Chiudi</button></div>`;
+  v.innerHTML = `<video playsinline muted></video><i class="bcbox" aria-hidden="true"></i><p class="bcmsg" aria-live="polite">Inquadra il codice a barre dentro il riquadro</p>
+    <p class="bchint">Tieni il telefono a 15-20 cm: troppo vicino resta sfocato. Tocca l'immagine per mettere a fuoco.</p>
+    <div class="confirm bcbtns"><label class="btn small" style="cursor:pointer">📷 Scatta una foto<input type="file" accept="image/*" capture="environment" hidden data-bcph></label><button class="btn small" type="button" data-torch hidden>🔦 Luce</button><button class="btn ghost small" type="button" data-close style="background:transparent;color:#fff;border-color:#fff8">Chiudi</button></div>`;
   document.body.appendChild(v); v.querySelector('[data-close]').onclick=bcStop;
+  v.querySelector('[data-bcph]').onchange=e=>{ const f=e.target.files&&e.target.files[0]; bcStop(); if(f) integPhoto(f); };
   bcam = {el:v, stream:{getTracks:()=>[]}};
   let stream;
-  try{ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720}}, audio:false}); }
-  catch(e){ v.querySelector('.bcmsg').textContent='Non riesco ad aprire la fotocamera. Controlla il permesso della fotocamera per questa app, oppure fotografa l\'etichetta.'; return; }
+  try{ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}, focusMode:{ideal:'continuous'}}, audio:false}); }
+  catch(e){ try{ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false}); }
+    catch(e2){ v.querySelector('.bcmsg').textContent='Non riesco ad aprire la fotocamera. Controlla il permesso della fotocamera per questa app, oppure fotografa l\'etichetta.'; return; } }
   if(!bcam || bcam.el!==v){ stream.getTracks().forEach(t=>t.stop()); return; }
+  const track = stream.getVideoTracks()[0];
+  let caps = {}; try{ caps = track.getCapabilities ? track.getCapabilities() : {}; }catch(e){}
+  const apply = c => { try{ return track.applyConstraints({advanced:[c]}).catch(()=>{}); }catch(e){ return Promise.resolve(); } };
+  /* messa a fuoco continua; un po' di zoom così il telefono può stare più lontano (e mette a fuoco) */
+  if((caps.focusMode||[]).includes('continuous')) apply({focusMode:'continuous'});
+  if(caps.zoom && caps.zoom.max>=1.5) apply({zoom:Math.min(2, caps.zoom.max)});
+  const tb = v.querySelector('[data-torch]');
+  if(caps.torch){ let on=false; tb.hidden=false; tb.onclick=()=>{ on=!on; apply({torch:on}); tb.setAttribute('aria-pressed',String(on)); }; }
   const vid = v.querySelector('video'); vid.srcObject = stream; try{ await vid.play(); }catch(e){}
-  const c = document.createElement('canvas'); let busy=false;
+  vid.onclick = ev => { const fm = caps.focusMode||[]; const r = vid.getBoundingClientRect();
+    const poi = {x:(ev.clientX-r.left)/r.width, y:(ev.clientY-r.top)/r.height};
+    if(fm.includes('single-shot')) apply(Object.assign({focusMode:'single-shot'}, caps.pointsOfInterest!==undefined?{pointsOfInterest:[poi]}:{})).then(()=>setTimeout(()=>{ if(fm.includes('continuous')) apply({focusMode:'continuous'}); },1500));
+    else if(fm.includes('continuous')) apply({focusMode:'manual'}).then(()=>apply({focusMode:'continuous'})); };
+  const c = document.createElement('canvas'); let busy=false, n=0;
   bcam.stream = stream;
   bcam.t = setInterval(async()=>{
-    if(busy || !vid.videoWidth) return; busy=true;
-    try{ const k=Math.min(1,960/vid.videoWidth); c.width=Math.round(vid.videoWidth*k); c.height=Math.round(vid.videoHeight*k); c.getContext('2d',{willReadFrequently:true}).drawImage(vid,0,0,c.width,c.height);
+    if(busy || !vid.videoWidth) return; busy=true; n++;
+    try{ const W=vid.videoWidth, H=vid.videoHeight;
+      /* a turno: tutta l'immagine, poi solo la fascia centrale a piena risoluzione */
+      if(n%2){ const k=Math.min(1,1280/W); c.width=Math.round(W*k); c.height=Math.round(H*k); c.getContext('2d',{willReadFrequently:true}).drawImage(vid,0,0,c.width,c.height); }
+      else { const sw=Math.round(W*.9), sh=Math.round(H*.45); c.width=sw; c.height=sh; c.getContext('2d',{willReadFrequently:true}).drawImage(vid,(W-sw)/2,(H-sh)/2,sw,sh,0,0,sw,sh); }
       const code = await barcodeIn(c);
       if(code && bcam){ beep('tick'); bcStop(); iscan={busy:true}; integCode(code); }
-    }catch(e){} busy=false; }, 350);
+    }catch(e){} busy=false; }, 300);
 }
 async function integPhoto(file){
   const keep = iscan && iscan.code && !iscan.chg ? iscan.code : '';

@@ -4806,5 +4806,10 @@ window.PF_EN={
 "{*} g al giorno, tutti i giorni (circa un cucchiaino raso).": "{*} g a day, every day (about a level teaspoon).",
 "I tuoi giorni di allenamento:": "Your training days:",
 "Non è giusto? Tocca il tipo corretto": "Not right? Tap the correct type",
-"Codice letto! È un codice del negozio o della farmacia: non è nell'archivio dei prodotti. Fotografa una volta l'etichetta (o scegli tu il tipo) e da adesso, quando leggi questo codice, lo riconosco subito.": "Code read! It's a shop or pharmacy code: it isn't in the product database. Photograph the label once (or choose the type yourself) and from now on, when you scan this code, I'll recognise it straight away."
+"Codice letto! È un codice del negozio o della farmacia: non è nell'archivio dei prodotti. Fotografa una volta l'etichetta (o scegli tu il tipo) e da adesso, quando leggi questo codice, lo riconosco subito.": "Code read! It's a shop or pharmacy code: it isn't in the product database. Photograph the label once (or choose the type yourself) and from now on, when you scan this code, I'll recognise it straight away.",
+"Tieni il telefono a 15-20 cm: troppo vicino resta sfocato. Tocca l'immagine per mettere a fuoco.": "Hold the phone 15-20 cm away: too close and it stays blurry. Tap the image to focus.",
+"Tieni il telefono a 15-20 cm: troppo vicino resta sfocato.": "Hold the phone 15-20 cm away: too close and it stays blurry.",
+"Tocca l'immagine per mettere a fuoco.": "Tap the image to focus.",
+"📷 Scatta una foto": "📷 Take a photo",
+"🔦 Luce": "🔦 Light"
 };
