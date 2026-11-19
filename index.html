@@ -6523,7 +6523,7 @@ const SUPP = {
     goal:{dim:"Se vuoi dimagrire non è adatto: ha moltissime calorie.", mus:"Utile solo se non riesci a mangiare abbastanza per crescere.", for:"Utile solo se non riesci a mangiare abbastanza.", res:"Di solito non serve: meglio pasti normali con carboidrati."},
     warn:["Contiene spesso latte e molti zuccheri: attenzione se hai diabete."],
     cite:"Jäger e coll., J Int Soc Sports Nutr 2017 · Thomas, Erdman e Burke, Med Sci Sports Exerc 2016"},
-  creatina:{n:'Creatina', ico:'⚡', ev:'s', kw:[[/creatin/i,6],[/creapure/i,6],[/kre-?alkalyn/i,6]],
+  creatina:{n:'Creatina', ico:'⚡', ev:'s', kw:[[/creati/i,6],[/creapure/i,6],[/kre-?alkalyn/i,6]],
     t:[['pasto',"Con il pasto dopo l'allenamento"]], r:[['pranzo','Con un pasto qualsiasi, anche nei giorni di riposo']],
     dose:c=>`${c.kg>90?'5':'3-5'} g al giorno, tutti i giorni (circa un cucchiaino raso). Se vuoi vedere l'effetto prima: ${c.kg?Math.round(c.kg*.3)+' g':'0,3 g per kg'} al giorno divisi in 4 volte per 5-7 giorni, poi ${c.kg>90?'5':'3-5'} g al giorno. Non è obbligatorio.`,
     how:["Prendila tutti i giorni, anche quelli di riposo: conta la costanza, non l'orario.","Sciogli in acqua, succo o insieme alle proteine. Con un pasto entra meglio nei muscoli.","La creatina monoidrato è la più studiata: le altre forme non funzionano meglio.","Nelle prime settimane il peso può salire di 1-2 kg: è acqua nei muscoli, non grasso.","Non servono pause o cicli."],
@@ -6749,6 +6749,7 @@ function scanHTML(){
   return `<section class="card"><h2>${g?'Ho riconosciuto':'Non sono sicuro'}</h2>
       ${iscan.thumb?`<img class="ithumb" src="${iscan.thumb}" alt="">`:''}
       ${iscan.err?`<p class="err">${esc(iscan.err)}</p>`:''}
+      ${iscan.ask?`<div class="links"><label class="btn" style="cursor:pointer">📷 Fotografa l'etichetta<input type="file" accept="image/*" capture="environment" id="iCam" hidden></label><label class="btn ghost" style="cursor:pointer">🖼 Scegli una foto<input type="file" accept="image/*" id="iGal" hidden></label></div>`:''}
       ${iscan.code?`<p class="note">Codice a barre: ${esc(iscan.code)}${iscan.src==='off'?' · dati prodotto da Open Food Facts (licenza ODbL)':iscan.src==='mem'?' · già salvato su questo telefono':''}</p>`:''}
       ${g?`<p class="lead">${SUPP[g].ico} <b>${esc(SUPP[g].n)}</b></p><details><summary class="note">Non è giusto? Tocca il tipo corretto</summary>${typeChips(g)}</details>`:`<p class="note">${iscan.lines?'Non sono riuscito a capire che prodotto è. ':''}Tocca il tipo di integratore:</p>${typeChips(g)}`}
       ${g?`<form id="iForm" class="mgrid">
@@ -6797,12 +6798,17 @@ function zxLoad(){ if(zxLib) return zxLib;
   zxLib = new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='ocr/zxing-reader.js'; s.onload=()=>{ try{ ZXingWASM.prepareZXingModule({overrides:{locateFile:(f,pre)=> f.endsWith('.wasm')?'ocr/'+f:pre+f}}); }catch(e){} res(window.ZXingWASM); }; s.onerror=()=>{ zxLib=null; rej(new Error('zx')); }; document.head.appendChild(s); });
   return zxLib; }
 let bdet = null;
+/* codici delle farmacie italiane (Code 32 / codice AIC-ministeriale): scritti in Code 39 in base 32 → "A" + 9 cifre */
+function codeNorm(t, f){ t=String(t||'').trim(); if(!t) return '';
+  if(/39/.test(f||'') && /^[0-9B-DF-HJ-NP-TV-Z]{6}$/.test(t)){ const A='0123456789BCDFGHJKLMNPQRSTUVWXYZ'; let v=0; for(const c of t) v=v*32+A.indexOf(c); return 'A'+String(v).padStart(9,'0'); }
+  return t; }
+const isEAN = c => /^\d{8}$|^\d{12,14}$/.test(c);
 async function barcodeIn(canvas){
-  try{ if(bdet===null && 'BarcodeDetector' in window){ const f = await BarcodeDetector.getSupportedFormats(); bdet = f.includes('ean_13') ? new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e'].filter(x=>f.includes(x))}) : false; } }catch(e){ bdet=false; }
-  if(bdet){ try{ const r = await bdet.detect(canvas); return r && r[0] ? r[0].rawValue : ''; }catch(e){} }
+  try{ if(bdet===null && 'BarcodeDetector' in window){ const f = await BarcodeDetector.getSupportedFormats(); bdet = f.includes('ean_13') ? new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_39','code_128','code_93','itf','codabar'].filter(x=>f.includes(x))}) : false; } }catch(e){ bdet=false; }
+  if(bdet){ try{ const r = await bdet.detect(canvas); if(r && r[0]) return codeNorm(r[0].rawValue, r[0].format); }catch(e){} }
   const Z = await zxLoad(); const x = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
-  const r = await Z.readBarcodes(x, {formats:['EAN-13','EAN-8','UPC-A','UPC-E'], tryHarder:true, maxNumberOfSymbols:1});
-  return r && r[0] && r[0].isValid ? r[0].text : '';
+  const r = await Z.readBarcodes(x, {formats:['Linear-Codes'], tryHarder:true, tryRotate:true, maxNumberOfSymbols:1});
+  return r && r[0] && r[0].isValid ? codeNorm(r[0].text, r[0].format) : '';
 }
 async function offLookup(code){
   const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,product_name_it,generic_name,generic_name_it,brands,ingredients_text,ingredients_text_it,categories,serving_size`, {cache:'no-store'});
@@ -6818,12 +6824,13 @@ async function integCode(code){
   iscan = Object.assign(iscan||{}, {busy:true, pct:0, code}); paintScan();
   const mem = INTEG.codes && INTEG.codes[code];
   if(mem){ Object.assign(iscan, {busy:false, type:mem.type, name:mem.name||'', dose:mem.dose, caf:mem.caf, src:'mem', err:''}); paintScan(); say('Prodotto già conosciuto.'); return true; }
-  if(!navigator.onLine){ Object.assign(iscan, {busy:false, type:'', err:'Codice letto, ma per cercare il prodotto serve internet. Fotografa l\'etichetta o scegli tu il tipo: la prossima volta lo riconosco anche senza internet.'}); paintScan(); return false; }
+  if(!isEAN(code)){ Object.assign(iscan, {busy:false, type:'', ask:1, err:'Codice letto! È un codice del negozio o della farmacia: non è nell\'archivio dei prodotti. Fotografa una volta l\'etichetta (o scegli tu il tipo) e da adesso, quando leggi questo codice, lo riconosco subito.'}); paintScan(); return false; }
+  if(!navigator.onLine){ Object.assign(iscan, {busy:false, type:'', ask:1, err:'Codice letto, ma per cercare il prodotto serve internet. Fotografa l\'etichetta o scegli tu il tipo: la prossima volta lo riconosco anche senza internet.'}); paintScan(); return false; }
   let P = null; try{ P = await offLookup(code); }catch(e){}
   if(!iscan) return false;
   if(P){ const g = suppGuess(P.lines); Object.assign(iscan, {busy:false, type:g.length?g[0][0]:'', name:P.name, dose:P.dose, caf:P.caf, src:'off', err: g.length?'':'Ho trovato il prodotto, ma non capisco che integratore è. Tocca il tipo giusto.'});
     if(iscan.type) say('Trovato. Mi sembra '+SUPP[iscan.type].n.replace(/\(.*\)/,'')+'.'); paintScan(); return true; }
-  Object.assign(iscan, {busy:false, type:'', err:'Prodotto non trovato nell\'archivio. Fotografa l\'etichetta o scegli tu il tipo: la prossima volta lo riconosco subito.'}); paintScan(); return false;
+  Object.assign(iscan, {busy:false, type:'', ask:1, err:'Prodotto non trovato nell\'archivio. Fotografa l\'etichetta o scegli tu il tipo: la prossima volta lo riconosco subito.'}); paintScan(); return false;
 }
 let bcam = null;
 function bcStop(){ if(!bcam) return; clearInterval(bcam.t); try{ bcam.stream.getTracks().forEach(t=>t.stop()); }catch(e){} bcam.el.remove(); bcam=null; }
@@ -6848,16 +6855,25 @@ async function bcScan(){
     }catch(e){} busy=false; }, 350);
 }
 async function integPhoto(file){
-  iscan = {busy:true, pct:0}; paintScan();
+  const keep = iscan && iscan.code && !iscan.chg ? iscan.code : '';
+  iscan = {busy:true, pct:0}; if(keep) iscan.code = keep; paintScan();
   try{
     const p = await ocrPrep(file); iscan.thumb = p.thumb; paintScan();
     let code=''; try{ code = await barcodeIn(p.canvas); }catch(e){}
     if(code && INTEG.codes && INTEG.codes[code]) return integCode(code);
-    const data = await ocrRead(p.canvas, pct=>{ if(iscan && iscan.busy){ iscan.pct=Math.max(3,pct); const s=document.querySelector('#iScan .cbar u'); if(s) s.style.width=iscan.pct+'%'; const n=document.querySelector('#iScan .note'); if(n) n.textContent=iscan.pct+'%'; } });
+    let data = await ocrRead(p.canvas, pct=>{ if(iscan && iscan.busy){ iscan.pct=Math.max(3,pct); const s=document.querySelector('#iScan .cbar u'); if(s) s.style.width=iscan.pct+'%'; const n=document.querySelector('#iScan .note'); if(n) n.textContent=iscan.pct+'%'; } });
     if(!iscan) return;
     if(!iscan) return;
-    const lines = ocrLines(data), g = suppGuess(lines), nums = suppNums(lines);
-    if(!g.length && code){ iscan.lines=lines; return integCode(code); }
+    let lines = ocrLines(data), g = suppGuess(lines);
+    /* etichetta di traverso (scritte in verticale): riprovo girando la foto */
+    for(const deg of [90,270]){ if(g.length || !iscan) break;
+      const r = document.createElement('canvas'); r.width=p.canvas.height; r.height=p.canvas.width; const x=r.getContext('2d');
+      x.translate(r.width/2, r.height/2); x.rotate(deg*Math.PI/180); x.drawImage(p.canvas, -p.canvas.width/2, -p.canvas.height/2);
+      iscan.pct=3; const l2 = ocrLines(await ocrRead(r, pct=>{ const u=document.querySelector('#iScan .cbar u'); if(u) u.style.width=Math.max(3,pct)+'%'; }));
+      const g2 = suppGuess(l2); if(g2.length || l2.length>lines.length){ lines=l2; g=g2; } }
+    if(!iscan) return;
+    const nums = suppNums(lines);
+    if(!g.length && code && !keep){ iscan.lines=lines; return integCode(code); }
     if(code) iscan.code=code;
     Object.assign(iscan, {busy:false, lines, type:g.length?g[0][0]:'', name:'', dose:nums.dose, caf:nums.caf});
     if(iscan.type) say('Mi sembra '+SUPP[iscan.type].n.replace(/\(.*\)/,'')+'.');
