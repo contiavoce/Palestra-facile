@@ -3485,7 +3485,7 @@ function drawRun(){
       <p class="err" id="err" hidden></p>
       <button class="btn big" id="doneSet" type="button">${timeEx?'Fatto ✓':'Serie fatta ✓'}${p.rest>0 && !(run.set>=p.sets && run.i>=run.plan.length-1) ? ` <span style="font-weight:500;opacity:.75">· parte il recupero ${fmt(p.rest)}</span>` : ''}</button>
       <div class="minor"><button class="btn ghost small" type="button" id="addSet">+ Serie</button><button class="btn ghost small" type="button" id="skipEx">Salta esercizio</button><a class="btn ghost small" href="#ex-${x.id}">Come si fa</a></div>
-      ${ANIM[x.id]?`<div class="player mini"><canvas class="demo" id="demo2" role="img" aria-label="Animazione di ${esc(x.name)}"></canvas><div class="label"><b id="w2"></b></div></div>`:''}
+      ${builtinVid(x.id)?`<div class="player mini"><video class="runvid" src="${builtinVid(x.id)}" autoplay muted loop playsinline></video></div>`:ANIM[x.id]?`<div class="player mini"><canvas class="demo" id="demo2" role="img" aria-label="Animazione di ${esc(x.name)}"></canvas><div class="label"><b id="w2"></b></div></div>`:''}
       <div class="next">${esc(nxt)}</div>`}
     <div class="chips wrapchips qa" role="group" aria-label="Audio">${canSpeak?`<button class="chip" type="button" id="qVoice" aria-pressed="${AU.voice}">${AU.voice?'🔊 Voce':'🔇 Voce'}</button>`:''}${music.list.length?`<button class="chip" type="button" id="qMusic" aria-pressed="${!!(music.el&&!music.el.paused)}">${music.el&&!music.el.paused?'❚❚ Musica':'▶ Musica'}</button>`:''}<a class="chip" href="https://open.spotify.com/" target="_blank" rel="noopener">Apri Spotify</a><button class="chip" type="button" id="qCoach" aria-pressed="${coachOn()}">${coachOn()?'🧠 Coach':'🧠 Coach: spento'}</button>${canSpeak&&!run.sets.length&&!resting?`<button class="chip" type="button" data-img="gym" aria-pressed="false">🧠 1 minuto per concentrarti</button>`:''}${canListen?`<button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button>`:''}</div>
     <div class="micbar" id="micBar" hidden></div>
@@ -3509,8 +3509,9 @@ function drawRun(){
       const nv = Math.max(0, cur + parseFloat(b.dataset.d));
       inp.value = b.dataset.step==='kg' ? kgf(nv) : Math.round(nv);
     });
-    const d2 = document.getElementById('demo2'); if(d2){ animCtl = makeAnim(x, d2, document.getElementById('w2'), null); if(!reduceMotion) animCtl.play(); }
-    if(d2) videoSrc(x.id).then(v=>{ if(!v||!d2.isConnected) return; if(animCtl&&animCtl.playing) animCtl.pause(); const w=d2.closest('.player'); w.innerHTML=`<video class="runvid" src="${v.src}" autoplay muted loop playsinline></video>`; });
+    const d2 = document.getElementById('demo2'), pl2 = d2 ? d2.closest('.player') : $app.querySelector('.player.mini');
+    if(d2){ animCtl = makeAnim(x, d2, document.getElementById('w2'), null); if(!reduceMotion) animCtl.play(); }
+    if(pl2) videoSrc(x.id).then(v=>{ if(!v||!pl2.isConnected) return; if(!d2 && !v.mine) return; if(animCtl&&animCtl.playing) animCtl.pause(); if(typeof dispose3D==='function') dispose3D(); const w=pl2; w.innerHTML=`<video class="runvid" src="${v.src}" autoplay muted loop playsinline></video>`; });
     document.getElementById('addSet').onclick = ()=>{ p.sets++; saveRun(); drawRun(); };
     document.getElementById('skipEx').onclick = ()=>{ if(run.i>=run.plan.length-1) return finish(); run.i++; run.set=1; saveRun(); drawRun(); };
     document.getElementById('doneSet').onclick = ()=>{
