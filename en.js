@@ -1,5 +1,18 @@
 /* Dizionario italiano → inglese per Palestra Facile. Per tradurre un testo nuovo aggiungi una riga "testo italiano": "English". {*} = parte che cambia (numeri, nomi). */
 window.PF_EN={
+/* parte del corpo per ogni scheda/giorno */
+"Parte del corpo": "Body area",
+"Automatica: {*}": "Automatic: {*}",
+"La calcolo dagli esercizi. Se preferisci, scegline una tu.": "I work it out from the exercises. If you prefer, pick one yourself.",
+"Giorno {*}": "Day {*}",
+"Corpo intero": "Full body",
+"Petto e braccia": "Chest and arms",
+"Petto e schiena": "Chest and back",
+"Schiena e braccia": "Back and arms",
+"Schiena e spalle": "Back and shoulders",
+"Spalle e braccia": "Shoulders and arms",
+"Spinta": "Push",
+"Tirata": "Pull",
 /* come prendere le misure + massa grassa stimata (metodo Marina USA) */
 "Collo": "Neck",
 "Sei": "You are",
