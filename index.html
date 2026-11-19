@@ -225,6 +225,10 @@ nav.tabs a[aria-current="page"] svg{stroke-width:2.4}
 .clcover{display:block;width:100%;height:auto;aspect-ratio:1280/714;object-fit:cover;border-radius:16px;background:var(--sunk)}
 .sess{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:10px}
 .sess-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.ztag{display:inline-flex;align-items:center;gap:8px;margin:0 0 6px;font-weight:700;font-size:14px;text-transform:uppercase;letter-spacing:.04em}
+.ztag b{background:var(--accent);color:var(--on-accent);border-radius:999px;padding:3px 10px}
+.ztag span{display:inline-flex;align-items:center;gap:6px}.ztag span::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--zc);box-shadow:0 0 0 1px var(--line)}
+.zsel{width:100%;font-size:16px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg)}
 .sess h2{font-size:26px;text-transform:uppercase}
 .sess .meta{display:flex;gap:14px;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums;flex-wrap:wrap}
 .stack{display:flex;gap:3px;height:8px;border-radius:4px;overflow:hidden}
@@ -3262,13 +3266,46 @@ function runBanner(){
   if(!run) return '';
   return `<div class="banner"><span><b>Allenamento in corso</b><br>${esc(run.name)}</span><span class="minor"><a class="btn small" href="#allena-${run.id}">Riprendi</a></span></div>`;
 }
-function sessCard(s, mine){
+/* Parte del corpo allenata da una scheda: calcolata dagli esercizi (conta le serie per gruppo), oppure scelta a mano (s.zona). */
+const ZONE = ['Parte alta','Parte bassa','Corpo intero','Petto','Schiena','Spalle','Braccia','Gambe','Core e addome','Cardio','Petto e spalle','Petto e braccia','Schiena e braccia','Schiena e spalle','Spalle e braccia','Petto e schiena','Glutei e gambe','Spinta','Tirata'];
+const ZCOL = {'Parte alta':'var(--blue)','Parte bassa':'var(--yellow)','Corpo intero':'var(--accent)','Glutei e gambe':'var(--yellow)','Spinta':'var(--red)','Tirata':'var(--blue)'};
+function zonaAuto(items){
+  const c={}; let T=0;
+  (items||[]).forEach(i=>{ const x=EXMAP[i[0]]; if(!x) return; const n=Math.max(1,+i[1]||1); c[x.g]=(c[x.g]||0)+n; });
+  Object.keys(c).forEach(g=>{ if(g!=='cardio') T+=c[g]; });
+  if(!T) return c.cardio ? 'Cardio' : '';
+  const g = k=>c[k]||0, up=['petto','schiena','spalle','braccia'], U=up.reduce((a,k)=>a+g(k),0);
+  if(g('core')/T>=.7) return 'Core e addome';
+  if(g('gambe')/T>=.6) return g('core')/T>=.2 ? 'Parte bassa' : 'Gambe';
+  if(U/T>=.75){
+    const o=up.filter(k=>g(k)).sort((a,b)=>g(b)-g(a));
+    if(g(o[0])/U>=.7) return GROUPS[o[0]].label;
+    if(o[1] && (g(o[0])+g(o[1]))/U>=.75){ const pr=[o[0],o[1]].sort((a,b)=>up.indexOf(a)-up.indexOf(b)); return GROUPS[pr[0]].label+' e '+GROUPS[pr[1]].label.toLowerCase(); }
+    return 'Parte alta'; }
+  return 'Corpo intero';
+}
+function zonaOf(s){ return (s && s.zona) || zonaAuto(s && s.items); }
+function zonaCol(z){ if(ZCOL[z]) return ZCOL[z]; const k=Object.keys(GROUPS).find(k=>z.startsWith(GROUPS[k].label)); return k?GROUPS[k].color:'var(--accent)'; }
+function zonaSel(id, val, items){
+  const a=zonaAuto(items);
+  return `<div class="field"><label for="${id}">Parte del corpo</label><select id="${id}" class="zsel">
+    <option value="" ${val?'':'selected'}>Automatica: ${esc(a||'—')}</option>${ZONE.map(z=>`<option value="${esc(z)}" ${z===val?'selected':''}>${esc(z)}</option>`).join('')}</select>
+    <small class="muted">La calcolo dagli esercizi. Se preferisci, scegline una tu.</small></div>`;
+}
+function zonaTag(s, day){
+  const z=zonaOf(s), nm=(s.name||'').toLowerCase();
+  const dayTxt = day && !/^\s*(giorno|day|seduta|allenamento)\b/i.test(s.name||'') ? 'Giorno '+day : '';
+  const zTxt = z && !/parte alta|parte bassa|corpo intero|gambe|glutei|petto|schiena|spalle|braccia|bicipiti|tricipiti|core|addome|cardio|spinta|tirata|push|pull|upper|lower|legs/.test(nm) ? z : '';
+  if(!dayTxt && !zTxt) return '';
+  return `<div class="ztag" style="--zc:${zonaCol(z||'')}">${dayTxt?`<b>${dayTxt}</b>`:''}${zTxt?`<span>${esc(zTxt)}</span>`:''}</div>`;
+}
+function sessCard(s, mine, day){
   const sets = s.items.reduce((a,i)=>a+(+i[1]||0),0);
   const min = s.min || Math.round(s.items.reduce((a,i)=>a+(+i[1]||0)*(60+(+i[3]||0)),0)/60);
   return `<article class="sess" data-sid="${s.id}">
     <div class="stack" aria-hidden="true">${s.items.map(i=>`<i style="background:${GROUPS[EXMAP[i[0]].g].color}"></i>`).join('')}</div>
     <div class="sthumbs" aria-hidden="true">${s.items.slice(0,6).map(i=>thumb(i[0],'st')).join('')}</div>
-    <div class="sess-top"><div><h2>${esc(s.name)}</h2>${s.for?`<div class="next">${esc(s.for)}</div>`:''}</div></div>
+    <div class="sess-top"><div>${zonaTag(s, mine?day:0)}<h2>${esc(s.name)}</h2>${s.for?`<div class="next">${esc(s.for)}</div>`:''}</div></div>
     <div class="meta"><span>≈ ${min} min</span><span>${s.items.length} esercizi</span><span>${sets} serie</span></div>
     <ol>${s.items.map(i=>`<li><b>${esc(EXMAP[i[0]].name)}</b> · ${i[1]>1?i[1]+' × ':''}${esc(i[2])}</li>`).join('')}</ol>
     <div class="actions"><a class="btn" href="#allena-${s.id}">Inizia</a>
@@ -3312,7 +3349,7 @@ function viewSessions(sub){
       ${mobCtaHTML()}
     </div>
     <div class="group-title"><h2>Le mie schede</h2><span class="count">${S.routines.length}</span></div>
-    <div class="sessions">${S.routines.map(s=>sessCard(s,true)).join('') || '<div class="empty">Crea la tua scheda con gli esercizi che vuoi, oppure premi Personalizza su una scheda pronta qui sotto.</div>'}
+    <div class="sessions">${S.routines.map((s,i)=>sessCard(s,true,i+1)).join('') || '<div class="empty">Crea la tua scheda con gli esercizi che vuoi, oppure premi Personalizza su una scheda pronta qui sotto.</div>'}
       <a class="btn ghost big" href="#scheda-nuova">+ Nuova scheda</a><a class="btn big" href="#importa">📷 Importa scheda da foto</a></div>
 `;
   $app.innerHTML = `<section class="view">${body}
@@ -3354,6 +3391,7 @@ function drawEditor(opts){
   $app.innerHTML = `<section class="view">
     <div><div class="eyebrow">${edit.isNew?'Nuova scheda':'Modifica scheda'}</div><h1 style="font-size:40px;text-transform:uppercase">${esc(edit.name||'La mia scheda')}</h1></div>
     <div class="field"><label for="rname">Nome della scheda</label><input id="rname" type="text" maxlength="40" placeholder="Es. Lunedì petto e tricipiti" value="${esc(edit.name)}"></div>
+    ${zonaSel('rzona', edit.zona||'', edit.items)}
     <div class="items">${edit.items.map((it,k)=>{ const x=EXMAP[it[0]]; return `<div class="item" style="border-left-color:${GROUPS[x.g].color}">
       <div class="item-top"><strong>${esc(x.name)}</strong>
         <button class="icon" type="button" data-up="${k}" aria-label="Sposta su" ${k?'':'disabled'}>↑</button>
@@ -3371,9 +3409,11 @@ function drawEditor(opts){
   </section>`;
   const nm = document.getElementById('rname');
   nm.oninput = ()=>{ edit.name = nm.value; };
+  document.getElementById('rzona').onchange = e=>{ edit.zona = e.target.value; };
   $app.querySelectorAll('[data-f]').forEach(inp=>inp.onchange=inp.oninput=()=>{
     const k=+inp.dataset.k, f=+inp.dataset.f;
     edit.items[k][f] = f===2 ? inp.value : Math.max(f===1?1:0, parseInt(inp.value,10)||0);
+    if(f===1){ const o=document.querySelector('#rzona option[value=""]'); if(o) o.textContent='Automatica: '+(zonaAuto(edit.items)||'—'); }
   });
   const move=(k,d)=>{ const a=edit.items; [a[k],a[k+d]]=[a[k+d],a[k]]; keepScroll(drawEditor); };
   $app.querySelectorAll('[data-up]').forEach(b=>b.onclick=()=>move(+b.dataset.up,-1));
@@ -3386,7 +3426,7 @@ function drawEditor(opts){
     edit.name = nm.value.trim();
     if(!edit.name){ err.textContent='Dai un nome alla scheda.'; err.hidden=false; nm.focus(); return; }
     if(!edit.items.length){ err.textContent='Aggiungi almeno un esercizio.'; err.hidden=false; return; }
-    const r = {id:edit.id, name:edit.name, items:clone(edit.items)};
+    const r = {id:edit.id, name:edit.name, items:clone(edit.items)}; if(edit.zona) r.zona=edit.zona;
     const i = S.routines.findIndex(x=>x.id===r.id);
     if(i>=0) S.routines[i]=r; else S.routines.push(r);
     saveRoutines(); edit=null; location.hash='sessioni';
@@ -5601,6 +5641,7 @@ function drawImportReview(){
     <p class="lead">${nOk===nAll?'Li ho riconosciuti tutti.':`Ne ho riconosciuti ${nOk}. Quelli in giallo scegli tu a quale esercizio corrispondono, oppure lasciali su "salta".`} Controlla serie, ripetizioni e recupero, poi premi Salva. ${imp.days.length>1?`Verranno create ${imp.days.length} schede, una per giorno.`:''}</p>
     ${imp.days.map((d,di)=>`<div class="card" style="padding:14px;display:grid;gap:10px">
       <div class="field"><label for="dn-${di}">Nome della scheda</label><input id="dn-${di}" type="text" maxlength="40" value="${esc(d.name)}" data-dn="${di}"></div>
+      ${zonaSel('dz-'+di, d.zona||'', d.items.filter(i=>EXMAP[i.id]).map(i=>[i.id,i.sets]))}
       ${d.items.map((it,k)=>{ const x=EXMAP[it.id]; return `<div class="item" style="border-left-color:${x?GROUPS[x.g].color:'#e6b800'};${x?'':'background:rgba(230,184,0,.12)'}">
         <div class="muted" style="font-size:13px">Scritto: «${esc(it.original)}»${it.kg?` · ${it.kg} kg`:''}</div>
         <select data-ex="${di}.${k}" aria-label="Esercizio" style="width:100%;font-size:16px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);margin:6px 0">${exOpts(it.id)}</select>
@@ -5615,13 +5656,14 @@ function drawImportReview(){
     <button class="btn ghost big" type="button" id="impBack">Ricomincia</button>
   </section>`;
   $app.querySelectorAll('[data-dn]').forEach(i=>i.oninput=()=>{ imp.days[+i.dataset.dn].name=i.value; });
+  imp.days.forEach((d,di)=>{ const z=document.getElementById('dz-'+di); if(z) z.onchange=()=>{ d.zona=z.value; }; });
   $app.querySelectorAll('[data-ex]').forEach(s=>s.onchange=()=>{ const [di,k]=s.dataset.ex.split('.').map(Number); imp.days[di].items[k].id=s.value||null; keepScroll(drawImportReview); });
   $app.querySelectorAll('[data-v]').forEach(i=>i.onchange=i.oninput=()=>{ const [di,k,f]=i.dataset.v.split('.'); const it=imp.days[+di].items[+k];
     it[f] = f==='reps' ? i.value : Math.max(f==='sets'?1:0, parseInt(i.value,10)||0); });
   document.getElementById('impBack').onclick=()=>{ imp=null; viewImport(); };
   document.getElementById('impSave').onclick=()=>{
     const out = imp.days.map((d,di)=>({id:'my'+Date.now().toString(36)+di, name:(d.name||'Scheda').trim().slice(0,40),
-      items:d.items.filter(i=>EXMAP[i.id]).map(i=>[i.id, i.sets, String(i.reps||'10'), i.rest])})).filter(r=>r.items.length);
+      items:d.items.filter(i=>EXMAP[i.id]).map(i=>[i.id, i.sets, String(i.reps||'10'), i.rest]), ...(d.zona?{zona:d.zona}:{})})).filter(r=>r.items.length);
     if(!out.length){ const e=document.getElementById('impErr'); e.textContent='Scegli almeno un esercizio prima di salvare.'; e.hidden=false; return; }
     S.routines.push(...out); saveRoutines(); imp=null; location.hash='sessioni';
   };
