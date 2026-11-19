@@ -636,6 +636,29 @@ body.noscroll{overflow:hidden}
 .fb button[aria-pressed="true"]{background:#7a3fb0;border-color:#7a3fb0}.fbmsg{font-style:normal;font-size:12px;color:var(--muted)}
 .sci p .fb{display:flex;margin:6px 0 0}
 .chip[data-img][aria-pressed="true"],.btn[data-img][aria-pressed="true"]{outline:3px solid #7a3fb0}
+.ichips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ithumb{width:120px;height:120px;object-fit:cover;border-radius:12px;border:1px solid var(--line)}
+.iocr{white-space:pre-wrap;font-size:12px;color:var(--muted);max-height:180px;overflow:auto;margin:6px 0 0}
+.iday{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:0}
+.iday li{display:grid;grid-template-columns:92px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.iday li>b{font-family:var(--display);font-size:16px;color:var(--accent)}
+.iday li span{display:grid;gap:2px}.iday small{color:var(--muted);font-size:13px}
+.iday li.itrain{background:var(--sunk);border-radius:10px;padding:8px 10px;border-top:0;margin:4px 0}.iday li.itrain>b{color:var(--fg)}
+.iday li.itrain+li{border-top:0}
+.isupp{padding:0;margin-bottom:10px}.isupp summary{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none}
+.isupp summary::-webkit-details-marker{display:none}
+.isupp summary>span:nth-child(2){flex:1;display:grid;gap:2px}.isupp summary small{color:var(--muted);font-size:13px}
+.isupp summary img,.isupp .iico{width:48px;height:48px;border-radius:10px;object-fit:cover;flex:none;background:var(--sunk);display:grid;place-items:center;font-size:26px}
+.isupp[open] summary svg{transform:rotate(90deg)}
+.ibody{padding:0 16px 16px;display:grid;gap:8px}.ibody h3{margin:8px 0 0;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}.ibody p{margin:0}
+.iwarn{background:color-mix(in srgb,var(--red) 10%,var(--surface));border-radius:10px;padding:10px}
+.icite{font-size:13px;color:var(--muted)}
+.bcview{display:grid;place-items:center}.bcview video{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.bcbox{position:absolute;left:10%;right:10%;top:38%;height:22%;border:3px solid #fff;border-radius:14px;box-shadow:0 0 0 2000px #0007}
+.bcmsg{position:absolute;top:24%;left:16px;right:16px;text-align:center;color:#fff;font-weight:700;font-size:17px;margin:0}
+.bcview .confirm{position:absolute;bottom:32px}
+
+.igoal{background:var(--sunk);border-radius:12px;padding:12px 14px;display:grid;gap:8px;margin-top:10px}.igoal p{margin:0;display:grid;gap:1px}.igoal small{color:var(--muted);font-size:13px}
 </style>
 
 <style>
@@ -3577,6 +3600,7 @@ function finish(){
     <div class="stats"><div><b>${mins}'</b><span>Durata</span></div><div><b>${nsets}</b><span>Serie</span></div><div><b>${kgf(vol)}</b><span>Kg sollevati</span></div>${hs?`<div><b>${hs.avg}</b><span>Battito medio</span></div>`:''}</div>${hs?hrDetail(hs):''}
     ${prs.length?`<div class="prs"><div class="eyebrow">Nuovi record</div>${prs.map(p=>`<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`:''}
     ${coachOn()?`<p class="next coachl"><b>🧠 Coach:</b> ${esc((coachEndTxt()+cTip).trim())}</p>${cTip?`<p class="note fbq">Ti è utile questo consiglio? ${fbBtns(cTip)}</p>`:''}`:''}
+    ${integNowHTML()}
     <p class="next">Salvata nel diario. Bevi acqua e, se hai qualche minuto, sciogliti con lo stretching guidato.</p>
     <div class="links"><a class="btn" href="#mob-${mk}">🧘 Stretching guidato · ${mobMin(MOBRMAP[mk])}'</a><a class="btn ghost" href="#diario">Vai al diario</a><a class="btn ghost" href="#sessioni">Altre sessioni</a></div></section>`;
 }
@@ -5206,6 +5230,7 @@ function viewFood(){
         <li><b>Integratori</b> (proteine in polvere, creatina...) solo se te li consiglia il professionista.</li>
         <li><b>Dormi bene</b>: 7-8 ore aiutano recupero, fame e peso.</li>
       </ul>
+      <div class="links"><a class="btn ghost small" href="#integratori">💊 Integratori: quando e come prenderli →</a></div>
     </section>
   </section>`;
   // acqua
@@ -6381,6 +6406,492 @@ function viewHome(){
 function progSwitch(on){
   return `<div class="seg" role="tablist" aria-label="Progressi"><a href="#diario" role="tab" aria-selected="${on==='diario'}">Allenamenti</a><a href="#corpo" role="tab" aria-selected="${on==='corpo'}">Corpo</a></div>`;
 }
+/* ---------------- INTEGRATORI (facoltativo): foto dell'etichetta → quando e come prenderlo ----------------
+   Lettura dell'etichetta sul telefono (Tesseract.js, file in ocr/, nessun server). Regole fisse dagli studi (ISSN, EFSA, ACSM). */
+const INTEG = Object.assign({ok:0, on:false, items:[], time:'', day:'train', days:null, codes:{}}, store.get('integ',{}));
+const integSave = () => store.set('integ', INTEG);
+const integOn = () => !!(INTEG.ok && INTEG.on);
+const OCR_FILES = ['ocr/zxing-reader.js','ocr/zxing_reader.wasm','ocr/tesseract.min.js','ocr/worker.min.js','ocr/ita.traineddata.gz','ocr/tesseract-core-lstm.wasm.js','ocr/tesseract-core-simd-lstm.wasm.js'];
+const ocrSimd = (()=>{ try{ return WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,0,0,1,5,1,96,0,1,123,3,2,1,0,10,10,1,8,0,65,0,253,15,253,98,11])); }catch(e){ return false; } })();
+const ocrCore = () => ocrSimd ? 'ocr/tesseract-core-simd-lstm.wasm.js' : 'ocr/tesseract-core-lstm.wasm.js';
+/* scarica i file per leggere le etichette anche senza internet (cache separata, non si cancella con gli aggiornamenti) */
+function ocrPrefetch(){ try{ if(!('caches' in window) || !navigator.onLine) return;
+  caches.open('pf-ocr').then(c=>Promise.all(OCR_FILES.filter(f=>f.indexOf('core')<0 || f===ocrCore()).map(f=>c.match(f).then(r=>r||c.add(f))))).catch(()=>{}); }catch(e){} }
+let ocrLib = null;
+function ocrLoad(){ if(ocrLib) return ocrLib;
+  ocrLib = new Promise((res,rej)=>{ if(window.Tesseract) return res(window.Tesseract); const s=document.createElement('script'); s.src='ocr/tesseract.min.js'; s.onload=()=>res(window.Tesseract); s.onerror=()=>{ ocrLib=null; rej(new Error('ocr')); }; document.head.appendChild(s); });
+  return ocrLib; }
+/* immagine più piccola e in scala di grigi: lettura più veloce */
+async function ocrPrep(file){
+  const img = await new Promise((res,rej)=>{ const u=URL.createObjectURL(file), i=new Image(); i.onload=()=>{ res(i); setTimeout(()=>URL.revokeObjectURL(u),1000); }; i.onerror=rej; i.src=u; });
+  const k = Math.min(1, 1600/Math.max(img.naturalWidth,img.naturalHeight));
+  const c = document.createElement('canvas'); c.width=Math.round(img.naturalWidth*k); c.height=Math.round(img.naturalHeight*k);
+  const x = c.getContext('2d'); x.filter='grayscale(1) contrast(1.25)'; x.drawImage(img,0,0,c.width,c.height);
+  const t = document.createElement('canvas'), tk = 160/Math.max(c.width,c.height); t.width=Math.round(c.width*tk); t.height=Math.round(c.height*tk);
+  t.getContext('2d').drawImage(img,0,0,t.width,t.height);
+  return {canvas:c, thumb:t.toDataURL('image/jpeg',.7)};
+}
+async function ocrRead(canvas, onp){
+  const T = await ocrLoad();
+  const w = await T.createWorker('ita', 1, {workerPath:'ocr/worker.min.js', corePath:ocrCore(), langPath:'ocr', workerBlobURL:false,
+    logger:m=>{ if(m && m.status==='recognizing text' && onp) onp(Math.round(m.progress*100)); }});
+  try{ const r = await w.recognize(canvas, {}, {text:true, blocks:true}); return r.data; } finally { try{ await w.terminate(); }catch(e){} }
+}
+/* righe del testo con "peso": le scritte grandi (il nome del prodotto) contano di più */
+function ocrLines(data){
+  const L = [];
+  (data.blocks||[]).forEach(b=>(b.paragraphs||[]).forEach(p=>(p.lines||[]).forEach(l=>{ const h=l.bbox?l.bbox.y1-l.bbox.y0:0; if((l.text||'').trim()) L.push({t:l.text.trim(), h}); })));
+  if(!L.length) (data.text||'').split('\n').forEach(t=>{ if(t.trim()) L.push({t:t.trim(), h:1}); });
+  const hs = L.map(l=>l.h).sort((a,b)=>a-b), med = hs[Math.floor(hs.length/2)]||1;
+  L.forEach(l=>{ l.w = Math.max(1, Math.min(3, l.h/med)); });
+  return L;
+}
+const n1 = v => String(Math.round(v*10)/10).replace('.',',');
+const rnd5 = v => Math.round(v/5)*5;
+const hm = (t, d) => { const m=((t+d)%1440+1440)%1440; return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
+const CAF_SLEEP = 'La caffeina resta nel corpo per molte ore: prendila almeno 6 ore prima di andare a dormire, altrimenti dormi peggio e recuperi meno.';
+/* tipi di integratore. ev: s=dimostrato m=prove medie w=poche prove. kw: [parola, punti]. when: momenti nei giorni di allenamento (t) e di riposo (r) */
+const SUPP = {
+  whey:{n:'Proteine del siero (whey)', ico:'🥛', ev:'s', kw:[[/whey/i,4],[/siero/i,3],[/isolat|isolate|idrolizzat|hydroly/i,2],[/protein/i,1.5]],
+    t:[['post',"Dopo l'allenamento, entro 1-2 ore"]], r:[['col','A colazione o a merenda, se in quel pasto mangi poche proteine']],
+    dose:c=> c.kg ? `${rnd5(c.kg*.3)}-${rnd5(c.kg*.4)} g di proteine per volta (0,3-0,4 g per ogni kg del tuo peso). In tutto il giorno, cibo compreso: circa ${rnd5(c.kg*(c.goal==='dim'?1.8:1.6))} g di proteine.` : '20-40 g di proteine per volta (0,3-0,4 g per ogni kg del tuo peso). In tutto il giorno, cibo compreso: circa 1,6 g per ogni kg.',
+    how:["Sciogli la dose in 200-300 ml di acqua o latte, nello shaker.","Conta come proteine della giornata: se mangi già abbastanza carne, pesce, uova, latticini o legumi, non serve.","Il totale di proteine del giorno conta più dell'orario preciso: l'importante è dividerle in 3-4 pasti."],
+    goal:{dim:"Per dimagrire ti aiuta a non perdere muscoli e a sentire meno fame. Ha calorie: contala nella dieta.", mus:"Per i muscoli conta soprattutto il totale di proteine della giornata, insieme all'allenamento.", for:"Per la forza aiuta il recupero tra un allenamento e l'altro.", res:"Dopo le corse lunghe aiuta i muscoli a recuperare, insieme ai carboidrati."},
+    warn:["Contiene latte: non prenderla se sei allergico alle proteine del latte. Se il lattosio ti dà fastidio, scegli un isolato.","Se hai problemi ai reni chiedi prima al medico."],
+    cite:"Jäger e coll., ISSN posizione sulle proteine, J Int Soc Sports Nutr 2017 · Morton e coll., Br J Sports Med 2018 (meta-analisi di 49 studi) · Schoenfeld e coll., J Int Soc Sports Nutr 2013 (orario)"},
+  casein:{n:'Caseine (proteine lente)', ico:'🌙', ev:'m', kw:[[/casein/i,5],[/micellar/i,4],[/night|notte/i,1.5]],
+    t:[['notte','La sera, circa 30 minuti prima di dormire']], r:[['notte','La sera, circa 30 minuti prima di dormire']],
+    dose:c=>'30-40 g di proteine (di solito 1 dose e mezza della confezione, controlla in etichetta).',
+    how:["Si digeriscono piano: per questo vanno bene prima della notte.","Sciogli in acqua o latte. Va bene anche come spuntino lontano dai pasti.","Se a cena hai già mangiato molte proteine, non serve."],
+    goal:{dim:"Per dimagrire conta le calorie: usala al posto di uno spuntino, non in più.", mus:"Le proteine prima di dormire aiutano i muscoli a ricostruirsi durante la notte.", for:"Aiuta il recupero notturno dopo gli allenamenti pesanti.", res:"Aiuta il recupero notturno dopo gli allenamenti lunghi."},
+    warn:["Contiene latte: non prenderla se sei allergico alle proteine del latte.","Se hai problemi ai reni chiedi prima al medico."],
+    cite:"Snijders e coll., J Nutr 2015 · Trommelen e van Loon, Nutrients 2016 · Jäger e coll., J Int Soc Sports Nutr 2017"},
+  veg:{n:'Proteine vegetali', ico:'🌱', ev:'m', kw:[[/pisello|pea\b/i,4],[/soia|soy/i,3],[/riso|rice/i,1.5],[/vegan|vegetal|plant/i,3]],
+    t:[['post',"Dopo l'allenamento, entro 1-2 ore"]], r:[['col','A colazione o a merenda, se in quel pasto mangi poche proteine']],
+    dose:c=> c.kg ? `${rnd5(c.kg*.35)}-${rnd5(c.kg*.45)} g di proteine per volta: un po' più delle proteine del latte, perché quelle vegetali hanno meno leucina.` : "30-40 g di proteine per volta: un po' più delle proteine del latte, perché quelle vegetali hanno meno leucina.",
+    how:["Sciogli la dose in acqua o bevanda vegetale.","Le miscele (per esempio pisello e riso) sono più complete di una sola fonte.","Conta come proteine della giornata."],
+    goal:{dim:"Per dimagrire ti aiuta a non perdere muscoli e a sentire meno fame. Ha calorie: contala nella dieta.", mus:"Con la dose giusta funzionano quasi come le proteine del latte.", for:"Aiutano il recupero tra un allenamento e l'altro.", res:"Dopo le corse lunghe aiutano i muscoli a recuperare."},
+    warn:["Controlla gli allergeni in etichetta (soia, glutine).","Se hai problemi ai reni chiedi prima al medico."],
+    cite:"Gorissen e coll., Amino Acids 2018 · Messina e coll., Int J Sport Nutr Exerc Metab 2018 · Jäger e coll., J Int Soc Sports Nutr 2017"},
+  gainer:{n:'Gainer (proteine e carboidrati)', ico:'🍚', ev:'w', kw:[[/gainer/i,5],[/mass\s*gain|weight\s*gain/i,4],[/aumento di peso/i,3]],
+    t:[['post',"Dopo l'allenamento, entro 1-2 ore"]], r:[['mer','Tra un pasto e l\'altro (per esempio a metà pomeriggio)']],
+    dose:c=>'Segui la dose in etichetta. Spesso una dose ha 500-1000 calorie: puoi iniziare con mezza dose.',
+    how:["Serve a chi fa fatica a mangiare abbastanza per mettere su peso.","Non sostituisce i pasti: si aggiunge."],
+    goal:{dim:"Se vuoi dimagrire non è adatto: ha moltissime calorie.", mus:"Utile solo se non riesci a mangiare abbastanza per crescere.", for:"Utile solo se non riesci a mangiare abbastanza.", res:"Di solito non serve: meglio pasti normali con carboidrati."},
+    warn:["Contiene spesso latte e molti zuccheri: attenzione se hai diabete."],
+    cite:"Jäger e coll., J Int Soc Sports Nutr 2017 · Thomas, Erdman e Burke, Med Sci Sports Exerc 2016"},
+  creatina:{n:'Creatina', ico:'⚡', ev:'s', kw:[[/creatin/i,6],[/creapure/i,6],[/kre-?alkalyn/i,6]],
+    t:[['pasto',"Con il pasto dopo l'allenamento"]], r:[['pranzo','Con un pasto qualsiasi, anche nei giorni di riposo']],
+    dose:c=>`${c.kg>90?'5':'3-5'} g al giorno, tutti i giorni (circa un cucchiaino raso). Se vuoi vedere l'effetto prima: ${c.kg?Math.round(c.kg*.3)+' g':'0,3 g per kg'} al giorno divisi in 4 volte per 5-7 giorni, poi ${c.kg>90?'5':'3-5'} g al giorno. Non è obbligatorio.`,
+    how:["Prendila tutti i giorni, anche quelli di riposo: conta la costanza, non l'orario.","Sciogli in acqua, succo o insieme alle proteine. Con un pasto entra meglio nei muscoli.","La creatina monoidrato è la più studiata: le altre forme non funzionano meglio.","Nelle prime settimane il peso può salire di 1-2 kg: è acqua nei muscoli, non grasso.","Non servono pause o cicli."],
+    goal:{dim:"Non fa dimagrire, ma ti aiuta a mantenere forza e muscoli mentre dimagrisci. La bilancia può segnare 1 kg in più d'acqua.", mus:"Ti aiuta a fare 1-2 ripetizioni in più: nel tempo vuol dire più muscoli.", for:"È l'integratore con più prove per la forza: in media qualche chilo in più sui massimali.", res:"Per la corsa lunga serve poco; aiuta negli scatti e nelle ripetute veloci."},
+    warn:["Se hai problemi ai reni o prendi farmaci per i reni, chiedi prima al medico.","Bevi acqua a sufficienza durante la giornata."],
+    cite:"Kreider e coll., ISSN posizione sulla creatina, J Int Soc Sports Nutr 2017 · Antonio e coll., J Int Soc Sports Nutr 2021 · Antonio e Ciccone, J Int Soc Sports Nutr 2013 (orario)"},
+  eaa:{n:'Aminoacidi essenziali (EAA)', ico:'🧬', ev:'m', kw:[[/\beaa\b/i,5],[/essenzial|essential/i,3]],
+    t:[['dur',"Prima, durante o subito dopo l'allenamento"]], r:[['mer','Tra i pasti, se in quel pasto mangi poche proteine']],
+    dose:c=>'10-15 g (contengono 2-3 g di leucina, la quantità che "accende" la crescita del muscolo).',
+    how:["Sciogli in 300-500 ml di acqua e bevi a sorsi.","Contengono tutti gli aminoacidi che servono ai muscoli: per questo funzionano meglio dei BCAA.","Se prendi già le proteine in polvere dopo l'allenamento, non servono anche questi."],
+    goal:{dim:"Hanno poche calorie: utili se ti alleni a digiuno o se mangi poche proteine.", mus:"Utili se mangi poche proteine; altrimenti conta il totale della giornata.", for:"Utili se mangi poche proteine.", res:"Utili nelle sedute lunghe a digiuno."},
+    warn:["Se hai problemi ai reni o al fegato chiedi prima al medico."],
+    cite:"Jäger e coll., J Int Soc Sports Nutr 2017 · Church e coll., J Clin Endocrinol Metab 2020"},
+  bcaa:{n:'Aminoacidi ramificati (BCAA)', ico:'🔗', ev:'w', kw:[[/bcaa/i,6],[/ramificat|branched/i,5],[/leucin/i,1.5],[/valin/i,1.5],[/2\s*:\s*1\s*:\s*1|4\s*:\s*1\s*:\s*1/,3],[/aminoacid|amino/i,1]],
+    t:[['pre30',"15-30 minuti prima o durante l'allenamento"]], r:[['no','Nei giorni di riposo non servono']],
+    dose:c=>'5-10 g.',
+    how:["Sciogli in acqua e bevi a sorsi.","Sono solo 3 dei 9 aminoacidi che servono ai muscoli: da soli non bastano per costruirli.","Se mangi abbastanza proteine, o prendi le proteine in polvere, non aggiungono niente."],
+    goal:{dim:"Possono servire se ti alleni a digiuno; altrimenti meglio un pasto con proteine.", mus:"Per i muscoli sono meglio le proteine complete (cibo, whey) o gli EAA.", for:"Per la forza non ci sono prove di un effetto.", res:"Nelle corse lunghe a digiuno possono ridurre un po' la stanchezza, ma le prove sono poche."},
+    warn:["Se hai problemi ai reni o al fegato chiedi prima al medico."],
+    cite:"Wolfe, J Int Soc Sports Nutr 2017 · Plotkin e coll., Nutrients 2021 · Jäger e coll., J Int Soc Sports Nutr 2017"},
+  glut:{n:'Glutammina', ico:'💧', ev:'w', kw:[[/glutamin|glutammin/i,6]],
+    t:[['post',"Dopo l'allenamento"]], r:[['no','Nei giorni di riposo non serve']],
+    dose:c=>'5 g, se proprio vuoi prenderla.',
+    how:["Nelle persone sane non aumenta muscoli, forza o recupero.","Il corpo la produce da solo e ce n'è molta nelle proteine del cibo."],
+    goal:{dim:"Non fa dimagrire.", mus:"Non aumenta i muscoli.", for:"Non aumenta la forza.", res:"Non migliora la resistenza."},
+    warn:["Se hai problemi ai reni o al fegato chiedi prima al medico."],
+    cite:"Gleeson, J Nutr 2008 · Candow e coll., Eur J Appl Physiol 2001"},
+  pre:{n:'Pre-allenamento (pre-workout)', ico:'🔥', ev:'m', caf:true, kw:[[/pre[\s-]?workout/i,6],[/pre[\s-]?allenament/i,6],[/pre[\s-]?work/i,4],[/booster|pump/i,3]],
+    t:[['pre30',"20-30 minuti prima dell'allenamento"]], r:[['no','Nei giorni di riposo non serve']],
+    dose:c=>`La prima volta prendi mezza dose per vedere come ti senti.${c.caf?` Una dose ha ${c.caf} mg di caffeina${c.kg?` (${n1(c.caf/c.kg)} mg per kg del tuo peso; negli studi funzionano 3-6 mg per kg)`:''}.`:' Controlla quanta caffeina c\'è in una dose: è l\'ingrediente che fa di più.'}`,
+    how:["Di solito contiene caffeina, beta-alanina e citrullina: l'effetto viene soprattutto dalla caffeina.","Il formicolio sulla pelle viene dalla beta-alanina: è innocuo e passa in 30-60 minuti.","Sciogli in 250-300 ml di acqua.","Non prenderlo insieme ad altri prodotti con caffeina (caffè, energy drink)."],
+    goal:{dim:"Ti dà energia per allenarti meglio, ma da solo non fa dimagrire.", mus:"Può aiutarti a fare qualche ripetizione in più.", for:"La caffeina aiuta un po' la forza massima.", res:"La caffeina aiuta la resistenza: è una delle sostanze con più prove."},
+    warn:["Non prenderlo se sei in gravidanza, hai problemi di cuore, pressione alta, ansia o insonnia, senza parlarne con il medico.","In tutto il giorno non superare 400 mg di caffeina (caffè compresi)."],
+    cite:"Harty e coll., J Int Soc Sports Nutr 2018 (rassegna) · Guest e coll., ISSN posizione sulla caffeina, J Int Soc Sports Nutr 2021 · EFSA 2015"},
+  caffeina:{n:'Caffeina', ico:'☕', ev:'s', caf:true, kw:[[/caffein|caffeine/i,5],[/guaran/i,4]],
+    t:[['pre45',"30-60 minuti prima dell'allenamento"]], r:[['no','Nei giorni di riposo non serve']],
+    dose:c=> (c.kg ? `${rnd5(c.kg*3)}-${rnd5(c.kg*6)} mg (3-6 mg per kg del tuo peso). Inizia dalla dose più bassa.` : '3-6 mg per ogni kg del tuo peso. Inizia dalla dose più bassa.') + (c.caf?` Una dose della confezione ha ${c.caf} mg.`:''),
+    how:["Bevi con acqua. Un caffè espresso ha circa 60-80 mg di caffeina: contalo.","Se la prendi tutti i giorni l'effetto diminuisce un po': usala per gli allenamenti più importanti."],
+    goal:{dim:"Ti aiuta ad allenarti con più energia; l'effetto sul grasso è piccolo.", mus:"Può aiutarti a fare qualche ripetizione in più.", for:"Aiuta un po' la forza massima e la potenza.", res:"Per la resistenza è una delle sostanze con più prove."},
+    warn:["Non prenderla se sei in gravidanza, hai problemi di cuore, pressione alta, ansia o insonnia, senza parlarne con il medico.","In tutto il giorno non superare 400 mg (200 mg in una volta se non sei abituato)."],
+    cite:"Guest e coll., ISSN posizione sulla caffeina, J Int Soc Sports Nutr 2021 · EFSA 2015 · Drake e coll., J Clin Sleep Med 2013 (sonno)"},
+  beta:{n:'Beta-alanina', ico:'✨', ev:'s', kw:[[/beta[\s-]?alanin/i,6],[/carnosyn/i,6]],
+    t:[['pasto2','Ai pasti, divisa in 2-4 volte durante la giornata']], r:[['pasto2','Ai pasti, divisa in 2-4 volte, anche nei giorni di riposo']],
+    dose:c=>'3,2-6,4 g al giorno, divisi in dosi da 0,8-1,6 g.',
+    how:["Funziona dopo 2-4 settimane di uso quotidiano: l'orario non conta.","Il formicolio sulla pelle è innocuo; dividere la dose e prenderla ai pasti lo riduce.","Aiuta negli sforzi intensi di 1-4 minuti (serie lunghe, ripetute)."],
+    goal:{dim:"Non fa dimagrire.", mus:"Può aiutare nelle serie lunghe (più di 12-15 ripetizioni).", for:"Per serie brevi e pesanti serve poco.", res:"Utile nelle ripetute e negli sforzi di 1-4 minuti; nelle corse lunghe l'effetto è piccolo."},
+    warn:["Se sei in gravidanza o prendi farmaci chiedi prima al medico."],
+    cite:"Trexler e coll., ISSN posizione sulla beta-alanina, J Int Soc Sports Nutr 2015 · Saunders e coll., Br J Sports Med 2017 (meta-analisi)"},
+  citrul:{n:'Citrullina', ico:'🍉', ev:'w', kw:[[/citrullin/i,6],[/malat/i,1]],
+    t:[['pre60',"Circa 60 minuti prima dell'allenamento"]], r:[['no','Nei giorni di riposo non serve']],
+    dose:c=>'6-8 g di citrullina malato, oppure 3-5 g di L-citrullina pura.',
+    how:["Sciogli in acqua.","Negli studi aiuta poco: forse qualche ripetizione in più e meno indolenzimento."],
+    goal:{dim:"Non fa dimagrire.", mus:"Effetto piccolo: forse qualche ripetizione in più.", for:"Effetto piccolo o nullo sulla forza.", res:"Effetto piccolo."},
+    warn:["Se prendi farmaci per la pressione o per il cuore chiedi prima al medico."],
+    cite:"Trexler e coll., Sports Med 2019 (meta-analisi) · Gonzalez e Trexler, J Strength Cond Res 2020"},
+  hmb:{n:'HMB', ico:'🛡', ev:'w', kw:[[/\bhmb\b/i,6],[/idrossi.?metil.?butirrat|hydroxy.?methyl.?butyr/i,6]],
+    t:[['pre60',"1 g circa 60 minuti prima dell'allenamento, il resto ai pasti"]], r:[['pasto2','1 g a ogni pasto principale']],
+    dose:c=>'3 g al giorno, divisi in 3 volte da 1 g.',
+    how:["Le prove migliori sono per chi inizia ad allenarsi e per le persone anziane.","In chi si allena da tempo l'effetto è piccolo o nullo."],
+    goal:{dim:"Può aiutare un po' a non perdere muscoli mentre dimagrisci.", mus:"Utile soprattutto per chi inizia.", for:"Effetto piccolo nelle persone allenate.", res:"Prove poche."},
+    warn:["Se sei in gravidanza o prendi farmaci chiedi prima al medico."],
+    cite:"Wilson e coll., ISSN posizione sull'HMB, J Int Soc Sports Nutr 2013 · Rowlands e Thomson, J Strength Cond Res 2009 (meta-analisi)"},
+  sali:{n:'Sali minerali e carboidrati per lo sport', ico:'🧂', ev:'m', kw:[[/elettrolit|electrolyt/i,5],[/sali minerali/i,5],[/isotonic/i,5],[/maltodestrin|maltodextrin|ciclodestrin|cyclodextrin|vitargo/i,5],[/potassio|sodio/i,1]],
+    t:[['dur',"Durante l'allenamento, se dura più di 60-90 minuti o fa molto caldo"]], r:[['no','Nei giorni di riposo non servono']],
+    dose:c=>"Carboidrati: 30-60 g all'ora negli sforzi che durano più di un'ora. Bevi a piccoli sorsi ogni 15-20 minuti.",
+    how:["Per un'ora di palestra basta l'acqua.","Utili nelle corse lunghe, nelle giornate calde e quando sudi molto."],
+    goal:{dim:"Hanno calorie: se l'allenamento dura meno di un'ora, bevi solo acqua.", mus:"Per la palestra di solito non servono.", for:"Per la palestra di solito non servono.", res:"Nelle corse oltre 60-90 minuti ti aiutano a non calare alla fine."},
+    warn:["Se hai pressione alta, problemi ai reni o diabete chiedi prima al medico."],
+    cite:"Thomas, Erdman e Burke, posizione ACSM e dietisti, Med Sci Sports Exerc 2016"},
+  omega:{n:'Omega 3', ico:'🐟', ev:'w', kw:[[/omega/i,5],[/\bepa\b|\bdha\b/i,3],[/olio di pesce|fish oil|krill/i,5]],
+    t:[['pranzo','Con un pasto principale (pranzo o cena)']], r:[['pranzo','Con un pasto principale (pranzo o cena)']],
+    dose:c=>'Come in etichetta; di solito 1-2 g di EPA + DHA al giorno.',
+    how:["Prendili con un pasto che contiene grassi: vengono assorbiti meglio e danno meno reflusso.","Per lo sport le prove sono poche; sono utili soprattutto se mangi poco pesce."],
+    goal:{dim:"Non fanno dimagrire.", mus:"Forse un piccolo aiuto al recupero; prove poche.", for:"Prove poche.", res:"Prove poche."},
+    warn:["Se prendi farmaci che rendono il sangue più fluido (anticoagulanti) chiedi prima al medico."],
+    cite:"Philpott e coll., Res Sports Med 2019 (rassegna) · EFSA 2012"},
+  vitd:{n:'Vitamina D', ico:'☀️', ev:'m', kw:[[/vitamin[ae]?\s*d\b|vit\.?\s*d3?\b/i,5],[/colecalcifer|cholecalcifer/i,6],[/\bd3\b/i,3]],
+    t:[['pranzo','Con il pasto più ricco della giornata (pranzo o cena)']], r:[['pranzo','Con il pasto più ricco della giornata (pranzo o cena)']],
+    dose:c=>"Come in etichetta o come ti ha detto il medico. Senza indicazione del medico non superare 4.000 UI (100 µg) al giorno.",
+    how:["Prendila con un pasto che contiene grassi: viene assorbita meglio.","Serve soprattutto se ne hai poca (si vede con l'esame del sangue), in inverno o se stai poco al sole."],
+    goal:{dim:"Non fa dimagrire.", mus:"Aiuta i muscoli solo se ne hai poca.", for:"Aiuta la forza solo se ne hai poca.", res:"Aiuta solo se ne hai poca."},
+    warn:["Troppa vitamina D fa male: non prendere più prodotti che la contengono insieme."],
+    cite:"EFSA, limite massimo della vitamina D, EFSA J 2023 · Holick e coll., Endocrine Society 2011"},
+  magn:{n:'Magnesio', ico:'🌿', ev:'w', kw:[[/magnesi/i,5]],
+    t:[['cena','A cena o prima di dormire']], r:[['cena','A cena o prima di dormire']],
+    dose:c=>'Come in etichetta. Da integratori non superare 250 mg di magnesio al giorno.',
+    how:["Se ti scioglie l'intestino, dividi la dose o prendila a cena.","Utile se ne mangi poco (frutta secca, legumi, cereali integrali, verdura verde)."],
+    goal:{dim:"Non fa dimagrire.", mus:"Aiuta solo se ne hai poco.", for:"Aiuta solo se ne hai poco.", res:"Con il caldo e molto sudore può servire con gli altri sali."},
+    warn:["Se hai problemi ai reni chiedi prima al medico."],
+    cite:"EFSA, limiti massimi di vitamine e minerali, 2006"},
+  zma:{n:'ZMA (zinco e magnesio)', ico:'🌛', ev:'w', kw:[[/\bzma\b/i,6],[/zinco|zinc/i,2]],
+    t:[['notte','30-60 minuti prima di dormire, a stomaco vuoto']], r:[['notte','30-60 minuti prima di dormire, a stomaco vuoto']],
+    dose:c=>'Come in etichetta. Non superare 25 mg di zinco al giorno.',
+    how:["Non prenderlo con latte o latticini: il calcio lo fa assorbire meno.","Negli sportivi che mangiano bene non aumenta il testosterone né la forza."],
+    goal:{dim:"Non fa dimagrire.", mus:"Prove contrarie: di solito non serve.", for:"Prove contrarie: di solito non serve.", res:"Di solito non serve."},
+    warn:["Troppo zinco a lungo fa male: non prendere più prodotti che lo contengono insieme."],
+    cite:"Koehler e coll., Eur J Clin Nutr 2009 · EFSA, limiti massimi 2006"},
+  multi:{n:'Multivitaminico', ico:'💊', ev:'w', kw:[[/multivitamin/i,6],[/vitamine e minerali|vitamins and minerals/i,4]],
+    t:[['col','A colazione']], r:[['col','A colazione']],
+    dose:c=>'1 dose al giorno come in etichetta.',
+    how:["Prendilo con la colazione o con un pasto.","Non sostituisce frutta e verdura."],
+    goal:{dim:"Non fa dimagrire.", mus:"Non aumenta i muscoli se mangi in modo vario.", for:"Non aumenta la forza se mangi in modo vario.", res:"Non migliora la resistenza se mangi in modo vario."},
+    warn:["Non sommarlo ad altri integratori con le stesse vitamine (D, A, zinco, ferro)."],
+    cite:"Maughan e coll., dichiarazione del CIO sugli integratori, Br J Sports Med 2018"},
+  carnit:{n:'L-carnitina', ico:'🔸', ev:'w', kw:[[/carnitin/i,6]],
+    t:[['pasto',"Con il pasto dopo l'allenamento"]], r:[['pranzo','Con un pasto con carboidrati']],
+    dose:c=>'1-2 g al giorno.',
+    how:["Prendila con un pasto con carboidrati: viene assorbita meglio.","Da sola non fa dimagrire: negli studi l'effetto è piccolo."],
+    goal:{dim:"Effetto piccolo: in media meno di 1 kg in qualche mese. Conta molto di più la dieta.", mus:"Non aumenta i muscoli.", for:"Non aumenta la forza.", res:"Prove poche."},
+    warn:["Se prendi farmaci per la tiroide o anticoagulanti chiedi prima al medico."],
+    cite:"Talenezhad e coll., Clin Nutr ESPEN 2020 (meta-analisi)"},
+  coll:{n:'Collagene', ico:'🦴', ev:'w', kw:[[/collagen/i,6]],
+    t:[['pre60',"30-60 minuti prima dell'allenamento, con vitamina C"]], r:[['col','A colazione, con vitamina C (per esempio una spremuta)']],
+    dose:c=>'10-15 g, con 50 mg di vitamina C.',
+    how:["Può aiutare tendini e articolazioni: le prove sono poche.","Non conta come proteina per i muscoli: è incompleta."],
+    goal:{dim:"Non fa dimagrire.", mus:"Non aumenta i muscoli.", for:"Forse aiuta i tendini con i carichi pesanti.", res:"Forse aiuta i tendini di chi corre."},
+    warn:["Controlla gli allergeni (pesce, se è collagene marino)."],
+    cite:"Shaw e coll., Am J Clin Nutr 2017 · Khatri e coll., Amino Acids 2021 (rassegna)"},
+  brucia:{n:'Brucia grassi (termogenici)', ico:'🌶', ev:'w', caf:true, kw:[[/brucia\s*grass|fat\s*burn/i,6],[/termogen|thermo/i,5],[/sinefrin|synephrin/i,5],[/garcinia|\bcla\b|cromo|t[eè] verde|green tea/i,3]],
+    t:[['col','Al mattino, mai la sera']], r:[['col','Al mattino, mai la sera']],
+    dose:c=>`Come in etichetta, non di più.${c.caf?` Una dose ha ${c.caf} mg di caffeina: contala insieme ai caffè.`:''}`,
+    how:["Negli studi l'effetto è piccolo o nullo: per dimagrire contano dieta, movimento e sonno.","Molti contengono caffeina o sinefrina: non prenderli insieme a caffè o pre-allenamento."],
+    goal:{dim:"L'effetto è piccolo: non aspettarti miracoli.", mus:"Non aumentano i muscoli.", for:"Non aumentano la forza.", res:"Non migliorano la resistenza."},
+    warn:["Non prenderli se hai problemi di cuore, pressione alta, ansia, se sei in gravidanza o prendi farmaci, senza parlarne con il medico."],
+    cite:"Jeukendrup e Randell, Obes Rev 2011 · Maughan e coll., Br J Sports Med 2018"}
+};
+const SUPP_ORDER = ['whey','casein','veg','gainer','creatina','eaa','bcaa','glut','pre','caffeina','beta','citrul','hmb','sali','omega','vitd','magn','zma','multi','carnit','coll','brucia'];
+/* riconosce il tipo dal testo letto. Restituisce [tipo, punti] ordinati */
+function suppGuess(lines){
+  const sc = {};
+  SUPP_ORDER.forEach(k=>{ let s=0; SUPP[k].kw.forEach(([re,p])=>lines.forEach(l=>{ if(re.test(l.t)) s+=p*l.w; })); if(s) sc[k]=s; });
+  const pre = ['caffeina','beta','citrul'].filter(k=>sc[k]).length;
+  if(pre>=2) sc.pre = (sc.pre||0) + 8;
+  if(sc.eaa && sc.bcaa) sc.bcaa -= 2;
+  if(sc.casein && sc.whey) sc.whey -= 3;
+  if(sc.zma && sc.magn) sc.magn -= 4;
+  if(sc.multi){ ['vitd','magn','zma'].forEach(k=>{ if(sc[k]) sc[k]-=4; }); }
+  return Object.entries(sc).filter(e=>e[1]>=3).sort((a,b)=>b[1]-a[1]);
+}
+/* dose per porzione (g) e caffeina (mg) lette dall'etichetta */
+function suppNums(lines){
+  const all = lines.map(l=>l.t).join('\n'), out = {};
+  const num = s => parseFloat(String(s).replace(',','.'));
+  for(const l of lines){ if(/dose|porzion|serving|misurin|scoop|per dose|giornalier|al giorno/i.test(l.t)){ const kw=l.t.search(/dose|porzion|serving|misurin|scoop|giornalier|al giorno/i), m=l.t.slice(kw).replace(/per\s*100\s*g|100\s*g\s*di prodotto/gi,'').match(/(\d{1,3}(?:[.,]\d)?)\s*g\b/i); if(m){ const v=num(m[1]); if(v>=1 && v<=150){ out.dose=v; break; } } } }
+  const c = all.match(/caff?e?in[ae]?[^\d\n]{0,40}(\d{2,3})\s*mg/i); if(c){ const v=num(c[1]); if(v>=20 && v<=600) out.caf=v; }
+  return out;
+}
+function suppName(lines){
+  const big = lines.filter(l=>/[a-zà-ú]{3}/i.test(l.t)).sort((a,b)=>b.h-a.h).slice(0,2).map(l=>l.t.replace(/[^\p{L}\p{N} +%.,'-]/gu,'').trim()).filter(Boolean);
+  return big.join(' ').slice(0,40);
+}
+const SLOT = { col:{n:'Colazione', at:8*60}, mer:{n:'Merenda', at:16*60+30}, pranzo:{n:'Pranzo', at:13*60}, cena:{n:'Cena', at:20*60}, notte:{n:'Prima di dormire', at:23*60},
+  pre60:{n:"60' prima", d:-60}, pre45:{n:"45' prima", d:-45}, pre30:{n:"30' prima", d:-30}, dur:{n:'Durante', d:15}, post:{n:'Dopo', d:75}, pasto:{n:'Pasto dopo', d:100}, pasto2:{n:'Ai pasti', at:13*60+1}, no:{n:'', at:9999} };
+const iDays = () => Array.isArray(INTEG.days) ? INTEG.days : ((typeof COACH!=='undefined' && COACH.days) || []);
+const iDaysTxt = () => iDays().slice().sort().map(i=>GGL[i]).join(', ');
+function suppDays(k){
+  const S2 = SUPP[k];
+  if(S2.r[0][0]==='no') return 'Solo nei giorni di allenamento.';
+  if(['whey','veg','gainer','eaa'].includes(k)) return 'Nei giorni di allenamento. Nei giorni di riposo solo se con i pasti non arrivi alle proteine.';
+  return 'Ogni giorno, anche nei giorni di riposo.';
+}
+const tMin = () => { const t = INTEG.time || (typeof COACH!=='undefined' && COACH.time) || ''; const m=/^(\d{1,2}):(\d{2})/.exec(t); return m ? (+m[1])*60+(+m[2]) : null; };
+function suppCtx(it){ let goal='mus'; try{ goal = tGoal(); }catch(e){} let kg=0; try{ kg = myKg(); }catch(e){} return {kg, goal, dose:it&&it.dose, caf:it&&it.caf}; }
+function slotAt(key, T){ const s=SLOT[key]; if(s.d!=null) return (T==null?18*60:T)+s.d; return s.at; }
+function slotLabel(key, T){ const s=SLOT[key]; if(s.d==null) return s.n; if(T==null) return key==='post'?"Dopo l'allenamento":key==='pasto'?"Pasto dopo l'allenamento":key==='dur'?"Durante l'allenamento":s.n+" dell'allenamento"; return 'ore '+hm(T,s.d); }
+function integGoalHTML(kind){
+  const c = suppCtx(), has = k => INTEG.items.some(it=>it.type===k), rows = [];
+  const PROT = {whey:.8, casein:.8, veg:.75, gainer:.25};
+  const fromPow = INTEG.items.filter(it=>PROT[it.type] && (kind==='train' || it.type!=='gainer')).reduce((a,it)=>a+(it.dose?it.dose*PROT[it.type]:25),0);
+  const lo = c.goal==='dim'?1.8:1.6, hi = 2.2;
+  rows.push(['🥩','Proteine', c.kg ? `circa ${rnd5(c.kg*lo)}-${rnd5(c.kg*hi)} g in tutto il giorno` : `${n1(lo)}-2,2 g per ogni kg del tuo peso, in tutto il giorno`,
+    fromPow ? `Dal cibo (carne, pesce, uova, latticini, legumi) più le tue polveri: ${INTEG.items.filter(it=>PROT[it.type]).length===1?'la polvere ne dà':'le polveri ne danno'} circa ${rnd5(fromPow)} g. Il resto viene dai pasti, divisi in 3-4 volte.` : 'Prima di tutto dal cibo, in 3-4 pasti. Le proteine in polvere servono solo se con i pasti non ci arrivi.']);
+  if(has('creatina')) rows.push(['⚡','Creatina', `${c.kg>90?'5':'3-5'} g ogni giorno`, 'Anche nei giorni di riposo: conta la costanza.']);
+  if(has('eaa') && kind==='train') rows.push(['🧬','Aminoacidi essenziali', '10-15 g', 'Solo se in quel momento mangi poche proteine.']);
+  if(has('bcaa') && kind==='train') rows.push(['🔗','Aminoacidi ramificati', '5-10 g', 'Non servono se arrivi alle proteine del giorno.']);
+  if(has('beta')) rows.push(['✨','Beta-alanina', '3,2-6,4 g al giorno', 'Divisa ai pasti.']);
+  if((has('caffeina')||has('pre')||has('brucia')) && kind==='train') rows.push(['☕','Caffeina', 'massimo 400 mg al giorno', 'Caffè compresi.']);
+  return `<div class="igoal"><div class="eyebrow">Da raggiungere ${kind==='train'?'oggi':'nei giorni di riposo'}</div>${rows.map(r=>`<p><b>${r[0]} ${r[1]}: ${esc(r[2])}</b><small>${esc(r[3])}</small></p>`).join('')}</div>`;
+}
+function integDayHTML(kind){
+  const T = tMin(), rows = [];
+  INTEG.items.forEach(it=>{ const S2=SUPP[it.type]; if(!S2) return; (kind==='train'?S2.t:S2.r).forEach(([k,txt])=>{ if(k==='no') return; rows.push({at:slotAt(k,T), lab:slotLabel(k,T), it, S2, txt}); }); });
+  if(kind==='train') rows.push({at:T==null?18*60:T, lab:T==null?'Allenamento':'ore '+hm(T,0), train:true});
+  rows.sort((a,b)=>a.at-b.at);
+  const real = rows.filter(r=>!r.train);
+  if(!real.length) return `<p class="note">${kind==='train'?'Nei giorni di allenamento':'Nei giorni di riposo'} i tuoi integratori non servono.</p>`;
+  return `<ol class="iday">${rows.map(r=> r.train ? `<li class="itrain"><b>${esc(r.lab)}</b><span>🏋 Allenamento</span></li>`
+    : `<li><b>${esc(r.lab)}</b><span><strong>${r.S2.ico} ${esc(it2name(r.it))}${r.it.dose?` · ${n1(r.it.dose)} g`:''}</strong><small>${esc(r.txt)}</small></span></li>`).join('')}</ol>`;
+}
+const it2name = it => it.name || SUPP[it.type].n;
+function suppCardHTML(it){
+  const S2 = SUPP[it.type], c = suppCtx(it), T = tMin();
+  const late = S2.caf && T!=null && T>=15*60;
+  return `<details class="card isupp" data-it="${esc(it.id)}"><summary>${it.thumb?`<img src="${it.thumb}" alt="">`:`<span class="iico" aria-hidden="true">${S2.ico}</span>`}<span><strong>${esc(it2name(it))}</strong>${it.name?`<small>${S2.ico} ${esc(S2.n)}</small>`:`<small>${pill(S2.ev)}</small>`}</span>${chev}</summary>
+    <div class="ibody">
+      <p>${pill(S2.ev)}${S2.ev==='w'?'Effetto poco provato dagli studi.':S2.ev==='m'?'Funziona, ma le prove sono meno numerose.':'Funziona: molti studi lo confermano.'}</p>
+      <h3>Quanto</h3><p>${esc(S2.dose(c)).split(/(?<=\.) (?=[A-Z0-9])/).map(x=>`<span>${x}</span>`).join(' ')}</p>${it.dose?`<p class="note">Dose scritta sulla tua confezione: ${n1(it.dose)} g.</p>`:''}
+      <h3>Che giorni</h3><p>${esc(suppDays(it.type))}</p>${iDays().length && suppDays(it.type).indexOf('Ogni giorno')<0?`<p class="note">I tuoi giorni di allenamento: ${iDays().slice().sort().map(i=>`<span>${GGL[i]}</span>`).join(', ')}</p>`:''}
+      <h3>A che ora</h3><p><b>Giorni di allenamento:</b> ${esc(S2.t[0][1])}${S2.t[0][0]!=='no'&&SLOT[S2.t[0][0]].d!=null&&T!=null?` (${slotLabel(S2.t[0][0],T)})`:''}.</p><p><b>Giorni di riposo:</b> ${esc(S2.r[0][1])}.</p>
+      ${late?`<p class="iwarn">⚠ Ti alleni alle ${hm(T,0)}. ${esc(CAF_SLEEP)}</p>`:''}
+      <h3>Come</h3><ul class="tips">${S2.how.map(h=>`<li>${esc(h)}</li>`).join('')}</ul>
+      <h3>Per il tuo obiettivo</h3><p>${esc(S2.goal[c.goal]||S2.goal.mus)}</p>
+      <h3>Attenzione</h3><ul class="tips">${S2.warn.map(h=>`<li>${esc(h)}</li>`).join('')}<li>Leggi sempre l'etichetta e non superare la dose consigliata.</li></ul>
+      <p class="icite"><b>Fonti:</b> ${esc(S2.cite)}</p>
+      <div class="links" data-acts="${esc(it.id)}"><button class="btn ghost small" type="button" data-ichg="${esc(it.id)}">Cambia tipo</button><button class="btn ghost small" type="button" data-idel="${esc(it.id)}">Elimina</button></div>
+    </div></details>`;
+}
+let iscan = null; /* {thumb, lines, guess, type, name, dose, caf, busy, pct, err} */
+function typeChips(sel){ return `<div class="ichips" role="group" aria-label="Tipo di integratore">${SUPP_ORDER.map(k=>`<button class="chip" type="button" data-itype="${k}" aria-pressed="${k===sel}">${SUPP[k].ico} ${esc(SUPP[k].n)}</button>`).join('')}</div>`; }
+function scanHTML(){
+  if(!iscan) return `<section class="card"><h2>Aggiungi un integratore</h2>
+      <p class="note">Fotografa l'etichetta: leggo il nome e la tabella e ti dico quando e come prenderlo. Funziona anche senza internet. La foto resta sul telefono.</p>
+      <div class="links"><label class="btn" style="cursor:pointer">📷 Fotografa l'etichetta<input type="file" accept="image/*" capture="environment" id="iCam" hidden></label>
+        <button class="btn" type="button" id="iBar">▥ Leggi il codice a barre</button>
+        <label class="btn ghost" style="cursor:pointer">🖼 Scegli una foto<input type="file" accept="image/*" id="iGal" hidden></label></div>
+      <p class="note">Il codice a barre riconosce il prodotto dall'archivio libero Open Food Facts (serve internet la prima volta). Se non lo trova, fotografa l'etichetta.</p>
+      <p class="note">Consiglio: luce buona, etichetta dritta e da vicino, con il nome del prodotto ben visibile.</p>
+      <details><summary class="note">Oppure scegli tu il tipo, senza foto</summary>${typeChips('')}</details>
+    </section>`;
+  if(iscan.busy) return `<section class="card"><h2>Leggo l'etichetta…</h2>${iscan.thumb?`<img class="ithumb" src="${iscan.thumb}" alt="">`:''}
+      <i class="cbar" aria-hidden="true"><u style="width:${iscan.pct||3}%"></u></i><p class="note" aria-live="polite">${iscan.pct?iscan.pct+'%':'Preparo la lettura (la prima volta ci vuole un po\' di più)…'}</p></section>`;
+  const g = iscan.type;
+  return `<section class="card"><h2>${g?'Ho riconosciuto':'Non sono sicuro'}</h2>
+      ${iscan.thumb?`<img class="ithumb" src="${iscan.thumb}" alt="">`:''}
+      ${iscan.err?`<p class="err">${esc(iscan.err)}</p>`:''}
+      ${iscan.code?`<p class="note">Codice a barre: ${esc(iscan.code)}${iscan.src==='off'?' · dati prodotto da Open Food Facts (licenza ODbL)':iscan.src==='mem'?' · già salvato su questo telefono':''}</p>`:''}
+      ${g?`<p class="lead">${SUPP[g].ico} <b>${esc(SUPP[g].n)}</b></p><details><summary class="note">Non è giusto? Tocca il tipo corretto</summary>${typeChips(g)}</details>`:`<p class="note">${iscan.lines?'Non sono riuscito a capire che prodotto è. ':''}Tocca il tipo di integratore:</p>${typeChips(g)}`}
+      ${g?`<form id="iForm" class="mgrid">
+        <label class="wide">Nome (facoltativo)<input id="iName" value="${esc(iscan.name||'')}" placeholder="${esc(SUPP[g].n)}"></label>
+        <label>Dose sulla confezione (g)<input id="iDose" inputmode="decimal" value="${iscan.dose?n1(iscan.dose):''}" placeholder="es. 30"></label>
+        ${SUPP[g].caf?`<label>Caffeina per dose (mg)<input id="iCaf" inputmode="numeric" value="${iscan.caf||''}" placeholder="es. 200"></label>`:''}
+        <button class="btn wide" type="submit">Salva e vedi quando prenderlo</button></form>`:''}
+      <div class="links"><button class="btn ghost small" type="button" id="iCancel">Annulla</button></div>
+      ${iscan.lines&&iscan.lines.length?`<details><summary class="note">Testo letto dalla foto</summary><pre class="iocr">${esc(iscan.lines.map(l=>l.t).join('\n'))}</pre></details>`:''}
+    </section>`;
+}
+function viewInteg(){
+  view='integ'; backBar('Altro','#altro'); setTab('altro');
+  if(!integOn()) return viewIntegInfo();
+  ocrPrefetch();
+  if(iDays().length && !viewInteg.done){ viewInteg.done=1; INTEG.day = iDays().includes((new Date().getDay()+6)%7)?'train':'rest'; }
+  const T = tMin();
+  $app.innerHTML = `<section class="view">
+    <div><div class="eyebrow">Facoltativo</div><div class="chead2"><h1 style="font-size:36px;text-transform:uppercase">Integratori</h1>${integSwitch()}</div></div>
+    <p class="note">Le indicazioni vengono dagli studi e dalle linee guida (ISSN, EFSA). Non sono un consiglio medico: chiedi al medico o al nutrizionista, soprattutto se prendi farmaci o hai problemi di salute. <a href="#integratori-info">Da dove vengono i dati</a></p>
+    <div id="iScan">${scanHTML()}</div>
+    ${INTEG.items.length?`<section class="card"><h2>La tua giornata</h2>
+      <div class="crow"><label for="iTime">Di solito mi alleno alle</label><input id="iTime" type="time" value="${esc(INTEG.time||(typeof COACH!=='undefined'&&COACH.time)||'')}"></div>
+      ${T==null?'<p class="note">Scrivi l\'ora: così ti dico gli orari esatti.</p>':''}
+      <p class="note" style="margin:8px 0 4px">I miei giorni di allenamento</p>
+      <div class="ichips" role="group" aria-label="Giorni di allenamento">${GG.map((g,i)=>`<button class="chip" type="button" data-idd="${i}" aria-pressed="${iDays().includes(i)}">${g}</button>`).join('')}</div>
+      <div class="seg" role="tablist" aria-label="Tipo di giorno" style="margin-top:12px"><button type="button" role="tab" data-iday="train" aria-selected="${INTEG.day!=='rest'}">Giorno di allenamento</button><button type="button" role="tab" data-iday="rest" aria-selected="${INTEG.day==='rest'}">Giorno di riposo</button></div>
+      ${integGoalHTML(INTEG.day==='rest'?'rest':'train')}
+      ${integDayHTML(INTEG.day==='rest'?'rest':'train')}
+      ${myKg()?'':'<p class="note">Scrivi il tuo peso in <a href="#corpo">Corpo</a>: così le dosi sono calcolate su di te.</p>'}
+    </section>
+    <div><div class="eyebrow" style="margin:6px 0">I miei integratori · tocca per i dettagli</div>${INTEG.items.map(suppCardHTML).join('')}</div>`
+    :`<section class="card"><h2>La tua giornata</h2><p class="note">Quando aggiungi un integratore, qui vedi a che ora prenderlo nei giorni di allenamento e di riposo.</p></section>`}
+  </section>`;
+  bindInteg();
+}
+function integSwitch(){ const on=integOn(); return `<button class="cswitch" type="button" role="switch" aria-checked="${on}" data-integsw><i aria-hidden="true"></i><span>${on?'Attivo':'Spento'}</span></button>`; }
+document.addEventListener('click', e=>{ const b=e.target.closest && e.target.closest('[data-integsw]'); if(!b) return;
+  if(!INTEG.ok){ location.hash='integratori-info'; return; }
+  INTEG.on=!INTEG.on; integSave(); if(view==='settings') viewSettings(); else route(true); });
+function paintScan(){ const s=document.getElementById('iScan'); if(s){ s.innerHTML=scanHTML(); bindScan(); } }
+
+/* ---- codice a barre: lettura sul telefono (BarcodeDetector o zxing-wasm), prodotto da Open Food Facts (serve internet) o dalla memoria ---- */
+let zxLib = null;
+function zxLoad(){ if(zxLib) return zxLib;
+  zxLib = new Promise((res,rej)=>{ const s=document.createElement('script'); s.src='ocr/zxing-reader.js'; s.onload=()=>{ try{ ZXingWASM.prepareZXingModule({overrides:{locateFile:(f,pre)=> f.endsWith('.wasm')?'ocr/'+f:pre+f}}); }catch(e){} res(window.ZXingWASM); }; s.onerror=()=>{ zxLib=null; rej(new Error('zx')); }; document.head.appendChild(s); });
+  return zxLib; }
+let bdet = null;
+async function barcodeIn(canvas){
+  try{ if(bdet===null && 'BarcodeDetector' in window){ const f = await BarcodeDetector.getSupportedFormats(); bdet = f.includes('ean_13') ? new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e'].filter(x=>f.includes(x))}) : false; } }catch(e){ bdet=false; }
+  if(bdet){ try{ const r = await bdet.detect(canvas); return r && r[0] ? r[0].rawValue : ''; }catch(e){} }
+  const Z = await zxLoad(); const x = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
+  const r = await Z.readBarcodes(x, {formats:['EAN-13','EAN-8','UPC-A','UPC-E'], tryHarder:true, maxNumberOfSymbols:1});
+  return r && r[0] && r[0].isValid ? r[0].text : '';
+}
+async function offLookup(code){
+  const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,product_name_it,generic_name,generic_name_it,brands,ingredients_text,ingredients_text_it,categories,serving_size`, {cache:'no-store'});
+  if(!r.ok) return null; const d = await r.json(); if(!d || d.status!==1 || !d.product) return null;
+  const P = d.product, name = (P.product_name_it||P.product_name||'').trim(), brand = (P.brands||'').split(',')[0].trim();
+  const lines = [{t:name,w:3},{t:P.generic_name_it||P.generic_name||'',w:2},{t:P.categories||'',w:1.5},{t:P.ingredients_text_it||P.ingredients_text||'',w:1}].filter(l=>l.t);
+  const sv = /(\d{1,3}(?:[.,]\d)?)\s*g\b/i.exec(P.serving_size||'');
+  const nums = suppNums(lines);
+  return {name:[brand,name].filter(Boolean).join(' · ').slice(0,50), lines, dose: sv?parseFloat(sv[1].replace(',','.')):nums.dose, caf:nums.caf};
+}
+/* dal codice al prodotto: prima la memoria del telefono, poi internet */
+async function integCode(code){
+  iscan = Object.assign(iscan||{}, {busy:true, pct:0, code}); paintScan();
+  const mem = INTEG.codes && INTEG.codes[code];
+  if(mem){ Object.assign(iscan, {busy:false, type:mem.type, name:mem.name||'', dose:mem.dose, caf:mem.caf, src:'mem', err:''}); paintScan(); say('Prodotto già conosciuto.'); return true; }
+  if(!navigator.onLine){ Object.assign(iscan, {busy:false, type:'', err:'Codice letto, ma per cercare il prodotto serve internet. Fotografa l\'etichetta o scegli tu il tipo: la prossima volta lo riconosco anche senza internet.'}); paintScan(); return false; }
+  let P = null; try{ P = await offLookup(code); }catch(e){}
+  if(!iscan) return false;
+  if(P){ const g = suppGuess(P.lines); Object.assign(iscan, {busy:false, type:g.length?g[0][0]:'', name:P.name, dose:P.dose, caf:P.caf, src:'off', err: g.length?'':'Ho trovato il prodotto, ma non capisco che integratore è. Tocca il tipo giusto.'});
+    if(iscan.type) say('Trovato. Mi sembra '+SUPP[iscan.type].n.replace(/\(.*\)/,'')+'.'); paintScan(); return true; }
+  Object.assign(iscan, {busy:false, type:'', err:'Prodotto non trovato nell\'archivio. Fotografa l\'etichetta o scegli tu il tipo: la prossima volta lo riconosco subito.'}); paintScan(); return false;
+}
+let bcam = null;
+function bcStop(){ if(!bcam) return; clearInterval(bcam.t); try{ bcam.stream.getTracks().forEach(t=>t.stop()); }catch(e){} bcam.el.remove(); bcam=null; }
+async function bcScan(){
+  bcStop();
+  const v = document.createElement('div'); v.className='viewer bcview'; v.setAttribute('role','dialog'); v.setAttribute('aria-label','Leggi il codice a barre');
+  v.innerHTML = `<video playsinline muted></video><i class="bcbox" aria-hidden="true"></i><p class="bcmsg" aria-live="polite">Inquadra il codice a barre dentro il riquadro</p><div class="confirm"><button class="btn small" type="button" data-close>Chiudi</button></div>`;
+  document.body.appendChild(v); v.querySelector('[data-close]').onclick=bcStop;
+  bcam = {el:v, stream:{getTracks:()=>[]}};
+  let stream;
+  try{ stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}, width:{ideal:1280}, height:{ideal:720}}, audio:false}); }
+  catch(e){ v.querySelector('.bcmsg').textContent='Non riesco ad aprire la fotocamera. Controlla il permesso della fotocamera per questa app, oppure fotografa l\'etichetta.'; return; }
+  if(!bcam || bcam.el!==v){ stream.getTracks().forEach(t=>t.stop()); return; }
+  const vid = v.querySelector('video'); vid.srcObject = stream; try{ await vid.play(); }catch(e){}
+  const c = document.createElement('canvas'); let busy=false;
+  bcam.stream = stream;
+  bcam.t = setInterval(async()=>{
+    if(busy || !vid.videoWidth) return; busy=true;
+    try{ const k=Math.min(1,960/vid.videoWidth); c.width=Math.round(vid.videoWidth*k); c.height=Math.round(vid.videoHeight*k); c.getContext('2d',{willReadFrequently:true}).drawImage(vid,0,0,c.width,c.height);
+      const code = await barcodeIn(c);
+      if(code && bcam){ beep('tick'); bcStop(); iscan={busy:true}; integCode(code); }
+    }catch(e){} busy=false; }, 350);
+}
+async function integPhoto(file){
+  iscan = {busy:true, pct:0}; paintScan();
+  try{
+    const p = await ocrPrep(file); iscan.thumb = p.thumb; paintScan();
+    let code=''; try{ code = await barcodeIn(p.canvas); }catch(e){}
+    if(code && INTEG.codes && INTEG.codes[code]) return integCode(code);
+    const data = await ocrRead(p.canvas, pct=>{ if(iscan && iscan.busy){ iscan.pct=Math.max(3,pct); const s=document.querySelector('#iScan .cbar u'); if(s) s.style.width=iscan.pct+'%'; const n=document.querySelector('#iScan .note'); if(n) n.textContent=iscan.pct+'%'; } });
+    if(!iscan) return;
+    if(!iscan) return;
+    const lines = ocrLines(data), g = suppGuess(lines), nums = suppNums(lines);
+    if(!g.length && code){ iscan.lines=lines; return integCode(code); }
+    if(code) iscan.code=code;
+    Object.assign(iscan, {busy:false, lines, type:g.length?g[0][0]:'', name:'', dose:nums.dose, caf:nums.caf});
+    if(iscan.type) say('Mi sembra '+SUPP[iscan.type].n.replace(/\(.*\)/,'')+'.');
+  }catch(e){
+    if(!iscan) return;
+    Object.assign(iscan, {busy:false, type:'', err: navigator.onLine ? 'Non sono riuscito a leggere la foto. Riprova con più luce, oppure scegli tu il tipo.' : 'Per leggere le etichette senza internet, apri questa pagina una volta con internet. Intanto scegli tu il tipo.'});
+  }
+  paintScan();
+}
+function bindScan(){
+  const on = (id,ev,fn)=>{ const el=document.getElementById(id); if(el) el[ev]=fn; };
+  ['iCam','iGal'].forEach(id=>on(id,'onchange',e=>{ const f=e.target.files&&e.target.files[0]; if(f) integPhoto(f); }));
+  on('iCancel','onclick',()=>{ iscan=null; paintScan(); });
+  on('iBar','onclick',bcScan);
+  document.querySelectorAll('#iScan [data-itype]').forEach(b=>b.onclick=()=>{
+    if(!iscan) iscan={busy:false};
+    const nm=document.getElementById('iName'), ds=document.getElementById('iDose'); if(nm) iscan.name=nm.value; if(ds) iscan.dose=parseFloat(ds.value.replace(',','.'))||iscan.dose;
+    iscan.type=b.dataset.itype; iscan.err=''; paintScan(); });
+  on('iForm','onsubmit',e=>{ e.preventDefault(); if(!iscan||!iscan.type) return;
+    const v=id=>{ const el=document.getElementById(id); return el?el.value.trim():''; };
+    const dose=parseFloat(v('iDose').replace(',','.')), caf=parseInt(v('iCaf'),10);
+    const it={id:'i'+Date.now().toString(36), type:iscan.type, name:v('iName'), at:Date.now()};
+    if(dose>0 && dose<200) it.dose=dose; if(caf>0 && caf<1000) it.caf=caf; if(iscan.thumb) it.thumb=iscan.thumb;
+    if(iscan.code){ it.code=iscan.code; INTEG.codes=INTEG.codes||{}; INTEG.codes[iscan.code]={type:it.type, name:it.name, dose:it.dose, caf:it.caf}; }
+    const chg=iscan.chg;
+    if(chg){ const o=INTEG.items.find(x=>x.id===iscan.chg); if(o){ Object.assign(o,{type:it.type,name:it.name}); o.dose=it.dose; o.caf=it.caf; } }
+    else INTEG.items.unshift(it);
+    integSave(); iscan=null; viewInteg(); say('Salvato.');
+    const d=document.querySelector(`[data-it="${CSS.escape(chg||it.id)}"]`); if(d){ d.open=true; d.scrollIntoView({behavior:'smooth',block:'start'}); } });
+}
+function bindInteg(){
+  bindScan();
+  const ti=document.getElementById('iTime'); if(ti) ti.onchange=e=>{ INTEG.time=e.target.value; integSave(); route(true); };
+  document.querySelectorAll('[data-idd]').forEach(b=>b.onclick=()=>{ const i=+b.dataset.idd, d=iDays().slice(), k=d.indexOf(i); if(k>=0) d.splice(k,1); else d.push(i); INTEG.days=d; integSave(); route(true); });
+  document.querySelectorAll('[data-iday]').forEach(b=>b.onclick=()=>{ INTEG.day=b.dataset.iday; integSave(); route(true); });
+  document.querySelectorAll('[data-idel]').forEach(b=>b.onclick=()=>{ const id=b.dataset.idel, w=b.parentNode;
+    w.innerHTML=`<span>Eliminare questo integratore?</span><button class="btn small" type="button" data-yes>Sì, elimina</button><button class="btn ghost small" type="button" data-no>Annulla</button>`;
+    w.querySelector('[data-no]').onclick=()=>route(true);
+    w.querySelector('[data-yes]').onclick=()=>{ INTEG.items=INTEG.items.filter(x=>x.id!==id); integSave(); route(true); }; });
+  document.querySelectorAll('[data-ichg]').forEach(b=>b.onclick=()=>{ const it=INTEG.items.find(x=>x.id===b.dataset.ichg); if(!it) return;
+    iscan={busy:false, chg:it.id, type:it.type, name:it.name, dose:it.dose, caf:it.caf, thumb:it.thumb}; paintScan(); document.getElementById('iScan').scrollIntoView({behavior:'smooth'}); });
+}
+function viewIntegInfo(){
+  view='integinfo'; backBar('Altro','#altro'); setTab('altro');
+  $app.innerHTML = `<section class="view coach">
+    <div><div class="eyebrow">Facoltativo · ${INTEG.ok?'spento':'prima di attivarlo'}</div><h1 style="font-size:36px;text-transform:uppercase">Integratori: quando e come prenderli</h1></div>
+    <section class="card"><h2>Come funziona</h2>
+      <p><b>Fotografi l'etichetta</b> di proteine, aminoacidi, creatina o altri integratori. L'app legge il testo <b>sul telefono</b>, anche senza internet, e capisce che prodotto è. Se sbaglia, scegli tu il tipo.</p>
+      <p><b>Ti dice quando e come prenderlo</b>: nei giorni di allenamento e di riposo, in base all'ora in cui ti alleni, al tuo peso (in Corpo) e al tuo obiettivo.</p>
+      <p><b>Da dove vengono i dati.</b> Dalle posizioni ufficiali della International Society of Sports Nutrition (ISSN), dai limiti di sicurezza dell'EFSA (l'Autorità europea per la sicurezza alimentare) e dalle linee guida ACSM. Sotto ogni integratore trovi gli studi. Non è un'intelligenza artificiale: segue regole fisse.</p>
+      <p><b>Quanto è affidabile.</b> ${pill('s')} molti studi confermano l'effetto (per esempio creatina, proteine, caffeina). ${pill('m')} prove buone ma meno numerose. ${pill('w')} effetto poco provato: te lo dico chiaramente.</p>
+    </section>
+    <section class="warn" role="note"><h2>Avvertenze</h2>
+      <p>Sono <b>informazioni generali</b>, non un consiglio medico. <b>Non sostituiscono</b> il medico, il nutrizionista o il farmacista.</p>
+      <p><b>Chiedi prima al medico</b> se hai problemi di salute (reni, fegato, cuore, pressione, diabete), se prendi farmaci, se sei in gravidanza o allatti, o se hai meno di 18 anni.</p>
+      <p>Segui sempre <b>l'etichetta</b> del prodotto e non superare la dose consigliata. La lettura della foto può sbagliare: controlla che il tipo sia giusto.</p>
+      <p>Gli integratori non sono necessari: un'alimentazione varia viene prima. Usi l'app <b>sotto la tua responsabilità</b>.</p>
+    </section>
+    ${INTEG.ok ? `<p class="note">Hai accettato queste condizioni il ${df.format(new Date(INTEG.ok))}.</p>
+      ${integOn()?'<a class="btn big" href="#integratori">Torna agli integratori</a>':'<button class="btn big" type="button" id="iOn">Riattiva gli integratori</button>'}`
+      : `<label class="cagree"><input type="checkbox" id="iAgree"> Ho letto e accetto queste informazioni e le avvertenze</label>
+      <button class="btn big" type="button" id="iAccept" disabled>Attiva gli integratori</button>
+      <a class="btn ghost big" href="#altro">Non ora</a>`}
+  </section>`;
+  const ag=document.getElementById('iAgree'), ac2=document.getElementById('iAccept'), on=document.getElementById('iOn');
+  if(ag) ag.onchange=()=>{ ac2.disabled=!ag.checked; };
+  if(ac2) ac2.onclick=()=>{ INTEG.ok=Date.now(); INTEG.on=true; integSave(); ocrPrefetch(); if(location.hash==='#integratori') viewInteg(); else location.hash='integratori'; };
+  if(on) on.onclick=()=>{ INTEG.on=true; integSave(); if(location.hash==='#integratori') viewInteg(); else location.hash='integratori'; };
+}
+/* a fine allenamento: cosa prendere adesso */
+function integNowHTML(){
+  if(!integOn()) return '';
+  const now = INTEG.items.filter(it=>SUPP[it.type] && ['post','pasto'].includes(SUPP[it.type].t[0][0]));
+  if(!now.length) return '';
+  return `<p class="next">💊 <b>Integratori:</b> ${now.map(it=>`${esc(it2name(it))}${it.dose?` ${n1(it.dose)} g`:''} (${SUPP[it.type].t[0][0]==='post'?'entro 1-2 ore':'con il prossimo pasto'})`).join(' · ')}. <a href="#integratori">Dettagli</a></p>`;
+}
+
 function viewAltro(){
   view='altro'; brand(); setTab('altro');
   const row = (href,ic,t,d) => `<a class="row mrow" href="${href}"><span class="mico" aria-hidden="true">${ic}</span><span><strong>${t}</strong><small>${d}</small></span>${chev}</a>`;
@@ -6389,6 +6900,7 @@ function viewAltro(){
     <div class="list">
       ${row('#coach','🧠','Mental coach', coachOn()?'Attivo · obiettivi, sagoma, il tuo perché':'Spento · una voce che ti motiva, se vuoi')}
       ${row('#dieta','🍎','Alimentazione','Il piano del nutrizionista, acqua, consigli')}
+      ${row('#integratori','💊','Integratori', integOn()?'Attivo · '+(INTEG.items.length?INTEG.items.length+(INTEG.items.length===1?' integratore':' integratori'):'fotografa l\'etichetta'):'Spento · dalla foto dell\'etichetta, quando e come prenderli')}
     </div>
     <div class="list">
       ${row('#impostazioni','⚙️','Impostazioni','Lingua, voce e musica, coach, backup')}
@@ -6402,6 +6914,7 @@ function viewSettings(){
     <div id="langSlot"></div>
     ${audioCardHTML()}
     <section class="card"><h2>Mental coach</h2>${coachCardHTML()}</section>
+    <section class="card"><div class="chead2"><h2>💊 Integratori</h2>${integSwitch()}</div><p class="note">${integOn()?'Attivo: dalla foto dell\'etichetta ti dico quando e come prendere i tuoi integratori.':'Spento. Se lo accendi, dalla foto dell\'etichetta ti dico quando e come prendere proteine, aminoacidi, creatina e altri integratori.'}</p><div class="links"><a class="btn ghost small" href="#integratori">Apri →</a></div></section>
     <section class="card"><h2>Foto dei progressi</h2><p class="note">Il PIN per bloccare le foto si mette nella pagina delle foto.</p><div class="links"><a class="btn ghost small" href="#corpo">Vai alle foto →</a></div></section>
     ${backupHTML()}
   </section>`;
@@ -6409,7 +6922,7 @@ function viewSettings(){
   bindBackup();
 }
 function route(soft){
-  stopPacer(); stopAnim(); dispose3D(); imgStop();
+  stopPacer(); stopAnim(); dispose3D(); imgStop(); if(typeof bcStop==='function') bcStop();
   if(explaining){ explaining=false; try{speechSynthesis.cancel()}catch(e){} }
   const h = (location.hash||'#home').slice(1);
   if(!h.startsWith('allena-')){ clearInterval(tick); if(!h.startsWith('sessioni') && h!=='corsa') micStop(); }
@@ -6433,6 +6946,8 @@ function route(soft){
     if(h.startsWith('mob-')) return startMob(h.slice(4));
     if(h==='coach-info') return viewCoachInfo();
     if(h==='dieta') return viewFood();
+    if(h==='integratori') return viewInteg();
+    if(h==='integratori-info') return viewIntegInfo();
     if(h==='altro') return viewAltro();
     if(h==='impostazioni') return viewSettings();
     if(h==='esercizi') return viewList();
