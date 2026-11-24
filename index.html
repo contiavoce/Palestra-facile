@@ -4210,6 +4210,16 @@ function paintMbar(){
 }
 addEventListener('resize', ()=>{ if(!mbar.hidden) paintMbar(); });
 
+// musica nella corsa: le tue canzoni oppure Spotify (o un'altra app) che suona sotto
+const SPOTIFY_URL = /Android/i.test(navigator.userAgent) ? 'intent://open.spotify.com/#Intent;scheme=https;package=com.spotify.music;S.browser_fallback_url=https%3A%2F%2Fopen.spotify.com%2F;end' : 'https://open.spotify.com/';
+function musicRowHTML(){
+  return `<div class="chips wrapchips qa" role="group" aria-label="Musica">${music.list.length?`<button class="chip" type="button" id="qMusic" aria-pressed="${!!(music.el&&!music.el.paused)}">${music.el&&!music.el.paused?'❚❚ Musica':'▶ La mia musica'}</button>`:''}<a class="chip" id="qSpot" href="${SPOTIFY_URL}" target="_blank" rel="noopener" aria-pressed="${!!AU.ext}">${AU.ext?'✓ ':''}🎵 Spotify</a></div>
+    ${AU.ext?`<p class="note" style="margin:4px 0 8px">Musica da Spotify: fai partire la canzone lì e torna qui. La voce dell'app si sente sopra la musica. I comandi a voce restano spenti, perché su Android il microfono ferma Spotify.</p>`:''}`; }
+function bindMusicRow(redraw){
+  const qm=document.getElementById('qMusic'); if(qm) qm.onclick=()=>{ if(AU.ext){ AU.ext=false; saveAU(); } mToggle(); };
+  const sp=document.getElementById('qSpot'); if(sp) sp.onclick=()=>{ if(music.el && !music.el.paused) try{ mPause(); }catch(e){}
+    AU.ext=true; if(AU.mic){ AU.mic=false; micStop(); } saveAU(); setTimeout(()=>{ try{ redraw(); }catch(e){} }, 300); };
+}
 function audioCardHTML(){
   const sw = (k,label,hint) => `<button class="chip" type="button" data-au="${k}" aria-pressed="${!!AU[k]}">${AU[k]?'✓ ':''}${label}</button>`;
   return `<section class="card" id="audioCard"><h2>Audio e musica</h2>
@@ -4722,7 +4732,7 @@ function viewCorsa(){
   const PRE = !corsa, FREE = PRE && rplan.mode==='libera';
   $app.innerHTML = `<section class="view${corsa?' crun':' cpre'}">
     <div class="chead" ${corsa?'hidden':''}><h1 style="font-size:34px;text-transform:uppercase;margin:0">Corsa</h1><img src="${RUN_IMG}" alt="" aria-hidden="true"></div>
-    ${PRE?`<div class="seg" role="tablist" aria-label="Corsa"><button type="button" role="tab" data-cmode="piani" aria-selected="${!FREE}">Obiettivi</button><button type="button" role="tab" data-cmode="libera" aria-selected="${FREE}">Corsa libera</button></div>`:''}
+    ${PRE?`<div class="seg" role="tablist" aria-label="Corsa"><button type="button" role="tab" data-cmode="piani" aria-selected="${!FREE}">Obiettivi</button><button type="button" role="tab" data-cmode="libera" aria-selected="${FREE}">Corsa libera</button></div>${musicRowHTML()}`:''}
     ${corsa && corsa.cd ? cdHTML() : ''}${corsa ? rpGuideHTML() : FREE ? `<div class="card cfree"><p style="margin:0"><strong>Corri come vuoi, senza un programma.</strong></p>${cBtns}<p class="note" id="cGps"></p><p class="err" id="cMsg"></p>${hrBox()}<p class="note" style="margin:10px 0 0">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>${myKg()?'':`<p class="note" style="margin:6px 0 0">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}</div>` : rpPlansHTML()}
     ${PRE?'':`<div class="card cspeed" ${TM?'hidden':''}><div id="cGauge"></div><div class="cvnum"><b id="cV">0,0</b><span>km/h</span></div>
       <div class="cvsub"><span>Media <b id="cVavg">0</b> km/h</span><span>Massima <b id="cVmax">0</b> km/h</span></div>${corsa?'<p class="note" id="cGps"></p>':''}</div>
@@ -4734,7 +4744,7 @@ function viewCorsa(){
       <div><span>Calorie</span><b id="cK">0</b></div>
       <div class="cpar"><span>Parziale km in corso</span><b id="cPar">0:00</b></div>
     </div>
-    ${cBtns+hrBox()}
+    ${cBtns+hrBox()+musicRowHTML()}
     ${myKg()?'':`<p class="note">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}
     <div class="cmapgl" id="cMapGL" ${TM?'hidden':''}><button class="btn small" id="cCenter" type="button" hidden>◎ Segui la mia posizione</button></div>
     <div class="card cmap" id="cMap" ${TM?'hidden':''}></div>
@@ -4754,7 +4764,8 @@ function viewCorsa(){
   on('cdGo', corsaGo); on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
   on('cDrop', ()=>{ const b=document.getElementById('cDrop'); if(b.dataset.sure){ corsaFinish(false); } else { b.dataset.sure='1'; b.textContent='Sicuro? Premi ancora per eliminare la corsa'; } });
   rpBind(); corsaPaint(); hrPaint();
-  const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; saveAU(); mic.msg='';
+  bindMusicRow(viewCorsa);
+  const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; if(AU.mic) AU.ext=false; saveAU(); mic.msg='';
     if(AU.mic){ say("Comandi a voce attivi. Chiedimi per esempio: quanto manca?", true); micStart(); } else { micStop(); say('Comandi a voce spenti.', true); } paintMic(); };
   paintMic(); if(micWanted()) micStart(); else micStop();
 }

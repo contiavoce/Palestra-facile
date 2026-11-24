@@ -4156,6 +4156,8 @@ window.PF_EN={
 "È già al massimo.": "It's already at maximum.",
 "Per alzare ancora usa i tasti del volume del telefono.": "To go louder, use your phone's volume buttons.",
 "È già al minimo.": "It's already at minimum.",
+"▶ La mia musica": "▶ My music",
+"Musica da Spotify: fai partire la canzone lì e torna qui. La voce dell'app si sente sopra la musica. I comandi a voce restano spenti, perché su Android il microfono ferma Spotify.": "Music from Spotify: start the song there and come back here. The app's voice plays over the music. Voice commands stay off, because on Android the microphone stops Spotify.",
 "Di più solo con i tasti laterali del telefono.": "For more, use the side buttons of your phone.",
 "Di' alza o abbassa, per la voce o per la musica.": "Say turn up or turn down, for the voice or the music.",
 "Ti alleni da {*}.": "You've been training for {*}.",
