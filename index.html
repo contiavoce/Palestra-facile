@@ -1817,6 +1817,14 @@ const EX = [
   steps:['Carrucole all\'altezza delle spalle, un passo avanti al centro della macchina.','Gomiti leggermente piegati e fermi per tutto il movimento.','Porta le mani una verso l\'altra davanti al petto, come per abbracciare un albero.','Riapri lentamente fino a sentire il petto allungato.'],
   br:{in:'Mentre apri le braccia.',out:'Mentre chiudi le mani davanti a te.'},tempo:[3,2],
   err:['Piegare e stendere i gomiti (diventa una spinta)','Inclinarsi troppo in avanti'],dose:['3','12–15','60"']},
+ {id:'croci-manubri',name:'Croci con manubri',g:'petto',e:'manubri',lv:'Intermedio',mu:'Petto',hl:['chest'],
+  steps:['Sdraiato sulla panca piana, manubri sopra il petto con i palmi uno verso l\'altro.','Gomiti leggermente piegati e fermi per tutto il movimento.','Apri le braccia lentamente verso i lati fino a sentire il petto allungato, senza scendere sotto la panca.','Richiudi le braccia sopra il petto come per abbracciare un albero.'],
+  br:{in:'Mentre apri le braccia.',out:'Mentre richiudi.'},tempo:[3,2],
+  err:['Piegare e stendere i gomiti (diventa una spinta)','Scendere troppo in basso','Usare manubri troppo pesanti'],dose:['3','10–12','60"']},
+ {id:'croci-inclinata-manubri',name:'Croci su panca inclinata',g:'petto',e:'manubri',lv:'Intermedio',mu:'Petto alto',hl:['chest'],
+  steps:['Schienale inclinato a 30°, schiena e testa appoggiate, manubri sopra il petto con i palmi uno verso l\'altro.','Gomiti leggermente piegati e fermi.','Apri le braccia lentamente verso i lati fino a sentire il petto alto allungato.','Richiudi sopra il petto con un arco ampio.'],
+  br:{in:'Mentre apri le braccia.',out:'Mentre richiudi.'},tempo:[3,2],
+  err:['Schienale troppo alto','Piegare e stendere i gomiti','Scendere troppo in basso'],dose:['3','10–12','60"']},
  {id:'piegamenti',name:'Piegamenti',g:'petto',e:'corpo',lv:'Principiante',mu:'Petto e tricipiti',
   steps:['Mani appena più larghe delle spalle, corpo dritto dalla testa ai talloni.','Scendi piegando i gomiti a circa 45° dal busto.','Arriva con il petto vicino al pavimento.','Spingi per tornare su mantenendo l\'addome contratto.'],
   br:{in:'Mentre scendi.',out:'Mentre spingi per risalire.'},tempo:[2,1],
@@ -1827,6 +1835,10 @@ const EX = [
   steps:['Siediti col petto rivolto verso la macchina e i pesi, cosce bloccate sotto i rulli, presa larga sulla barra.','Petto in fuori, leggero arco della schiena.','Tira la barra fino all\'altezza del mento o della parte alta del petto (non serve toccare il petto): i gomiti scendono tenendosi un po\' in avanti, non troppo di lato, per proteggere la spalla.','Risali lentamente fino a braccia distese: in alto è normale che i gomiti si aprano.','Busto quasi dritto con carichi leggeri. Quando il carico aumenta è normale inclinarsi un po\' indietro e inarcare di più la schiena per aiutarti nelle ultime ripetizioni (si dice "rubare"), come succede anche nelle trazioni. Fallo sempre con controllo, senza dondolare.'],
   br:{in:'Mentre la barra risale.',out:'Mentre tiri la barra verso il petto.'},tempo:[3,2],
   err:['Tirare dietro la nuca','Gomiti troppo larghi di lato quando tiri giù','Dondolare con il busto','Lasciar risalire la barra di scatto'],dose:['3','10–12','90"']},
+ {id:'lat-presa-inversa',name:'Lat machine presa inversa',g:'schiena',e:'macchina',lv:'Principiante',mu:'Dorsali e bicipiti',hl:['back','ua'],
+  steps:['Siediti col petto rivolto verso la macchina, cosce bloccate sotto i rulli.','Afferra la barra con i palmi verso di te, mani alla larghezza delle spalle.','Petto in fuori, tira la barra fino alla parte alta del petto portando i gomiti in basso vicino ai fianchi.','Risali lentamente fino a braccia quasi tese.'],
+  br:{in:'Mentre la barra risale.',out:'Mentre tiri la barra verso il petto.'},tempo:[3,2],
+  err:['Dondolare con il busto','Tirare solo con le braccia','Lasciar risalire la barra di scatto'],dose:['3','10–12','90"']},
  {id:'pulley',name:'Pulley basso',g:'schiena',e:'macchina',lv:'Principiante',mu:'Dorsali e centro schiena',
   steps:['Seduto, piedi sulla pedana e ginocchia leggermente piegate.','Busto dritto, braccia distese in avanti.','Tira la maniglia verso l\'ombelico stringendo le scapole.','Torna avanti piano senza piegare la schiena.'],
   br:{in:'Mentre le braccia tornano avanti.',out:'Mentre tiri verso la pancia.'},tempo:[3,2],
@@ -1849,6 +1861,11 @@ const EX = [
   br:{in:'In alto, prima di scendere: aria nella pancia e addome contratto.',out:'Dopo il punto più duro della risalita.'},tempo:[3,2],
   note:'Lavora nel rack con le sicure regolate appena sotto la profondità che raggiungi.',
   err:['Talloni che si staccano','Schiena che si arrotonda in basso','Ginocchia che vanno verso l\'interno'],dose:['4','6–8','2\'']},
+ {id:'mezzo-squat',name:'Mezzo squat',g:'gambe',e:'bilanciere',lv:'Intermedio',mu:'Quadricipiti e glutei',hl:['thigh','glutes'],
+  steps:['Bilanciere sulla parte alta della schiena, nel rack con le sicure regolate all\'altezza giusta.','Piedi larghi come le spalle, punte leggermente aperte.','Scendi portando il bacino indietro fino a cosce circa a metà strada (ginocchia a 90° o poco meno), senza andare più giù.','Risali spingendo il pavimento, petto alto, fino in piedi.'],
+  br:{in:'In alto, prima di scendere: aria nella pancia e addome contratto.',out:'Dopo il punto più duro della risalita.'},tempo:[3,2],
+  note:'Detto anche semi squat: è uno squat che si ferma a metà. Si usa spesso un po\' più di peso, quindi lavora sempre nel rack con le sicure.',
+  err:['Talloni che si staccano','Schiena che si arrotonda','Ginocchia che vanno verso l\'interno','Scendere di scatto'],dose:['4','10–12','90"']},
  {id:'leg-extension',name:'Leg extension',g:'gambe',e:'macchina',lv:'Principiante',mu:'Quadricipiti',
   steps:['Ginocchio allineato al perno della macchina.','Rullo appoggiato sopra le caviglie.','Stendi le gambe fino in alto e tieni un attimo.','Scendi lentamente.'],
   br:{in:'Mentre scendi.',out:'Mentre stendi le gambe.'},tempo:[3,2],
@@ -1922,6 +1939,11 @@ const EX = [
   steps:['Schienale inclinato a 30°, siediti con la schiena ben appoggiata.','Manubri all\'altezza delle spalle, palmi in avanti.','Spingi verso l\'alto fino a braccia quasi tese, sopra il mento.','Scendi lentamente fino all\'altezza del petto alto.'],
   br:{in:'Mentre scendi.',out:'Mentre spingi verso l\'alto.'},tempo:[3,2],
   err:['Schienale troppo alto (lavorano solo le spalle)','Staccare il sedere dalla panca'],dose:['3','10–12','90"']},
+ {id:'panca-inclinata',name:'Panca inclinata con bilanciere',g:'petto',e:'bilanciere',lv:'Intermedio',mu:'Petto alto, spalle e tricipiti',hl:['chest','delt'],
+  steps:['Schienale inclinato a 30–45°, schiena e testa appoggiate, piedi a terra.','Presa un po\' più larga delle spalle, stacca il bilanciere a braccia tese sopra il mento.','Scendi lentamente fino a sfiorare la parte alta del petto, gomiti non troppo aperti.','Spingi verso l\'alto fino a braccia quasi tese.'],
+  br:{in:'Mentre scendi.',out:'Mentre spingi verso l\'alto.'},tempo:[3,2],
+  note:'Con un peso impegnativo fatti assistere da qualcuno o usa la panca con le sicure.',
+  err:['Schienale troppo alto (lavorano solo le spalle)','Rimbalzare sul petto','Staccare il sedere dalla panca'],dose:['4','8–10','2\'']},
  {id:'pectoral-machine',name:'Pectoral machine',g:'petto',e:'macchina',lv:'Principiante',mu:'Petto',
   steps:['Regola il sedile: le maniglie all\'altezza del petto.','Schiena appoggiata, braccia aperte con i gomiti appena piegati.','Chiudi le braccia davanti al petto come per abbracciare un albero.','Riapri lentamente fino a sentire il petto che si allunga.'],
   br:{in:'Mentre riapri le braccia.',out:'Mentre chiudi davanti al petto.'},tempo:[3,2],
@@ -1935,6 +1957,10 @@ const EX = [
   steps:['Carrucola alta con barra dritta o corda, fai un passo indietro.','Busto leggermente inclinato in avanti, braccia tese in alto.','Porta la barra verso le cosce tenendo le braccia quasi tese.','Risali lentamente fino all\'altezza della testa.'],
   br:{in:'Mentre risali.',out:'Mentre porti la barra verso le cosce.'},tempo:[2,2],
   err:['Piegare i gomiti trasformandolo in un pushdown','Muovere il busto avanti e indietro'],dose:['3','12–15','60"']},
+ {id:'pullover-manubrio',name:'Pullover con manubrio',g:'schiena',e:'manubri',lv:'Intermedio',mu:'Dorsali e petto',hl:['back','chest'],
+  steps:['Sdraiato sulla panca (o di traverso con le spalle appoggiate), un manubrio tenuto con due mani sopra il petto.','Braccia quasi tese, gomiti leggermente piegati e fermi.','Porta il manubrio dietro la testa con un arco ampio, fin dove senti allungare dorsali e petto.','Riporta il manubrio sopra il petto con lo stesso arco.'],
+  br:{in:'Mentre porti il manubrio dietro la testa.',out:'Mentre lo riporti sopra il petto.'},tempo:[3,2],
+  err:['Piegare e stendere i gomiti','Andare troppo giù dietro la testa','Inarcare molto la schiena'],dose:['3','12','60"']},
  {id:'iperestensioni',name:'Hyperextension',g:'schiena',e:'macchina',lv:'Intermedio',mu:'Lombari e glutei',
   steps:['Regola il cuscino all\'altezza dell\'anca, talloni bloccati sotto il rullo.','Braccia incrociate sul petto.','Scendi piegandoti in avanti con la schiena dritta.','Risali fino a formare una linea dritta con le gambe, senza andare oltre.'],
   br:{in:'Mentre scendi.',out:'Mentre risali.'},tempo:[2,2],
@@ -1973,6 +1999,10 @@ const EX = [
   steps:['Siediti rivolto verso lo schienale, petto appoggiato.','Afferra le maniglie davanti a te a braccia quasi tese.','Apri le braccia all\'indietro stringendo le scapole.','Torna avanti lentamente.'],
   br:{in:'Mentre torni avanti.',out:'Mentre apri le braccia.'},tempo:[2,2],
   err:['Usare peso troppo alto e tirare con la schiena','Piegare troppo i gomiti'],dose:['3','15','60"']},
+ {id:'alzate-posteriori',name:'Alzate posteriori con manubri',g:'spalle',e:'manubri',lv:'Principiante',mu:'Spalle posteriori',hl:['delt'],
+  steps:['Seduto in fondo alla panca o in piedi, busto piegato in avanti quasi parallelo al pavimento, schiena dritta.','Manubri sotto il petto, palmi uno verso l\'altro, gomiti leggermente piegati.','Apri le braccia verso i lati fino all\'altezza delle spalle.','Scendi lentamente.'],
+  br:{in:'Mentre scendi.',out:'Mentre apri le braccia.'},tempo:[2,2],
+  err:['Alzare il busto mentre sali','Usare manubri troppo pesanti e dare lo slancio','Stringere troppo le scapole'],dose:['3','12–15','60"']},
  {id:'tirate-mento',name:'Tirate al mento',g:'spalle',e:'bilanciere',lv:'Intermedio',mu:'Spalle e trapezi',hl:['delt','traps'],
   steps:['In piedi, bilanciere davanti alle cosce, presa alla larghezza delle spalle.','Tira il bilanciere in alto vicino al corpo.','I gomiti salgono per primi, fino all\'altezza delle spalle.','Scendi lentamente.'],
   br:{in:'Mentre scendi.',out:'Mentre tiri in alto.'},tempo:[2,2],
@@ -1998,6 +2028,10 @@ const EX = [
   steps:['Sdraiato sulla panca, bilanciere (meglio quello sagomato) a braccia tese sopra il petto.','Tieni le braccia ferme e leggermente inclinate verso la testa.','Piega solo i gomiti portando la barra verso la fronte.','Distendi le braccia tornando su.'],
   br:{in:'Mentre scendi verso la fronte.',out:'Mentre distendi le braccia.'},tempo:[3,2],
   err:['Aprire i gomiti verso l\'esterno','Muovere le spalle insieme ai gomiti'],dose:['3','10–12','90"']},
+ {id:'french-press-manubri',name:'French press con manubri',g:'braccia',e:'manubri',lv:'Intermedio',mu:'Tricipiti',hl:['ua'],
+  steps:['Sdraiato sulla panca piana, un manubrio per mano a braccia tese sopra il petto, palmi uno verso l\'altro.','Tieni le braccia ferme, leggermente inclinate verso la testa.','Piega solo i gomiti portando i manubri ai lati della testa.','Distendi le braccia tornando su.'],
+  br:{in:'Mentre scendi verso la testa.',out:'Mentre distendi le braccia.'},tempo:[3,2],
+  err:['Aprire i gomiti verso l\'esterno','Muovere le spalle insieme ai gomiti','Scendere di scatto vicino alla testa'],dose:['3','12','60"']},
  {id:'estensioni-sopra-testa',name:'Estensioni sopra la testa',g:'braccia',e:'manubri',lv:'Intermedio',mu:'Tricipiti',
   steps:['Seduto o in piedi, un manubrio tenuto con due mani sopra la testa.','Gomiti vicino alla testa, rivolti in avanti.','Piega i gomiti portando il manubrio dietro la nuca.','Distendi le braccia verso l\'alto.'],
   br:{in:'Mentre scendi dietro la testa.',out:'Mentre distendi verso l\'alto.'},tempo:[3,2],
@@ -2656,6 +2690,8 @@ const ANIM = {
  'jumping-jack':{ab:'in',mirror:true,props:['floor'],akey:'hand',
    A:{hip:[160,106],torso:0,hand:[180,158],foot:[168,184]}, B:{hip:[160,102],torso:0,hand:[200,8],foot:[196,182]}}
 };
+/* esercizi nuovi con la stessa posizione di uno che c'è già: usano la sua animazione finché non arriva il video */
+[['mezzo-squat','squat'],['lat-presa-inversa','lat-machine'],['panca-inclinata','panca-inclinata-manubri'],['french-press-manubri','french-press']].forEach(([a,b])=>{ if(!ANIM[a] && ANIM[b]) ANIM[a]=ANIM[b]; });
 
 const L = {torso:52, ua:30, fa:28, th:40, sh:38, foot:12, head:10};
 const dirv = a => { const r=a*Math.PI/180; return [Math.sin(r), -Math.cos(r)]; };
@@ -3240,6 +3276,7 @@ function viewExercise(id){
       ${x.mu?`<p class="lead" style="margin:0">Muscoli: <b>${esc(x.mu)}</b></p>`:''}
       <h1>${esc(x.name)}</h1>
     </div>
+    ${variantsOf(x.id).length?`<section class="card"><h2>Varianti</h2><p class="muted" style="margin:0 0 8px">Stessi muscoli, con un altro attrezzo o un'altra presa. Utili se la macchina è occupata.</p><div class="links">${variantsOf(x.id).map(v=>`<a class="btn ghost small" href="#ex-${v}">${esc(EXMAP[v].name)}</a>`).join('')}</div></section>`:''}
     <section class="card"><h2>Il tuo video</h2><div id="myVideo"></div></section>
     <section class="card" aria-label="Video e guida al respiro">
       ${pacerHTML(x)}
@@ -4203,6 +4240,25 @@ function bindAudioCard(redraw){
    Serie degli ultimi 7 giorni per muscolo. Conteggio "frazionario" come in Pelland e coll. (Sports Med 2025):
    1 serie per i muscoli che lavorano di più, ½ per quelli che aiutano. Soglie: 4 (minimo), 10–20 (zona consigliata, ACSM 2026). */
 const MUW = {"curl-up":[["abs"],["obliq"]],"bird-dog":[["lowback","glutes"],["abs","delt_a"]],"dead-bug":[["abs"],["obliq"]],"pallof-press":[["abs","obliq"],["glutes","delt_a"]],"woodchop-cavi":[["obliq","abs"],["delt_a"]],"ruota-addominale":[["abs"],["lats","delt_a","obliq"]],"suitcase-carry":[["obliq","forearm"],["abs","traps","lowback"]],"knee-raise-sedia":[["abs"],["obliq"]],"chest-press":[["pecs"],["delt_a","triceps"]],"panca-piana":[["pecs"],["delt_a","triceps"]],"croci-cavi":[["pecs"],["delt_a"]],"piegamenti":[["pecs"],["triceps","delt_a","abs"]],"panca-manubri":[["pecs"],["delt_a","triceps"]],"panca-inclinata-manubri":[["pecs","delt_a"],["triceps"]],"pectoral-machine":[["pecs"],["delt_a"]],"lat-machine":[["lats"],["biceps","rhomb","delt_p","traps","forearm"]],"pulley":[["lats","rhomb"],["biceps","delt_p","traps"]],"rematore-manubrio":[["lats"],["rhomb","biceps","delt_p"]],"trazioni-assistite":[["lats"],["biceps","rhomb","delt_p","forearm"]],"rematore-bilanciere":[["lats","rhomb"],["biceps","delt_p","lowback","hams"]],"pullover-cavo":[["lats"],["triceps","pecs"]],"leg-press":[["quads","glutes"],["hams","adduct"]],"squat":[["quads","glutes"],["hams","lowback","adduct"]],"leg-extension":[["quads"],[]],"leg-curl":[["hams"],["calves"]],"affondi":[["quads","glutes"],["hams","adduct","calves"]],"polpacci":[["calves"],[]],"hip-thrust":[["glutes"],["hams","quads"]],"stacco-rumeno":[["hams","glutes"],["lowback","forearm"]],"goblet-squat":[["quads","glutes"],["adduct","abs"]],"abductor":[["gmed"],["glutes"]],"adductor":[["adduct"],[]],"shoulder-press":[["delt_a","delt_l"],["triceps","traps"]],"alzate-laterali":[["delt_l"],["traps","delt_a"]],"face-pull":[["delt_p","rhomb"],["traps"]],"lento-manubri":[["delt_a","delt_l"],["triceps","traps"]],"alzate-frontali":[["delt_a"],["pecs","delt_l"]],"reverse-fly":[["delt_p","rhomb"],["traps"]],"tirate-mento":[["delt_l","traps"],["biceps","delt_a"]],"curl-bilanciere":[["biceps"],["forearm","delt_a"]],"curl-manubri":[["biceps"],["forearm"]],"curl-martello":[["biceps","forearm"],[]],"curl-cavo":[["biceps"],["forearm"]],"curl-scott":[["biceps"],["forearm"]],"pushdown":[["triceps"],[]],"french-press":[["triceps"],[]],"estensioni-sopra-testa":[["triceps"],[]],"kickback":[["triceps"],["delt_p"]],"dip-macchina":[["triceps"],["pecs","delt_a"]],"plank":[["abs","obliq"],["delt_a","glutes","quads"]],"crunch":[["abs"],["obliq"]],"crunch-cavo":[["abs"],["obliq"]],"sollevamento-gambe":[["abs"],["quads","obliq"]],"crunch-macchina":[["abs"],["obliq"]],"mountain-climber":[["abs"],["delt_a","quads","obliq"]],"tapis-roulant":[["quads","calves"],["glutes","hams"]],"cyclette":[["quads"],["glutes","calves","hams"]],"ellittica":[["quads","glutes"],["hams","calves","lats","delt_a"]],"stepper":[["glutes","quads"],["calves","hams"]],"vogatore":[["lats","quads"],["hams","glutes","biceps","rhomb","lowback"]],"iperestensioni":[["lowback","glutes"],["hams"]],"squat-libero":[["quads","glutes"],["adduct","hams"]],"squat-bulgaro":[["quads","glutes"],["adduct","hams"]],"ponte-glutei":[["glutes"],["hams"]],"leg-curl-asciugamano":[["hams"],["glutes","calves"]],"nordic-curl":[["hams"],["calves","glutes"]],"polpacci-gradino":[["calves"],[]],"piegamenti-rialzati":[["pecs"],["triceps","delt_a"]],"piegamenti-stretti":[["triceps","pecs"],["delt_a","abs"]],"piegamenti-piedi-rialzati":[["pecs","delt_a"],["triceps","abs"]],"pike-push-up":[["delt_a","delt_l"],["triceps","traps"]],"dip-sedia":[["triceps"],["pecs","delt_a"]],"rematore-tavolo":[["lats","rhomb"],["biceps","delt_p","traps","forearm"]],"alzate-yt":[["delt_p","traps"],["rhomb","delt_l"]],"plank-laterale":[["obliq","abs"],["gmed","delt_l"]]};
+Object.assign(MUW,{"mezzo-squat":[["quads","glutes"],["hams","adduct","lowback"]],"lat-presa-inversa":[["lats","biceps"],["rhomb","delt_p"]],"pullover-manubrio":[["lats","pecs"],["triceps","serr"]],"panca-inclinata":[["pecs","delt_a"],["triceps"]],"croci-manubri":[["pecs"],["delt_a"]],"croci-inclinata-manubri":[["pecs"],["delt_a"]],"french-press-manubri":[["triceps"],[]],"alzate-posteriori":[["delt_p"],["rhomb","traps"]]});
+/* varianti: esercizi che si sostituiscono a vicenda (altro attrezzo, altra presa, altro macchinario) */
+const VARG = [
+ ['squat','mezzo-squat','goblet-squat','leg-press','squat-libero'],
+ ['lat-machine','lat-presa-inversa','trazioni-assistite'],
+ ['pulley','rematore-manubrio','rematore-bilanciere'],
+ ['pullover-cavo','pullover-manubrio'],
+ ['panca-piana','panca-manubri','chest-press','piegamenti'],
+ ['panca-inclinata','panca-inclinata-manubri'],
+ ['croci-cavi','croci-manubri','croci-inclinata-manubri','pectoral-machine'],
+ ['french-press','french-press-manubri','estensioni-sopra-testa','pushdown'],
+ ['reverse-fly','alzate-posteriori','face-pull'],
+ ['shoulder-press','lento-manubri'],
+ ['curl-bilanciere','curl-manubri','curl-martello','curl-scott','curl-cavo'],
+ ['stacco-rumeno','iperestensioni'],
+ ['leg-curl','leg-curl-asciugamano'],
+ ['alzate-laterali','tirate-mento']
+];
+const variantsOf = id => [...new Set(VARG.filter(g=>g.includes(id)).flat())].filter(v=>v!==id && EXMAP[v]);
 const MZ = [ // [chiave, nome, muscoli dell'esercizio, principale]
   ['pecs','Petto',['pecs'],1], ['lats','Dorsali',['lats'],1], ['mid','Centro schiena',['rhomb','traps'],1],
   ['delt_a','Spalle davanti',['delt_a'],1], ['delt_l','Spalle laterali',['delt_l'],1], ['delt_p','Spalle dietro',['delt_p'],1],
@@ -5498,18 +5554,18 @@ let explaining=false;
 const ALIAS = [
  ['chest press','chest-press'],['distensioni macchina','chest-press'],['spinte macchina','chest-press'],
  ['panca piana manubri','panca-manubri'],['spinte manubri','panca-manubri'],['distensioni manubri','panca-manubri'],['panca manubri','panca-manubri'],
- ['panca inclinata','panca-inclinata-manubri'],['inclinata','panca-inclinata-manubri'],
+ ['panca inclinata manubri','panca-inclinata-manubri'],['panca inclinata bilanciere','panca-inclinata'],['panca inclinata','panca-inclinata'],['inclinata','panca-inclinata'],
  ['panca piana','panca-piana'],['distensioni bilanciere','panca-piana'],['bench press','panca-piana'],['panca','panca-piana'],
- ['croci cavi','croci-cavi'],['croci ai cavi','croci-cavi'],['croce cavi','croci-cavi'],['cable cross','croci-cavi'],['crossover','croci-cavi'],['croci','croci-cavi'],
+ ['croci inclinata','croci-inclinata-manubri'],['croci panca inclinata','croci-inclinata-manubri'],['croci manubri','croci-manubri'],['croci con manubri','croci-manubri'],['croci panca','croci-manubri'],['croci cavi','croci-cavi'],['croci ai cavi','croci-cavi'],['croce cavi','croci-cavi'],['cable cross','croci-cavi'],['crossover','croci-cavi'],['croci','croci-manubri'],
  ['pectoral','pectoral-machine'],['peck deck','pectoral-machine'],['pec deck','pectoral-machine'],['butterfly','pectoral-machine'],
  ['piegamenti','piegamenti'],['flessioni','piegamenti'],['push up','piegamenti'],['pushup','piegamenti'],
- ['lat machine','lat-machine'],['lat pulldown','lat-machine'],['lat avanti','lat-machine'],['lat','lat-machine'],
+ ['lat presa inversa','lat-presa-inversa'],['lat inversa','lat-presa-inversa'],['lat supina','lat-presa-inversa'],['lat machine','lat-machine'],['lat pulldown','lat-machine'],['lat avanti','lat-machine'],['lat','lat-machine'],
  ['pulley','pulley'],['seated row','pulley'],['rematore cavo','pulley'],
  ['rematore manubrio','rematore-manubrio'],['rematore 1 braccio','rematore-manubrio'],['rematore un braccio','rematore-manubrio'],
  ['rematore bilanciere','rematore-bilanciere'],['rematore','rematore-bilanciere'],['barbell row','rematore-bilanciere'],
  ['trazioni','trazioni-assistite'],['pull up','trazioni-assistite'],['assisted','trazioni-assistite'],['chin up','trazioni-assistite'],
- ['pullover','pullover-cavo'],['iperestensioni','iperestensioni'],['hyperextension','iperestensioni'],['lombari','iperestensioni'],
- ['stacco rumeno','stacco-rumeno'],['stacchi rumeni','stacco-rumeno'],['rdl','stacco-rumeno'],['stacco','stacco-rumeno'],['stacchi','stacco-rumeno'],
+ ['pullover manubrio','pullover-manubrio'],['pullover con manubrio','pullover-manubrio'],['pullover cavo','pullover-cavo'],['pullover ai cavi','pullover-cavo'],['pullover','pullover-manubrio'],['iperestensioni','iperestensioni'],['hyperextension','iperestensioni'],['lombari','iperestensioni'],
+ ['stacco rumeno','stacco-rumeno'],['stacchi rumeni','stacco-rumeno'],['rdl','stacco-rumeno'],['stacco','stacco-rumeno'],['stacchi','stacco-rumeno'],['mezzi stacchi','stacco-rumeno'],['semi squat','mezzo-squat'],['mezzo squat','mezzo-squat'],['mezzi squat','mezzo-squat'],['half squat','mezzo-squat'],
  ['leg press','leg-press'],['pressa','leg-press'],
  ['goblet','goblet-squat'],['squat','squat'],
  ['leg extension','leg-extension'],['leg ext','leg-extension'],['estensioni gambe','leg-extension'],
@@ -5520,13 +5576,13 @@ const ALIAS = [
  ['abductor','abductor'],['abduttori','abductor'],['adductor','adductor'],['adduttori','adductor'],
  ['shoulder press','shoulder-press'],['military','lento-manubri'],['lento avanti','lento-manubri'],['lento','lento-manubri'],['arnold','lento-manubri'],
  ['alzate laterali','alzate-laterali'],['laterali','alzate-laterali'],['alzate frontali','alzate-frontali'],['frontali','alzate-frontali'],
- ['face pull','face-pull'],['tirate al viso','face-pull'],['reverse fly','reverse-fly'],['croci inverse','reverse-fly'],['deltoidi posteriori','reverse-fly'],
+ ['face pull','face-pull'],['tirate al viso','face-pull'],['reverse fly','reverse-fly'],['croci inverse','reverse-fly'],['deltoidi posteriori','reverse-fly'],['alzate posteriori','alzate-posteriori'],['posteriori manubri','alzate-posteriori'],['aperture posteriori','alzate-posteriori'],
  ['tirate al mento','tirate-mento'],['tirate mento','tirate-mento'],['upright row','tirate-mento'],
  ['curl martello','curl-martello'],['hammer','curl-martello'],['martello','curl-martello'],
  ['curl scott','curl-scott'],['scott','curl-scott'],['curl cavo','curl-cavo'],['curl ai cavi','curl-cavo'],
  ['curl bilanciere','curl-bilanciere'],['curl manubri','curl-manubri'],['curl alternato','curl-manubri'],['curl','curl-manubri'],
  ['pushdown','pushdown'],['push down','pushdown'],['tricipiti cavo','pushdown'],['tricipiti ai cavi','pushdown'],['corda','pushdown'],
- ['french press','french-press'],['skull','french-press'],['sopra la testa','estensioni-sopra-testa'],['overhead','estensioni-sopra-testa'],
+ ['french press manubri','french-press-manubri'],['french press con manubri','french-press-manubri'],['french press','french-press'],['skull','french-press'],['sopra la testa','estensioni-sopra-testa'],['overhead','estensioni-sopra-testa'],
  ['kickback','kickback'],['kick back','kickback'],['dip','dip-macchina'],['parallele','dip-macchina'],
  ['plank','plank'],['crunch cavo','crunch-cavo'],['crunch ai cavi','crunch-cavo'],['crunch macchina','crunch-macchina'],['ab crunch','crunch-macchina'],['crunch','crunch'],['addominali','crunch'],
  ['sollevamento gambe','sollevamento-gambe'],['leg raise','sollevamento-gambe'],['gambe alla sbarra','sollevamento-gambe'],
@@ -5545,9 +5601,13 @@ const ALIASN = ALIAS.map(([a,id])=>[normT(a),id]).sort((a,b)=>b[0].length-a[0].l
 function matchEx(name){
   const n = ' '+normT(name)+' ';
   if(!n.trim()) return null;
-  if(/ inclinat/.test(n) && / (manubri|panca|spinte|distensioni) /.test(n) && !/ croci /.test(n)) return 'panca-inclinata-manubri';
-  for(const x of EX) if(n.includes(' '+normT(x.name)+' ')) return x.id;
-  for(const [a,id] of ALIASN) if(n.includes(' '+a+' ')) return id;
+  if(/ croci /.test(n) && / inclinat/.test(n)) return 'croci-inclinata-manubri';
+  if(/ inclinat/.test(n) && / (manubri|panca|spinte|distensioni) /.test(n)) return / manubri /.test(n) ? 'panca-inclinata-manubri' : 'panca-inclinata';
+  /* vince la frase più lunga trovata (es. "semi squat" prima di "squat", "french press con manubri" prima di "french press") */
+  let bid=null, bl=0;
+  for(const x of EX){ const k=normT(x.name); if(k.length>bl && n.includes(' '+k+' ')){ bid=x.id; bl=k.length; } }
+  for(const [a,id] of ALIASN){ if(a.length>bl && n.includes(' '+a+' ')){ bid=id; bl=a.length; } }
+  if(bid) return bid;
   // somiglianza a parole
   const w = n.trim().split(' ').filter(t=>t.length>2);
   let best=null, bs=0;
@@ -5572,9 +5632,9 @@ const HEADMAP = {pettorali:'petto',pettorale:'petto',petto:'petto',dorsali:'schi
 const HEADG = {bicipiti:'braccia', tricipiti:'braccia'};
 const HEADCONN = new Set(['e','ed','piu','con','and']);
 const CTX = {
- spalle:[['spinte','shoulder-press'],['press','shoulder-press'],['distensioni','shoulder-press'],['lento','lento-manubri'],['posterior','reverse-fly'],['aperture','reverse-fly'],['frontal','alzate-frontali'],['lateral','alzate-laterali'],['tirate','tirate-mento'],['manubri','lento-manubri']],
- petto:[['spinte','panca-piana'],['croci','croci-cavi'],['aperture','croci-cavi'],['pectoral','pectoral-machine'],['macchina','chest-press']],
- tricipiti:[['french','french-press'],['sopra','estensioni-sopra-testa'],['dip','dip-macchina'],['kick','kickback'],['push','pushdown'],['barra','pushdown'],['cav','pushdown'],['corda','pushdown'],['manubri','french-press']],
+ spalle:[['spinte','shoulder-press'],['press','shoulder-press'],['distensioni','shoulder-press'],['lento','lento-manubri'],['posterior','alzate-posteriori'],['aperture','alzate-posteriori'],['frontal','alzate-frontali'],['lateral','alzate-laterali'],['tirate','tirate-mento'],['manubri','lento-manubri']],
+ petto:[['spinte','panca-piana'],['croci','croci-manubri'],['aperture','croci-manubri'],['pectoral','pectoral-machine'],['macchina','chest-press']],
+ tricipiti:[['french','french-press'],['sopra','estensioni-sopra-testa'],['dip','dip-macchina'],['kick','kickback'],['push','pushdown'],['barra','pushdown'],['cav','pushdown'],['corda','pushdown'],['manubri','french-press-manubri']],
  bicipiti:[['martello','curl-martello'],['scott','curl-scott'],['cav','curl-cavo'],['bilanciere','curl-bilanciere'],['dritto','curl-bilanciere'],['ez','curl-bilanciere'],['z','curl-bilanciere'],['bic','curl-bilanciere'],['manubri','curl-manubri']],
  schiena:[['rematore','rematore-bilanciere'],['stacc','stacco-rumeno'],['pullover','pullover-cavo'],['lat','lat-machine'],['trazioni','trazioni-assistite']],
  gambe:[['squat','squat'],['stacc','stacco-rumeno'],['pressa','leg-press']]
@@ -5660,7 +5720,8 @@ function parseScheda(text){
     let id, written = name, extra = '';
     if(cont){
       written = last.written; id = last.id; extra = [extraName(last.written, id), name].filter(Boolean).join(' ');
-      if(/inclinat/.test(nn) && /^(panca-piana|panca-manubri|chest-press)$/.test(id)) { id='panca-inclinata-manubri'; extra=''; }
+      if(/inclinat/.test(nn)){ const inc={'panca-piana':'panca-inclinata','chest-press':'panca-inclinata','panca-manubri':'panca-inclinata-manubri','croci-manubri':'croci-inclinata-manubri','croci-cavi':'croci-inclinata-manubri'}[id]; if(inc){ id=inc; extra=''; } }
+      if(id==='lat-machine' && /invers|supin/.test(nn)){ id='lat-presa-inversa'; extra=''; }
     } else {
       id = nn ? matchExCtx(name, head) : null;
       extra = id ? extraName(name, id) : '';
@@ -5669,8 +5730,10 @@ function parseScheda(text){
     const base = {id, original:line, written, rest: rest!=null?rest:90, kg};
     if(!doses.length){ push(Object.assign({}, base, {sets:3, reps:'10', nodose:true, note: extra})); return; }
     doses.forEach((d,k)=>{
-      const note = [extra, d.qual, k===doses.length-1 ? tail : ''].filter(Boolean).join(' · ');
-      push(Object.assign({}, base, {sets:Math.max(1,Math.min(10,d.sets)), reps:normReps(d.reps)||'10', note}));
+      let did = id, q = d.qual;
+      if(id==='lat-machine' && /invers|supin/.test(normT(q))){ did='lat-presa-inversa'; q=''; }
+      const note = [extra, q, k===doses.length-1 ? tail : ''].filter(Boolean).join(' · ');
+      push(Object.assign({}, base, {id:did, sets:Math.max(1,Math.min(10,d.sets)), reps:normReps(d.reps)||'10', note}));
     });
   });
   // righe senza serie (spesso cancellate) già presenti più avanti nello stesso giorno: le tolgo
