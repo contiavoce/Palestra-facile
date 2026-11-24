@@ -4590,7 +4590,7 @@ function onFix(pos){
 function onGpsErr(e){ corsaMsg = e && e.code===1 ? 'Il telefono non dà il permesso alla posizione. Attivalo per questo sito nelle impostazioni di Chrome (Impostazioni sito → Posizione).' : 'Sto cercando il segnale GPS… meglio all\'aperto, lontano da palazzi alti.'; corsaPaint(); }
 function gpsOn(){ if(gpsWatch!=null || (corsa&&corsa.plan&&corsa.plan.tm) || !('geolocation' in navigator)) return; gpsWatch = navigator.geolocation.watchPosition(onFix, onGpsErr, {enableHighAccuracy:true, maximumAge:1000, timeout:20000}); }
 function gpsOff(){ if(gpsWatch!=null){ try{ navigator.geolocation.clearWatch(gpsWatch); }catch(e){} gpsWatch=null; } }
-function corsaStart(plan){ corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0, kms:[], ...(plan?{plan}:{})}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn(); if(plan){ const m0=coachStartTxt()+motStart(); if(m0) say(m0, true); setTimeout(()=>{ if(corsa&&corsa.plan){ corsa.plan.i=-1; rpTick(); } }, m0?Math.max(6500,m0.length*70):0); } else say(coachStartTxt()+motStart()+'Corsa iniziata. Buona corsa!', true); corsaLoop(); viewCorsa(); window.scrollTo(0,0); }
+function corsaStart(plan){ corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0, kms:[], ...(plan?{plan}:{})}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn(); if(plan){ const q0=rpPos(); if(q0 && !q0.end){ plan.i=q0.i; beep('go'); } say(coachStartTxt()+motStart()+(q0 && !q0.end ? rpCue(plan,q0.i) : ''), true); corsaSave(); } else say(coachStartTxt()+motStart()+'Corsa iniziata. Buona corsa!', true); corsaLoop(); viewCorsa(); window.scrollTo(0,0); }
 function corsaPause(){ if(!corsa||corsa.paused) return; corsa.acc += Date.now()-corsa.t0; corsa.paused=true; corsa.gap=true; corsaSave(); say('Pausa.', true); viewCorsa(); }
 function corsaResume(){ if(!corsa||!corsa.paused) return; corsa.t0=Date.now(); corsa.paused=false; corsaSave(); gpsOn(); corsaWakeOn(); say('Si riparte.', true); viewCorsa(); }
 function corsaFinish(save){
@@ -4797,7 +4797,7 @@ function rpCue(p, i){ const sg=p.segs[i], T=RSEG[sg[0]];
   if(sg[0]==='int'||sg[0]==='sog'){ const mx=hrMax(); if(mx) txt += ' Battito tra '+Math.round(T.z[0]*mx)+' e '+Math.round(T.z[1]*mx)+'.'; }
   const nx=p.segs[i+1]; if(i===0) txt = 'Settimana '+(p.w+1)+', giorno '+(p.d+1)+'. '+txt;
   if(p.tm){ const v=tmSpeed(sg[0],p.vf); if(v) txt += sg[0]==='cam' ? ' Velocità tra 5 e mezzo e 6 e mezzo.' : ' Velocità circa '+v.replace(',5',' e mezzo')+' chilometri all\'ora.'; else if(sg[2]) txt += ' Quando il tapis roulant segna la distanza, premi Arrivato.'; }
-  if(!nx) txt += ' È l\'ultima parte.';
+  if(!nx && p.segs.length>1) txt += ' È l\'ultima parte.';
   return txt; }
 function rpTick(){
   const p=corsa&&corsa.plan; if(!p || corsa.paused || p.fin) return;
@@ -4835,7 +4835,7 @@ function rpPaint(){ const p=corsa&&corsa.plan, el=document.getElementById('rpG')
     set('rpZ', (T.z ? 'Zona: '+rpZoneTxt(T.z) : sg[2] ? 'Il tuo ritmo migliore, regolare: mancano questi km' : '20 secondi veloce e sciolto') + (p.tm && tmSpeed(sg[0],p.vf) ? ' · Tapis: '+tmSpeed(sg[0],p.vf)+' km/h, pendenza 1%' : ''));
     const ok=document.getElementById('rpOk'); if(ok) ok.hidden = !(p.tm && sg[2]);
     const rest = p.segs.slice(q.i+1).reduce((x,y)=>x+segSec(y),0) + (sg[2] ? q.mLeft*0.36 : q.left);
-    set('rpX', `Parte ${q.i+1} di ${p.segs.length}`+(nx?` · poi ${RSEG[nx[0]].n.toLowerCase()} ${nx[2]?kmSay(nx[2])+' km':fmtDur(nx[1])}`:' · ultima parte')+` · mancano ${sg[2]||p.segs.slice(q.i+1).some(x=>x[2])?'circa ':''}${fmtDur(Math.max(0,rest))}`); }
+    set('rpX', p.segs.length===1 ? `mancano ${sg[2]?'circa ':''}${fmtDur(Math.max(0,rest))}` : `Parte ${q.i+1} di ${p.segs.length}`+(nx?` · poi ${RSEG[nx[0]].n.toLowerCase()} ${nx[2]?kmSay(nx[2])+' km':fmtDur(nx[1])}`:' · ultima parte')+` · mancano ${sg[2]||p.segs.slice(q.i+1).some(x=>x[2])?'circa ':''}${fmtDur(Math.max(0,rest))}`); }
   const before = p.segs.slice(0,q.end?p.segs.length:q.i).reduce((x,y)=>x+segSec(y),0) + (q.end?0:segSec(p.segs[q.i])*q.fr);
   const c=document.getElementById('rpC'); if(c) c.style.left=Math.min(100,before/tot*100)+'%';
 }
