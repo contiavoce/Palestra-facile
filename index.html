@@ -4690,7 +4690,7 @@ const RP_P = [[1,1.5,8],[2,2,5],[3,2,4],[5,2.5,3],[6,2,3],[10,2,2],[12,2,2],[25,
   return [s, s, s];
 });
 // INTERMEDIO: 4 uscite, 8 settimane (4ª e 8ª più leggere). 1 seduta intensa su 4 = 80/20
-const RP_I = (()=>{ const fac=[30,30,35,25,35,35,40,30], lun=[40,44,48,35,48,52,56,40];
+const RP_I = (()=>{ const fac=[30,30,35,25,35,35,40,30], lun=[33,36,39,30,43,47,51,40];
   const iv=[[6,1,2],[5,2,2],[4,3,3],[4,2,2],[4,4,3],[4,4,3],[5,4,3],[3,3,3]];
   return fac.map((f,w)=>{ const [n,a,b]=iv[w];
     return [ rSess(`Facile ${f}'`, [['fac',M_(f)]]),
@@ -4715,8 +4715,8 @@ const lnS = f => rSess(`Lungo facile ${f}'`, [['fac',M_(f)]]);
 const alS = f => rSess(`Facile ${f}' + 6 allunghi`, [['fac',M_(f)], ...rRep(6,['all',20],['rec',60])]);
 const prS = m => rSess(`Prova sui ${kmSay(m)} km`, [['fac',M_(12)], ...rRep(3,['all',20],['rec',60]), ['pro',0,m], ['cam',M_(5)]]);
 const RP_5 = [
- [facS(25), ivS(6,2,2), lnS(40)], [facS(30), ivS(5,3,2), lnS(44)], [facS(30), ivS(4,4,3), lnS(48)], [facS(25), ivS(4,2,2), lnS(35)],
- [alS(30), sgS(2,8), lnS(50)], [alS(30), ivS(5,4,3), lnS(52)], [facS(25), ivS(4,3,2), lnS(40)], [facS(20), ivS(3,2,2), prS(5000)]];
+ [facS(25), ivS(6,2,2), lnS(33)], [facS(30), ivS(5,3,2), lnS(36)], [facS(30), ivS(4,4,3), lnS(39)], [facS(25), ivS(4,2,2), lnS(30)],
+ [alS(30), sgS(2,8), lnS(43)], [alS(30), ivS(5,4,3), lnS(46)], [facS(25), ivS(4,3,2), lnS(40)], [facS(20), ivS(3,2,2), prS(5000)]];
 const RP_10 = [
  [facS(30), ivS(5,3,2), alS(30), lnS(50)], [facS(30), sgS(2,10), alS(30), lnS(55)], [facS(35), ivS(4,4,3), alS(30), lnS(60)], [facS(25), sgS(2,8), facS(25), lnS(45)],
  [facS(35), ivS(5,4,3), alS(30), lnS(65)], [facS(35), sgS(3,10), alS(35), lnS(70)], [facS(40), ivS(5,4,3), alS(35), lnS(75)], [facS(30), sgS(1,25), facS(30), lnS(55)],
@@ -4745,7 +4745,7 @@ const RUNPLANS = {
  dim:{name:'Dimagrire', g:1, weeks:RP_D, days:'5 uscite a settimana per 12 settimane',
   info:'Per perdere peso muovendoti tanto ma senza farti male: soprattutto camminata svelta, poi brevi tratti di corsetta. Si parte da 150 minuti a settimana e si arriva a 300. Da solo il movimento fa perdere poco peso: conta soprattutto l\'alimentazione (scheda Dieta e un nutrizionista). Insieme funzionano meglio e aiutano a non riprendere i chili.'},
  k21:{name:'Mezza maratona', g:1, weeks:RP_21, days:'4 uscite a settimana per 12 settimane',
-  info:'Per arrivare a correre i 21 km. Serve correre già 3–4 volte a settimana con un lungo di almeno 55 minuti. Il lungo arriva a 100 minuti, poi 2 settimane di scarico e la prova sui 21,1 km.'}
+  info:'Per arrivare a correre i 21 km. Serve correre già 3–4 volte a settimana con un lungo di almeno 55 minuti. Il lungo arriva a 100 minuti, poi 2 settimane di scarico e la prova sui 21,1 km. Se corri piano (più di 7 minuti al km), ripeti le settimane 9 e 10 prima dello scarico.'}
 };
 const SCI_RUN = `<div class="sci">
   <p>${pill('s')}<b>80% facile, 20% duro.</b> Gli atleti di resistenza più forti fanno circa l'80% degli allenamenti piano e il 20% duro. Negli studi questo schema migliora il fiato almeno quanto, o più, di fare tutto a ritmo medio.<cite>Seiler e Kjerland, Scand J Med Sci Sports 2006 · Stöggl e Sperlich, Front Physiol 2014 · Rosenblat e coll., J Strength Cond Res 2019 (meta-analisi)</cite></p>
