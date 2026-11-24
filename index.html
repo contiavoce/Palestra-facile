@@ -313,6 +313,8 @@ nav.tabs a[aria-current="page"] svg{stroke-width:2.4}
 .icon{width:34px;height:34px;border-radius:50%;border:0;background:var(--sunk);cursor:pointer;font-size:15px;flex:none}
 .icon:disabled{opacity:.35;cursor:default}
 .dosein{display:grid;grid-template-columns:1fr 1.4fr 1.3fr;gap:8px}
+.notein{display:grid;gap:3px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:8px}
+.notein input{border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);font-size:16px;width:100%;min-width:0;text-transform:none;letter-spacing:0;color:var(--fg)}
 .dosein label{display:grid;gap:3px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
 .dosein input,.dosein select{border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);font-size:16px;width:100%;min-width:0;text-transform:none;letter-spacing:0;color:var(--fg)}
 .picker{display:grid;gap:10px}
@@ -3331,7 +3333,7 @@ function sessCard(s, mine, day){
     <div class="sthumbs" aria-hidden="true">${s.items.slice(0,6).map(i=>thumb(i[0],'st')).join('')}</div>
     <div class="sess-top"><div>${zonaTag(s, mine?day:0)}<h2>${esc(s.name)}</h2>${s.for?`<div class="next">${esc(s.for)}</div>`:''}</div></div>
     <div class="meta"><span>≈ ${min} min</span><span>${s.items.length} esercizi</span><span>${sets} serie</span></div>
-    <ol>${s.items.map(i=>`<li><b>${esc(EXMAP[i[0]].name)}</b> · ${i[1]>1?i[1]+' × ':''}${esc(i[2])}</li>`).join('')}</ol>
+    <ol>${s.items.map(i=>`<li><b>${esc(EXMAP[i[0]].name)}</b> · ${i[1]>1?i[1]+' × ':''}${esc(i[2])}${i[4]?` <span class="muted">· ${esc(i[4])}</span>`:''}</li>`).join('')}</ol>
     <div class="actions"><a class="btn" href="#allena-${s.id}">Inizia</a>
       ${mine?`<a class="btn ghost" href="#scheda-${s.id}">Modifica</a>`:`<button class="btn ghost" type="button" data-copy="${s.id}">Personalizza</button><a class="btn ghost" href="${yt(s.name+' allenamento palestra')}" target="_blank" rel="noopener">Video ↗</a>`}</div>
   </article>`;
@@ -3425,7 +3427,8 @@ function drawEditor(opts){
         <label>Serie<input id="sets-${k}" type="number" min="1" max="10" inputmode="numeric" value="${it[1]}" data-f="1" data-k="${k}"></label>
         <label>${isTime(x)?'Durata':'Ripetizioni'}<input id="reps-${k}" type="text" maxlength="14" value="${esc(it[2])}" data-f="2" data-k="${k}"></label>
         <label>Recupero<select id="rest-${k}" data-f="3" data-k="${k}">${restOpt(it[3])}</select></label>
-      </div></div>`}).join('') || '<div class="empty">Nessun esercizio. Aggiungine uno qui sotto.</div>'}</div>
+      </div>
+      <label class="notein">Nota<input id="note-${k}" type="text" maxlength="80" placeholder="Es. presa larga, oppure Pectoral machine" value="${esc(it[4]||'')}" data-f="4" data-k="${k}"></label></div>`}).join('') || '<div class="empty">Nessun esercizio. Aggiungine uno qui sotto.</div>'}</div>
     <div id="pickWrap">${opts.pick ? pickerHTML() : '<button class="btn ghost big" type="button" id="addEx">+ Aggiungi esercizio</button>'}</div>
     <p class="err" id="err" hidden></p>
     <button class="btn big" type="button" id="saveR">Salva scheda</button>
@@ -3436,6 +3439,7 @@ function drawEditor(opts){
   document.getElementById('rzona').onchange = e=>{ edit.zona = e.target.value; };
   $app.querySelectorAll('[data-f]').forEach(inp=>inp.onchange=inp.oninput=()=>{
     const k=+inp.dataset.k, f=+inp.dataset.f;
+    if(f===4){ const v=inp.value.trim(); if(v) edit.items[k][4]=v; else edit.items[k].length=Math.min(edit.items[k].length,4); return; }
     edit.items[k][f] = f===2 ? inp.value : Math.max(f===1?1:0, parseInt(inp.value,10)||0);
     if(f===1){ const o=document.querySelector('#rzona option[value=""]'); if(o) o.textContent='Automatica: '+(zonaAuto(edit.items)||'—'); }
   });
@@ -3450,7 +3454,7 @@ function drawEditor(opts){
     edit.name = nm.value.trim();
     if(!edit.name){ err.textContent='Dai un nome alla scheda.'; err.hidden=false; nm.focus(); return; }
     if(!edit.items.length){ err.textContent='Aggiungi almeno un esercizio.'; err.hidden=false; return; }
-    const r = {id:edit.id, name:edit.name, items:clone(edit.items)}; if(edit.zona) r.zona=edit.zona;
+    const r = {id:edit.id, name:edit.name, items:clone(edit.items)}; if(edit.zona) r.zona=edit.zona; if(edit.fedele) r.fedele=true;
     const i = S.routines.findIndex(x=>x.id===r.id);
     if(i>=0) S.routines[i]=r; else S.routines.push(r);
     saveRoutines(); edit=null; location.hash='sessioni';
@@ -3493,7 +3497,7 @@ function startRun(id){
     return;
   }
   if(!run){
-    run = {id, name:s.name, plan:s.items.map(i=>{ const r=String(goalReps(i[0], String(i[2]), s.lvl)), heavy=tGoal()==='for' && r!==String(i[2]) && !/^8/.test(r); return {ex:i[0], sets:+i[1]||1, reps:r, rest: heavy ? Math.max(+i[3]||0, 150) : (+i[3]||0)}; }), i:0, set:1, restEnd:0, start:Date.now(), sets:[]};
+    run = {id, name:s.name, plan:s.items.map(i=>{ const r=String(s.fedele||pyrOf(i[2]) ? i[2] : goalReps(i[0], String(i[2]), s.lvl)), heavy=tGoal()==='for' && r!==String(i[2]) && !/^8/.test(r), py=pyrOf(r); return Object.assign({ex:i[0], sets:+i[1]||1, reps:r, rest: heavy ? Math.max(+i[3]||0, 150) : (+i[3]||0)}, i[4]?{note:String(i[4])}:{}, py?{pyr:py}:{}); }), i:0, set:1, restEnd:0, start:Date.now(), sets:[]};
     saveRun();
   }
   try{ navigator.wakeLock && navigator.wakeLock.request('screen').then(w=>wake=w).catch(()=>{}) }catch(e){}
@@ -3511,7 +3515,7 @@ function defaults(p, setNo){
 function drawRun(){
   clearInterval(tick); stopAnim();
   if(run.pauseLeft!=null){ if(run.restEnd) run.restEnd = Date.now()+run.pauseLeft; else delete run.pauseLeft; }
-  const p = run.plan[run.i], x = EXMAP[p.ex];
+  const P0 = run.plan[run.i], p = P0.pyr ? Object.assign({}, P0, {reps: String(P0.pyr[Math.min(run.set, P0.pyr.length)-1])}) : P0, x = EXMAP[p.ex];
   const total = run.plan.reduce((a,q)=>a+q.sets,0);
   const done = run.sets.length;
   backBar('Esci','#sessioni'); setTab('sessioni');
@@ -3537,7 +3541,8 @@ function drawRun(){
       <div class="remind"><span><b>Intanto:</b> respira lento e profondo, inspira dal naso ed espira dalla bocca.</span></div>`
     : `
       <div class="pips" aria-hidden="true">${Array.from({length:p.sets},(_,k)=>`<i class="${k<run.set-1?'done':k===run.set-1?'now':''}"></i>`).join('')}</div>
-      <div class="prev">Serie <b>${run.set} di ${p.sets}</b> · obiettivo <b>${esc(p.reps)}</b>${!timeEx&&last?` · volta scorsa <b>${last.sets.map(s=>setTxt(s)).join(', ')}</b>`:''}</div>
+      <div class="prev">Serie <b>${run.set} di ${p.sets}</b> · obiettivo <b>${esc(p.reps)}</b>${P0.pyr?` <span class="muted">(piramide ${esc(P0.pyr.join('–'))})</span>`:''}${!timeEx&&last?` · volta scorsa <b>${last.sets.map(s=>setTxt(s)).join(', ')}</b>`:''}</div>
+      ${p.note?`<div class="remind"><span><b>📝 Nota della scheda:</b> ${esc(p.note)}</span></div>`:''}
       ${runAdvice(p, x)}
       ${isWarm(p)&&run.set===1?mobRunCta():''}
       ${timeEx ? '' : `<div class="logger">
@@ -3576,7 +3581,7 @@ function drawRun(){
     const d2 = document.getElementById('demo2'), pl2 = d2 ? d2.closest('.player') : $app.querySelector('.player.mini');
     if(d2){ animCtl = makeAnim(x, d2, document.getElementById('w2'), null); if(!reduceMotion) animCtl.play(); }
     if(pl2) videoSrc(x.id).then(v=>{ if(!v||!pl2.isConnected) return; if(!d2 && !v.mine) return; if(animCtl&&animCtl.playing) animCtl.pause(); if(typeof dispose3D==='function') dispose3D(); const w=pl2; w.innerHTML=`<video class="runvid" src="${v.src}" autoplay muted loop playsinline></video>`; });
-    document.getElementById('addSet').onclick = ()=>{ p.sets++; saveRun(); drawRun(); };
+    document.getElementById('addSet').onclick = ()=>{ P0.sets++; saveRun(); drawRun(); };
     document.getElementById('skipEx').onclick = ()=>{ if(run.i>=run.plan.length-1) return finish(); run.i++; run.set=1; saveRun(); drawRun(); };
     document.getElementById('doneSet').onclick = ()=>{
       let rec = {ex:p.ex};
@@ -5488,7 +5493,7 @@ const ALIAS = [
  ['rematore bilanciere','rematore-bilanciere'],['rematore','rematore-bilanciere'],['barbell row','rematore-bilanciere'],
  ['trazioni','trazioni-assistite'],['pull up','trazioni-assistite'],['assisted','trazioni-assistite'],['chin up','trazioni-assistite'],
  ['pullover','pullover-cavo'],['iperestensioni','iperestensioni'],['hyperextension','iperestensioni'],['lombari','iperestensioni'],
- ['stacco rumeno','stacco-rumeno'],['stacchi rumeni','stacco-rumeno'],['rdl','stacco-rumeno'],['stacco','stacco-rumeno'],
+ ['stacco rumeno','stacco-rumeno'],['stacchi rumeni','stacco-rumeno'],['rdl','stacco-rumeno'],['stacco','stacco-rumeno'],['stacchi','stacco-rumeno'],
  ['leg press','leg-press'],['pressa','leg-press'],
  ['goblet','goblet-squat'],['squat','squat'],
  ['leg extension','leg-extension'],['leg ext','leg-extension'],['estensioni gambe','leg-extension'],
@@ -5524,8 +5529,8 @@ const ALIASN = ALIAS.map(([a,id])=>[normT(a),id]).sort((a,b)=>b[0].length-a[0].l
 function matchEx(name){
   const n = ' '+normT(name)+' ';
   if(!n.trim()) return null;
+  if(/ inclinat/.test(n) && / (manubri|panca|spinte|distensioni) /.test(n) && !/ croci /.test(n)) return 'panca-inclinata-manubri';
   for(const x of EX) if(n.includes(' '+normT(x.name)+' ')) return x.id;
-  if(/ inclinat/.test(n) && / (manubri|panca|spinte|distensioni) /.test(n)) return 'panca-inclinata-manubri';
   for(const [a,id] of ALIASN) if(n.includes(' '+a+' ')) return id;
   // somiglianza a parole
   const w = n.trim().split(' ').filter(t=>t.length>2);
@@ -5543,41 +5548,131 @@ function parseRest(t){
   m = t.match(/(\d+)/); if(m){ const v=+m[1]; return v<=5 ? v*60 : v; }
   return null;
 }
-const DAYRE = /^\s*(?:giorno|day|seduta|allenamento|scheda|workout|lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)\b|^\s*[a-e]\s*[\)\.:\-]?\s*$|^\s*(?:giorno|day)?\s*[1-7]\s*[\)\.:\-]\s*$/i;
+/* ---- lettura della scheda scritta (anche a mano): giorni, gruppi muscolari, piramidi, serie divise, alternative ---- */
+const HEADMAP = {pettorali:'petto',pettorale:'petto',petto:'petto',dorsali:'schiena',dorsale:'schiena',schiena:'schiena',dorso:'schiena',
+  gambe:'gambe',quadricipiti:'gambe',femorali:'gambe',glutei:'gambe',polpacci:'gambe',spalle:'spalle',deltoidi:'spalle',
+  bicipiti:'bicipiti',bicipite:'bicipiti',tricipiti:'tricipiti',tricipite:'tricipiti',braccia:'braccia',addominali:'core',addome:'core',core:'core',
+  cardio:'cardio',riscaldamento:'cardio',defaticamento:'cardio'};
+const HEADG = {bicipiti:'braccia', tricipiti:'braccia'};
+const HEADCONN = new Set(['e','ed','piu','con','and']);
+const CTX = {
+ spalle:[['spinte','shoulder-press'],['press','shoulder-press'],['distensioni','shoulder-press'],['lento','lento-manubri'],['posterior','reverse-fly'],['aperture','reverse-fly'],['frontal','alzate-frontali'],['lateral','alzate-laterali'],['tirate','tirate-mento'],['manubri','lento-manubri']],
+ petto:[['spinte','panca-piana'],['croci','croci-cavi'],['aperture','croci-cavi'],['pectoral','pectoral-machine'],['macchina','chest-press']],
+ tricipiti:[['french','french-press'],['sopra','estensioni-sopra-testa'],['dip','dip-macchina'],['kick','kickback'],['push','pushdown'],['barra','pushdown'],['cav','pushdown'],['corda','pushdown'],['manubri','french-press']],
+ bicipiti:[['martello','curl-martello'],['scott','curl-scott'],['cav','curl-cavo'],['bilanciere','curl-bilanciere'],['dritto','curl-bilanciere'],['ez','curl-bilanciere'],['z','curl-bilanciere'],['bic','curl-bilanciere'],['manubri','curl-manubri']],
+ schiena:[['rematore','rematore-bilanciere'],['stacc','stacco-rumeno'],['pullover','pullover-cavo'],['lat','lat-machine'],['trazioni','trazioni-assistite']],
+ gambe:[['squat','squat'],['stacc','stacco-rumeno'],['pressa','leg-press']]
+};
+function ctxMatch(name, head){
+  const w = normT(name).split(' ').filter(Boolean), L = CTX[head]||[];
+  for(const [k,id] of L) if(w.some(t=>t===k || (k.length>=3 && t.startsWith(k)))) return id;
+  return null;
+}
+function matchExCtx(name, head){
+  let id = matchEx(name);
+  if(head && /manubri/.test(normT(name)) && id==='rematore-bilanciere') id='rematore-manubrio';
+  if(!head) return id;
+  const g = HEADG[head]||head;
+  if(id && EXMAP[id] && EXMAP[id].g===g) return id;
+  return ctxMatch(name, head) || id;
+}
+const NSTOP = new Set(['con','al','ai','alla','alle','allo','di','da','del','il','la','le','lo','gli','i','e','a','in','su','sul','spinte','distensioni','esercizio','macchina','machine','machines','alla','o']);
+const VARW = /^(inclinat\w*|declinat\w*|presa|larg\w*|strett\w*|invers\w*|neutr\w*|supin\w*|pron\w*|alternat\w*|singol\w*|unilateral\w*|in|piedi|seduto|seduta)$/;
+/* testo dell'esercizio così come è scritto, se dice qualcosa in più del nome nel catalogo (es. "Semi squat", "Croci con manubri") */
+function extraName(written, id){
+  const x = EXMAP[id]; if(!x) return '';
+  const xn = normT(x.name).split(' ');
+  const extra = normT(written).split(' ').filter(w=>w.length>1 && !NSTOP.has(w) && !xn.some(u=>u===w || (u.length>3&&w.length>3&&(u.startsWith(w.slice(0,4))||w.startsWith(u.slice(0,4))))));
+  return extra.length ? written.replace(/\s+/g,' ').trim() : '';
+}
+const NUMW_D = {uno:1,due:2,tre:3,quattro:4,cinque:5,sei:6,sette:7};
+const DAYANY = /\b(giorno|day|seduta|allenamento|workout|scheda)\s*(\d{1,2}|[a-e]\b|uno|due|tre|quattro|cinque|sei|sette)\b/i;
+const DAYWK = /^\s*(lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)\b/i;
+const DAYLET = /^\s*(?:scheda\s*)?[a-e]\s*[\)\.:\-]?\s*$|^\s*(?:giorno|day)?\s*[1-7]\s*[\)\.:\-]\s*$/i;
+const DOSERE = /(\d{1,2})\s*((?:[a-zà-ú\.]+\s+){0,3}?)(?:serie\s*)?[x×X\*]\s*(max|cedimento|\d{1,3}(?:\s*[-–\/\.·,]\s*\d{1,3})*)\s*(["”]|''|sec\b|s\b|min\b|['’])?/gi;
+/* scritto TUTTO MAIUSCOLO (tipico a mano) → normale */
+const capT = t => String(t||'').split(' · ').map(t=>{ t=t.trim(); const u=t.replace(/^oppure /,''); if(u===u.toUpperCase()) t=t.replace(/[A-ZÀ-Ú]{2,}|\b[OEAI]\b/g,w=>w.toLowerCase()); return t.charAt(0).toUpperCase()+t.slice(1); }).join(' · ');
+function pyrOf(r){ const n = String(r||'').split(/\s*[–\-\/·,]\s*/); return n.length>=3 && n.every(t=>/^\d{1,3}$/.test(t)) ? n.map(Number) : null; }
 function parseScheda(text){
-  const days=[]; let cur=null;
-  const newDay = name => { cur={name:name, items:[]}; days.push(cur); };
-  String(text||'').split(/\r?\n/).forEach(raw=>{
-    let line = raw.replace(/[•·▪●◦\-–—]\s+/,'').trim();
+  const days=[]; let cur=null, head=null, last=null;
+  const newDay = (name)=>{ cur={name:name||'', heads:[], items:[]}; days.push(cur); head=null; last=null; };
+  const addHead = h=>{ if(!cur) newDay(''); if(!cur.heads.includes(h)) cur.heads.push(h); head=h; };
+  const headsOf = nl=>{ const w=nl.split(' ').filter(Boolean); if(!w.length) return null; const hs=[];
+    for(const t of w){ if(HEADMAP[t]) hs.push(HEADMAP[t]); else if(!HEADCONN.has(t)) return null; } return hs.length?hs:null; };
+  const push = (o)=>{ if(!cur) newDay(''); cur.items.push(o); last=o; };
+  String(text||'').replace(/\r/g,'').split('\n').forEach(raw=>{
+    let line = raw.replace(/^[\s•·▪●◦*\-–—>]+/,'').replace(/[—–]/g,'-').trim();
     if(!line) return;
     const nl = normT(line);
-    if(DAYRE.test(nl) && !/\d+\s*[x×*]\s*\d/.test(line)){ newDay(line.replace(/[:\-–]+\s*$/,'').trim()); return; }
-    let sets=null, reps=null, rest=null, kg=null, work=line;
-    // recupero
+    if(!nl) return;
+    // alternativa scritta a parte: "/ Pectoral machine", "oppure ..."
+    const alt = line.match(/^(?:\/|oppure\b|in alternativa\b|o\s+(?=[a-z]))\s*(.+)$/i);
+    if(alt && last && !/\d\s*[x×X\*]\s*\d/.test(line)){ last.note = (last.note?last.note+' · ':'')+'oppure '+alt[1].trim(); return; }
+    // giorno
+    const dm = line.match(DAYANY), hasDose = /\d\s*(?:[a-zà-ú\.]+\s+){0,3}[x×X\*]\s*\d/.test(line);
+    if(!hasDose && (dm || DAYWK.test(nl) || DAYLET.test(nl))){
+      let nm = dm ? (dm[1][0].toUpperCase()+dm[1].slice(1).toLowerCase()+' '+(NUMW_D[dm[2].toLowerCase()]||dm[2].toUpperCase())) : line.replace(/[:\-]+\s*$/,'').trim();
+      newDay(nm);
+      const rest = dm ? normT(line.replace(dm[0],' ')) : '';
+      const hs = rest && headsOf(rest); if(hs) hs.forEach(addHead);
+      return;
+    }
+    // titolo del gruppo muscolare: "Pettorali", "Dorsali", "Spalle e tricipiti"
+    const hs = !hasDose && headsOf(nl);
+    if(hs){ hs.forEach(addHead); return; }
+    let rest=null, kg=null, work=line;
     const rm = work.match(/(?:rec(?:upero)?|pausa|riposo|rest)\.?\s*:?\s*([0-9][0-9'’"”:,\. ]*(?:min|minuti|sec|secondi|s|m)?)/i);
     if(rm){ rest = parseRest(rm[1].replace(':',"'")); work = work.replace(rm[0],' '); }
-    // kg
     const km = work.match(/(\d+(?:[.,]\d+)?)\s*kg/i); if(km){ kg=parseFloat(km[1].replace(',','.')); work=work.replace(km[0],' '); }
-    // serie x ripetizioni
-    let m = work.match(/(\d{1,2})\s*[x×X*]\s*(max|cedimento|\d{1,3}(?:\s*[-–\/]\s*\d{1,3})*\s*(?:["”]|''|sec|s\b|min|')?)/i);
-    if(m){ sets=+m[1]; reps=m[2].trim(); work=work.replace(m[0],' '); }
-    else { m = work.match(/(\d{1,2})\s*(?:serie|set)\s*(?:da|di|x)?\s*(\d{1,3}(?:\s*[-–\/]\s*\d{1,3})?)?\s*(?:rip|ripetizioni|reps)?/i);
-      if(m){ sets=+m[1]; reps=(m[2]||'').trim()||null; work=work.replace(m[0],' '); }
-      else { m = work.match(/(\d{1,3})\s*(min|minuti|['’])/i); if(m){ sets=1; reps=m[1]+"'"; work=work.replace(m[0],' '); } } }
-    // ultima possibilità: rest finale tipo "90''" o "1'30" rimasto
-    if(rest==null){ const r2 = work.match(/(\d+\s*['’]\s*\d{0,2}|\d+\s*(?:["”]|''))\s*$/); if(r2 && sets){ rest=parseRest(r2[1]); work=work.replace(r2[0],' '); } }
-    const name = work.replace(/\s+/g,' ').replace(/^[\d\.\)\s]+/,'').replace(/[:\-–,;\/]+\s*$/,'').trim();
-    const id = matchEx(name || line);
-    if(!sets && !id) { if(!cur || cur.items.length) { if(nl.length<30 && !/\d/.test(nl)) newDay(line); } return; }
-    if(!cur) newDay('Scheda importata');
-    cur.items.push({id, original:line, sets:sets||3, reps:normReps(reps)||'10', rest: rest!=null?rest:90, kg});
+    // serie x ripetizioni (anche più di una sulla stessa riga: "3 larghe x12 3 presa inversa x12")
+    const doses=[]; let m; DOSERE.lastIndex=0;
+    while((m = DOSERE.exec(work))){ doses.push({at:m.index, end:m.index+m[0].length, sets:+m[1], qual:m[2].replace(/\bserie\b/i,'').trim(), reps:(m[3]+(m[4]||'')).trim()}); }
+    let name = '', tail = '';
+    if(doses.length){ name = work.slice(0, doses[0].at); tail = work.slice(doses[doses.length-1].end); }
+    else {
+      let mm = work.match(/(\d{1,2})\s*(?:serie|set)\s*(?:da|di|x)?\s*(\d{1,3}(?:\s*[-–\/]\s*\d{1,3})?)?\s*(?:rip|ripetizioni|reps)?/i);
+      if(mm){ doses.push({sets:+mm[1], qual:'', reps:(mm[2]||'').trim()}); name = work.replace(mm[0],' '); }
+      else if((mm = work.match(/(\d{1,3})\s*(min|minuti|['’])/i))){ doses.push({sets:1, qual:'', reps:mm[1]+"'"}); name = work.replace(mm[0],' '); }
+      else name = work;
+    }
+    if(rest==null && doses.length){ const r2 = tail.match(/(\d+\s*['’]\s*\d{0,2}|\d+\s*(?:["”]|''))\s*$/); if(r2){ rest=parseRest(r2[1]); tail=tail.replace(r2[0],' '); } }
+    name = name.replace(/\s+/g,' ').replace(/^[\d\.\)\s]+/,'').replace(/[:\-,;\/]+\s*$/,'').trim();
+    tail = tail.replace(/^[\s:\-,;]+|[\s:\-,;]+$/g,'').replace(/^\/\s*(?=[a-z])/i,'oppure ');
+    const nn = normT(name);
+    // riga che continua l'esercizio di sopra: "Inclinata 4x15-12-10-8", "3 presa inversa x12"
+    const cont = last && (!nn || nn.split(' ').every(w=>VARW.test(w)));
+    let id, written = name, extra = '';
+    if(cont){
+      written = last.written; id = last.id; extra = [extraName(last.written, id), name].filter(Boolean).join(' ');
+      if(/inclinat/.test(nn) && /^(panca-piana|panca-manubri|chest-press)$/.test(id)) { id='panca-inclinata-manubri'; extra=''; }
+    } else {
+      id = nn ? matchExCtx(name, head) : null;
+      extra = id ? extraName(name, id) : '';
+    }
+    if(!doses.length && !id){ if(!cur && nn.length<40) newDay(line.replace(/[:\-]+\s*$/,'').trim()); return; }
+    const base = {id, original:line, written, rest: rest!=null?rest:90, kg};
+    if(!doses.length){ push(Object.assign({}, base, {sets:3, reps:'10', nodose:true, note: extra})); return; }
+    doses.forEach((d,k)=>{
+      const note = [extra, d.qual, k===doses.length-1 ? tail : ''].filter(Boolean).join(' · ');
+      push(Object.assign({}, base, {sets:Math.max(1,Math.min(10,d.sets)), reps:normReps(d.reps)||'10', note}));
+    });
   });
-  return days.filter(d=>d.items.length);
+  // righe senza serie (spesso cancellate) già presenti più avanti nello stesso giorno: le tolgo
+  days.forEach(d=>{ d.items = d.items.filter(it=>!(it.nodose && it.id && d.items.some(o=>o!==it && o.id===it.id && !o.nodose))); });
+  const out = days.filter(d=>d.items.length);
+  const hl = h=>({petto:'Pettorali',schiena:'Dorsali',gambe:'Gambe',spalle:'Spalle',bicipiti:'Bicipiti',tricipiti:'Tricipiti',braccia:'Braccia',core:'Addominali',cardio:'Cardio'})[h]||h;
+  out.forEach((d,i)=>{
+    const g = d.heads.length ? d.heads.map((h,k)=>k?hl(h).toLowerCase():hl(h)).join(d.heads.length>2?', ':' e ').replace(/, ([^,]+)$/,' e $1') : '';
+    if(!d.name){ const nx = out[i+1] && String(out[i+1].name).match(/^giorno (\d+)/i); d.name = nx && +nx[1]>1 ? 'Giorno '+(+nx[1]-1) : (out.length>1 ? 'Giorno '+(i+1) : ''); }
+    d.name = [d.name, g].filter(Boolean).join(' · ') || 'Scheda importata';
+    d.items.forEach(it=>{ delete it.written; if(it.note) it.note = capT(it.note); });
+  });
+  return out;
 }
 function normReps(r){
   if(!r) return null; r=String(r).trim();
   if(/max|cedimento/i.test(r)) return 'max';
-  r = r.replace(/\s*[-–\/]\s*/g,'–').replace(/\s*(?:''|”|sec|s)$/i,'"').replace(/\s*(?:min|’)$/i,"'");
+  r = r.replace(/\s*[-–\/·,]\s*(?=\d)/g,'–').replace(/(\d)\.(\d)/g,'$1–$2').replace(/\s*(?:''|”|sec|s)$/i,'"').replace(/\s*(?:min|’)$/i,"'");
   return r;
 }
 async function readSchedaAI(file, setMsg){
@@ -5592,12 +5687,12 @@ Leggila e trascrivi TUTTI gli esercizi, divisi per giorno/seduta se ci sono (Gio
 Per ogni esercizio abbina l'id più simile da questo catalogo (se proprio non c'è nulla di simile metti id null):
 ${cat}
 Rispondi SOLO con JSON in questa forma:
-{"days":[{"name":"Giorno A","items":[{"id":"panca-piana","original":"testo come scritto nella scheda","sets":4,"reps":"8–10","rest_sec":90,"kg":null}]}]}
-Regole: reps è testo ("10", "8–12", "max", "30\\"" per secondi, "10'" per minuti). Se il recupero non è scritto usa 90. Se le serie non sono scritte usa 3.`;
+{"days":[{"name":"Giorno 1 · Pettorali e tricipiti","items":[{"id":"panca-piana","original":"testo come scritto nella scheda","sets":4,"reps":"15–12–10–8","rest_sec":90,"kg":null,"note":""}]}]}
+Regole: trascrivi ESATTAMENTE quello che è scritto, senza cambiare numeri. reps è testo ("10", "10–12" per un intervallo, "15–12–10–8" per una piramide con un numero per serie, "max", "30\\"" per secondi, "10'" per minuti). Le righe cancellate con una riga sopra NON vanno messe. Se una riga ha due parti (es. "3 larghe x12, 3 presa inversa x12") crea due esercizi con la nota "presa larga" e "presa inversa". Le alternative ("/ Pectoral machine", "oppure…") vanno nella nota come "oppure …". In note metti anche il nome scritto se diverso dal catalogo e ogni indicazione in più (es. "6 supine + 6 presa neutra"). I titoli dei gruppi muscolari (Pettorali, Dorsali…) vanno nel nome del giorno. Se il recupero non è scritto usa 90. Se le serie non sono scritte usa 3.`;
   const out = await sample.json(prompt, {images:[file], modelTier:'default'});
   const days = (out && out.days || []).map(d=>({name:String(d.name||'Scheda'), items:(d.items||[]).map(it=>({
     id: EXMAP[it.id] ? it.id : matchEx(it.original), original:String(it.original||''), sets: Math.max(1,Math.min(10,parseInt(it.sets,10)||3)),
-    reps: normReps(it.reps)||'10', rest: Math.max(0, parseInt(it.rest_sec,10)||90), kg: it.kg!=null?+it.kg:null }))})).filter(d=>d.items.length);
+    reps: normReps(it.reps)||'10', rest: Math.max(0, parseInt(it.rest_sec,10)||90), kg: it.kg!=null?+it.kg:null, note: String(it.note||'') }))})).filter(d=>d.items.length);
   return days;
 }
 let tessP=null;
@@ -5626,7 +5721,9 @@ function viewImport(){
     <label class="btn big" style="width:100%"><input id="impFoto" type="file" accept="image/*" capture="environment" hidden>📷 Fotografa la scheda</label>
     <label class="btn ghost big" style="width:100%"><input id="impGal" type="file" accept="image/*" hidden>🖼️ Scegli una foto dalla galleria</label>
     <p class="err" id="impMsg" hidden></p>
-    <details class="card" id="impTxtBox" style="padding:14px"><summary style="font-weight:600;cursor:pointer">✍️ Oppure scrivi o incolla il testo della scheda</summary>
+    <div class="card" style="padding:14px"><b>✍️ Scheda scritta a mano?</b>
+      <p class="muted" style="font-size:15px;margin:8px 0 0">La scrittura a mano la legge meglio Google Lens. Apri la foto con <b>Google Lens</b>, premi <b>Testo</b>, poi <b>Seleziona tutto</b> e <b>Condividi</b> → <b>Palestra Facile</b>. Oppure premi <b>Copia</b> e incolla qui sotto. L'app capisce giorni, gruppi muscolari, piramidi (4x15-12-10-8), serie divise (3 larghe x12 + 3 presa inversa x12) e alternative (/ Pectoral machine).</p></div>
+    <details class="card" id="impTxtBox" style="padding:14px" ${imp&&imp.text?'open':''}><summary style="font-weight:600;cursor:pointer">📋 Incolla o scrivi il testo della scheda</summary>
       <p class="muted" style="font-size:14px;margin:10px 0">Un esercizio per riga, per esempio:<br><code>Giorno A<br>Panca piana 4x8 rec 2'<br>Lat machine 3x10-12 rec 90"<br>Giorno B<br>Leg press 4x12</code><br>Trucco: su Android apri la foto con Google Lens, premi <b>Testo</b> e poi <b>Copia</b>, e incollalo qui.</p>
       <textarea id="impTxt" rows="8" style="width:100%;border:1px solid var(--line);border-radius:8px;padding:10px;font-size:16px;background:var(--surface);color:var(--fg)" placeholder="Incolla qui la scheda">${esc(imp&&imp.text||'')}</textarea>
       <button class="btn big" type="button" id="impGo" style="width:100%;margin-top:10px">Riconosci gli esercizi</button></details>
@@ -5672,13 +5769,17 @@ function drawImportReview(){
       <div class="field"><label for="dn-${di}">Nome della scheda</label><input id="dn-${di}" type="text" maxlength="40" value="${esc(d.name)}" data-dn="${di}"></div>
       ${zonaSel('dz-'+di, d.zona||'', d.items.filter(i=>EXMAP[i.id]).map(i=>[i.id,i.sets]))}
       ${d.items.map((it,k)=>{ const x=EXMAP[it.id]; return `<div class="item" style="border-left-color:${x?GROUPS[x.g].color:'#e6b800'};${x?'':'background:rgba(230,184,0,.12)'}">
-        <div class="muted" style="font-size:13px">Scritto: «${esc(it.original)}»${it.kg?` · ${it.kg} kg`:''}</div>
+        <div class="item-top"><div class="muted" style="font-size:13px;flex:1">Scritto: «${esc(it.original)}»${it.kg?` · ${it.kg} kg`:''}</div><button class="icon" type="button" data-irm="${di}.${k}" aria-label="Togli">✕</button></div>
+        ${it.nodose?'<div class="muted" style="font-size:13px;color:#b38f00">⚠️ Qui non ho trovato serie e ripetizioni (forse era cancellato): controlla o togli.</div>':''}
         <select data-ex="${di}.${k}" aria-label="Esercizio" style="width:100%;font-size:16px;padding:9px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);margin:6px 0">${exOpts(it.id)}</select>
         <div class="dosein">
           <label>Serie<input type="number" min="1" max="10" inputmode="numeric" value="${it.sets}" data-v="${di}.${k}.sets"></label>
-          <label>${x&&isTime(x)?'Durata':'Ripetizioni'}<input type="text" maxlength="14" value="${esc(it.reps)}" data-v="${di}.${k}.reps"></label>
+          <label>${x&&isTime(x)?'Durata':'Ripetizioni'}<input type="text" maxlength="24" value="${esc(it.reps)}" data-v="${di}.${k}.reps"></label>
           <label>Recupero<select data-v="${di}.${k}.rest">${restOpt(it.rest)}</select></label>
-        </div></div>`; }).join('')}
+        </div>
+        <label class="notein">Nota<input type="text" maxlength="80" value="${esc(it.note||'')}" placeholder="Es. presa larga, oppure Pectoral machine" data-v="${di}.${k}.note"></label>
+        ${pyrOf(it.reps)?`<div class="muted" style="font-size:13px">Piramide: ${pyrOf(it.reps).map((r,j)=>`${j+1}ª serie ${r}`).join(' · ')}</div>`:''}</div>`; }).join('')}
+      <button class="btn ghost" type="button" data-iadd="${di}">+ Aggiungi un esercizio a questo giorno</button>
     </div>`).join('')}
     <p class="err" id="impErr" hidden></p>
     <button class="btn big" type="button" id="impSave">Salva ${imp.days.length>1?'le schede':'la scheda'}</button>
@@ -5688,11 +5789,13 @@ function drawImportReview(){
   imp.days.forEach((d,di)=>{ const z=document.getElementById('dz-'+di); if(z) z.onchange=()=>{ d.zona=z.value; }; });
   $app.querySelectorAll('[data-ex]').forEach(s=>s.onchange=()=>{ const [di,k]=s.dataset.ex.split('.').map(Number); imp.days[di].items[k].id=s.value||null; keepScroll(drawImportReview); });
   $app.querySelectorAll('[data-v]').forEach(i=>i.onchange=i.oninput=()=>{ const [di,k,f]=i.dataset.v.split('.'); const it=imp.days[+di].items[+k];
-    it[f] = f==='reps' ? i.value : Math.max(f==='sets'?1:0, parseInt(i.value,10)||0); });
+    it[f] = f==='reps'||f==='note' ? i.value : Math.max(f==='sets'?1:0, parseInt(i.value,10)||0); if(f!=='note') delete it.nodose; });
+  $app.querySelectorAll('[data-irm]').forEach(b=>b.onclick=()=>{ const [di,k]=b.dataset.irm.split('.').map(Number); imp.days[di].items.splice(k,1); keepScroll(drawImportReview); });
+  $app.querySelectorAll('[data-iadd]').forEach(b=>b.onclick=()=>{ imp.days[+b.dataset.iadd].items.push({id:null, original:'aggiunto da te', sets:3, reps:'10', rest:90, kg:null}); keepScroll(drawImportReview); });
   document.getElementById('impBack').onclick=()=>{ imp=null; viewImport(); };
   document.getElementById('impSave').onclick=()=>{
     const out = imp.days.map((d,di)=>({id:'my'+Date.now().toString(36)+di, name:(d.name||'Scheda').trim().slice(0,40),
-      items:d.items.filter(i=>EXMAP[i.id]).map(i=>[i.id, i.sets, String(i.reps||'10'), i.rest]), ...(d.zona?{zona:d.zona}:{})})).filter(r=>r.items.length);
+      items:d.items.filter(i=>EXMAP[i.id]).map(i=>{ const a=[i.id, i.sets, normReps(i.reps)||'10', i.rest], n=String(i.note||'').trim(); if(n) a.push(n.slice(0,80)); return a; }), fedele:true, ...(d.zona?{zona:d.zona}:{})})).filter(r=>r.items.length);
     if(!out.length){ const e=document.getElementById('impErr'); e.textContent='Scegli almeno un esercizio prima di salvare.'; e.hidden=false; return; }
     S.routines.push(...out); saveRoutines(); imp=null; location.hash='sessioni';
   };
@@ -7039,6 +7142,9 @@ function route(soft){
     open.forEach(id=>{ const b=id&&$app.querySelector(`[data-del="${id}"]`); if(b) b.closest('details').open=true; }); }
   else { go(); window.scrollTo(0,0); }
 }
+/* testo condiviso da un'altra app (Google Lens → Condividi → Palestra Facile) */
+try{ const q=new URLSearchParams(location.search), st=[q.get('title'),q.get('text')].filter(Boolean).join('\n');
+  if(st){ history.replaceState(null,'',location.pathname+'#importa'); const d=parseScheda(st); imp={days:d.length?d:null, text:st}; } }catch(e){}
 window.addEventListener('hashchange',()=>route());
 route();
 initDb();

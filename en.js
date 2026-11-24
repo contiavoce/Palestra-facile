@@ -1,5 +1,23 @@
 /* Dizionario italiano → inglese per Palestra Facile. Per tradurre un testo nuovo aggiungi una riga "testo italiano": "English". {*} = parte che cambia (numeri, nomi). */
 window.PF_EN={
+/* importa scheda scritta a mano */
+"✍️ Scheda scritta a mano?": "✍️ Handwritten plan?",
+"La scrittura a mano la legge meglio Google Lens. Apri la foto con": "Google Lens reads handwriting best. Open the photo with",
+", premi": ", press",
+", poi": ", then",
+"Seleziona tutto": "Select all",
+"Condividi": "Share",
+"Palestra Facile": "Palestra Facile",
+". Oppure premi": ". Or press",
+"e incolla qui sotto. L'app capisce giorni, gruppi muscolari, piramidi (4x15-12-10-8), serie divise (3 larghe x12 + 3 presa inversa x12) e alternative (/ Pectoral machine).": "and paste it below. The app understands days, muscle groups, pyramids (4x15-12-10-8), split sets (3 wide x12 + 3 reverse grip x12) and alternatives (/ Pectoral machine).",
+"📋 Incolla o scrivi il testo della scheda": "📋 Paste or type the plan text",
+"Nota": "Note",
+"Es. presa larga, oppure Pectoral machine": "E.g. wide grip, or Pectoral machine",
+"Piramide: {*}": "Pyramid: {*}",
+"+ Aggiungi un esercizio a questo giorno": "+ Add an exercise to this day",
+"⚠️ Qui non ho trovato serie e ripetizioni (forse era cancellato): controlla o togli.": "⚠️ I found no sets and reps here (maybe it was crossed out): check it or remove it.",
+"📝 Nota della scheda:": "📝 Plan note:",
+"(piramide {*})": "(pyramid {*})",
 /* parte del corpo per ogni scheda/giorno */
 "Parte del corpo": "Body area",
 "Automatica: {*}": "Automatic: {*}",
