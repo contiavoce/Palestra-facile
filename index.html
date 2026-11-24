@@ -2967,7 +2967,7 @@ function viewList(){
   const hadFocus = document.activeElement && document.activeElement.id==='q';
   $app.innerHTML = `<section class="view">
     ${runBanner()}
-    <div><div class="eyebrow">${EX.length} esercizi con l'omino 3D</div><h1 style="font-size:40px;text-transform:uppercase">Esercizi</h1></div>
+    <div><div class="eyebrow">${EX.length} esercizi spiegati passo passo</div><h1 style="font-size:40px;text-transform:uppercase">Esercizi</h1></div>
     <label class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Cerca un esercizio o un macchinario" value="${esc(filt.q)}" aria-label="Cerca"></label>
     <div class="gtiles" role="group" aria-label="Muscolo">${gChips}</div>
@@ -4453,13 +4453,13 @@ function advise(x, repsTxt){
   const wk = Math.floor((Date.now()-last.at)/(7*864e5));
   if(wk>=4 && kg>0 && !assist){ const n=Math.max(step, Math.floor(kg*.9/step)*step); a={kg:n, reps:lo, act:'back', msg:`Sono passate ${wk} settimane dall'ultima volta: riparti da <b>${kgf(n)} kg</b> (10% in meno) oppure <a href="#test-${x.id}">rifai il test</a>.`, short:`Sono passate ${wk} settimane: riparti da <b>${kgf(n)} kg</b> (10% in meno) o rifai il test.`}; }
   if(a.kg>0 && !assist){ const tl=tgtLine(x, a.kg); if(tl){ a.msg+=tl; if(a.act==='up') a.short+=tl; } }
-  a.was = `L'ultima volta: ${S2.map(s=>setTxt(s)).join(', ')}.`; a.lo=lo; a.hi=hi;
+  a.was = `<span>L'ultima volta:</span> <span data-noi18n>${esc(S2.map(s=>setTxt(s)).join(', ')).replace(/ rip\./g, window.I18N&&I18N.lang==='en'?' reps':' rip.')}</span>.`; a.lo=lo; a.hi=hi;
   return a;
 }
 const STALL_TXT = 'Da 3 allenamenti non migliori su questo esercizio. Capita: fai una settimana leggera (metà delle serie, stesso peso) e poi riparti.';
 function nextTip(x){
   const a = advise(x, goalReps(x.id, x.dose&&x.dose[1])); if(!a || a.first) return '';
-  return `<div class="next adv"><b>💡 Peso consigliato per la prossima volta</b><p>${esc(a.was)} ${a.msg}</p>${a.stall?`<p>${STALL_TXT}</p>`:''}
+  return `<div class="next adv"><b>💡 Peso consigliato per la prossima volta</b><p>${a.was} ${a.msg}</p>${a.stall?`<p>${STALL_TXT}</p>`:''}
     <details class="more"><summary>Perché questo peso?</summary>${SCI_W}</details></div>`;
 }
 /* durante la serie: consiglio di oggi e correzione dopo una serie troppo facile o troppo pesante */
@@ -4921,7 +4921,7 @@ function viewDiary(){
           <div class="confirm" data-delwrap="${w.id}"><button class="btn ghost small" type="button" data-del="${w.id}">Elimina</button></div></div></details>`}).join('')}</div>`
       : `<div class="empty">Qui compariranno le sessioni completate.<br><a href="#sessioni">Scegli una sessione e premi Inizia</a> per registrare la prima.</div>`}
     ${log.length?`<div class="delalls">${delAllHTML('gym')}${delAllHTML('run')}</div>`:''}
-    <p class="fine">${DB?'I dati sono salvati sul tuo account: li ritrovi anche da un altro dispositivo aprendo questa app.':'Aperta fuori da Claude, l\'app salva i dati solo su questo dispositivo.'}</p>
+    <p class="fine">${DB?'I dati sono salvati sul tuo account: li ritrovi anche da un altro dispositivo aprendo questa app.':'I dati restano solo su questo telefono. Ogni tanto fai un backup da Impostazioni.'}</p>
   </section>`;
   $app.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.del, wrap=$app.querySelector(`[data-delwrap="${id}"]`);
@@ -5608,7 +5608,10 @@ function loadTesseract(){
   return tessP;
 }
 async function readSchedaOCR(file, setMsg){
-  setMsg('Sto leggendo la foto… (serve internet, la prima volta ci vuole circa un minuto)');
+  setMsg('Sto leggendo la foto…');
+  /* lettore dentro l'app (cartella ocr/): funziona anche senza internet, come per gli integratori */
+  try{ const P = await ocrPrep(file); const d = await ocrRead(P.canvas, pc=>setMsg('Sto leggendo la foto… '+pc+'%')); return d.text||''; }
+  catch(e){ setMsg('Sto leggendo la foto… (serve internet, la prima volta ci vuole circa un minuto)'); }
   const T = await loadTesseract();
   const r = await T.recognize(file, 'ita', {logger:m=>{ if(m.status==='recognizing text') setMsg('Sto leggendo la foto… '+Math.round(m.progress*100)+'%'); }});
   return r.data.text;
@@ -6442,7 +6445,7 @@ function viewHome(){
     ${heroHTML()}
     ${coachOn() ? coachCardHTML() : ''}
     <div class="qgrid">
-      <a class="qtile" href="#esercizi"><b>📖 Esercizi</b><span>Come si fanno, con l'omino 3D</span></a>
+      <a class="qtile" href="#esercizi"><b>📖 Esercizi</b><span>Come si fanno, passo passo</span></a>
       <a class="qtile" href="#diario"><b>📈 Progressi</b><span>Diario, muscoli, peso e misure</span></a>
     </div>
   </section>`;
