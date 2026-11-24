@@ -4091,7 +4091,7 @@ function corsaDo(a){
   if(a.repeat && corsa.plan){ const q=rpPos(); if(q && !q.end) return say(rpCue(corsa.plan,q.i), true); }
   if(a.repeat || a.done) return say(runAnswer('how'), true);
 }
-function micWanted(){ return !!(canListen && AU.mic && !mic.mute && document.visibilityState!=='hidden' && ((run && view==='run' && location.hash==='#allena-'+run.id) || (view==='sessions' && mic.pick) || (view==='corsa' && corsa))); }
+function micWanted(){ return !!(canListen && (AU.mic || mic.ptt) && !mic.mute && document.visibilityState!=='hidden' && ((run && view==='run' && location.hash==='#allena-'+run.id) || (view==='sessions' && mic.pick) || (view==='corsa' && corsa))); }
 function pickSess(id){
   const s=getSess(id); if(!s) return;
   mic.pick=id; mic.heard=''; markPick();
@@ -4107,28 +4107,33 @@ function micStart(){
   clearTimeout(mic.timer);
   if(mic.on || !micWanted()) return;
   try{
-    const r = new SR(); r.lang='it-IT'; r.continuous=true; r.interimResults=false; r.maxAlternatives=3;
+    const r = new SR(); r.lang='it-IT'; r.continuous=!mic.ptt; r.interimResults=false; r.maxAlternatives=3;
     let seen = 0; // Android a volte ripete i risultati già dati: li processo una volta sola
     r.onresult = e=>{ for(let k=Math.max(e.resultIndex, seen);k<e.results.length;k++){ const res=e.results[k]; if(!res.isFinal) continue; seen = k+1;
-      const alts=[]; for(let j=0;j<res.length;j++) alts.push(res[j].transcript); onHeard(alts); } };
+      const alts=[]; for(let j=0;j<res.length;j++) alts.push(res[j].transcript); if(mic.ptt){ try{ r.stop(); }catch(e){} } onHeard(alts); } };
     r.onerror = e=>{ mic.err = e.error;
       if(e.error==='not-allowed' || e.error==='service-not-allowed'){ AU.mic=false; saveAU(); mic.msg='Il microfono è bloccato. Tocca il lucchetto vicino all\'indirizzo (o Impostazioni sito di Chrome) e consenti il microfono.'; }
       else if(e.error==='network') mic.msg='I comandi a voce hanno bisogno di internet. Appena torna la linea riparto da solo.';
       else if(e.error==='audio-capture') mic.msg='Non trovo il microfono del telefono.';
       paintMic(); };
     r.onstart = ()=>{ if(mic.err!=='network') mic.msg=''; paintMic(); };
-    r.onend = ()=>{ mic.on=false; mic.rec=null; const wait = mic.err==='network' ? 5000 : mic.err==='audio-capture' ? 8000 : 250; mic.err='';
+    r.onend = ()=>{ mic.on=false; mic.rec=null; if(mic.ptt){ mic.ptt=false; clearTimeout(mic.pttT); paintPtt(); paintMic(); return; } const wait = mic.err==='network' ? 5000 : mic.err==='audio-capture' ? 8000 : 250; mic.err='';
       if(micWanted()) mic.timer = setTimeout(micStart, wait); paintMic(); };
     mic.rec=r; mic.on=true; r.start();
   }catch(e){ mic.on=false; mic.rec=null; }
   paintMic();
 }
 // mentre l'app parla il microfono è spento: così non sente la propria voce e non va in loop
-function micMute(text){ mic.mute=true; mic.muteTok=(mic.muteTok||0)+1; const tok=mic.muteTok; clearTimeout(mic.muteT);
+function micMute(text){ if(mic.ptt){ mic.ptt=false; clearTimeout(mic.pttT); setTimeout(paintPtt,0); } mic.mute=true; mic.muteTok=(mic.muteTok||0)+1; const tok=mic.muteTok; clearTimeout(mic.muteT);
   const r=mic.rec; if(r){ mic.rec=null; mic.on=false; try{ r.onend=null; r.onerror=null; r.onresult=null; r.abort(); }catch(e){} }
   mic.muteT=setTimeout(()=>micUnmute(tok), 4000+String(text).length*90); } // riserva se la voce non avvisa della fine
 function micUnmute(tok){ if(tok!==mic.muteTok || !mic.mute) return; clearTimeout(mic.muteT);
   mic.muteT=setTimeout(()=>{ if(tok!==mic.muteTok) return; mic.mute=false; mic.unmutedAt=Date.now(); if(micWanted()) micStart(); else paintMic(); }, 700); }
+// «Parla»: ascolta una frase sola quando tocchi il tasto (Spotify si ferma solo per quei secondi)
+function pttStart(){ if(!canListen || mic.on) return; try{ navigator.vibrate && navigator.vibrate(40); }catch(e){}
+  try{ speechSynthesis.cancel(); }catch(e){} mic.mute=false; mic.ptt=true; mic.heard=''; micStart(); paintPtt();
+  clearTimeout(mic.pttT); mic.pttT=setTimeout(()=>{ if(mic.ptt){ const r=mic.rec; if(r) try{ r.stop(); }catch(e){} } }, 7000); }
+function paintPtt(){ const b=document.getElementById('qPtt'); if(b){ b.textContent = mic.ptt ? '🎙 Ti ascolto…' : '🎙 Parla'; b.setAttribute('aria-pressed', String(!!mic.ptt)); } }
 function micStop(){ clearTimeout(mic.timer); const r=mic.rec; mic.rec=null; mic.on=false; if(r) try{ r.onend=null; r.onerror=null; r.abort(); }catch(e){} }
 function paintMic(){
   const c=document.getElementById('qMic'); if(c){ c.setAttribute('aria-pressed',String(!!AU.mic)); c.textContent = AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'; }
@@ -4214,7 +4219,7 @@ addEventListener('resize', ()=>{ if(!mbar.hidden) paintMbar(); });
 const SPOTIFY_URL = /Android/i.test(navigator.userAgent) ? 'intent://open.spotify.com/#Intent;scheme=https;package=com.spotify.music;S.browser_fallback_url=https%3A%2F%2Fopen.spotify.com%2F;end' : 'https://open.spotify.com/';
 function musicRowHTML(){
   return `<div class="chips wrapchips qa" role="group" aria-label="Musica">${music.list.length?`<button class="chip" type="button" id="qMusic" aria-pressed="${!!(music.el&&!music.el.paused)}">${music.el&&!music.el.paused?'❚❚ Musica':'▶ La mia musica'}</button>`:''}<a class="chip" id="qSpot" href="${SPOTIFY_URL}" target="_blank" rel="noopener" aria-pressed="${!!AU.ext}">${AU.ext?'✓ ':''}🎵 Spotify</a></div>
-    ${AU.ext?`<p class="note" style="margin:4px 0 8px">Musica da Spotify: fai partire la canzone lì e torna qui. La voce dell'app si sente sopra la musica. I comandi a voce restano spenti, perché su Android il microfono ferma Spotify.</p>`:''}`; }
+    ${AU.ext?`<p class="note" style="margin:4px 0 8px">Musica da Spotify: fai partire la canzone lì e torna qui. La voce dell'app si sente sopra la musica. Per i comandi usa il tasto «Parla»: Spotify si ferma solo per quei secondi.</p>`:''}`; }
 function bindMusicRow(redraw){
   const qm=document.getElementById('qMusic'); if(qm) qm.onclick=()=>{ if(AU.ext){ AU.ext=false; saveAU(); } mToggle(); };
   const sp=document.getElementById('qSpot'); if(sp) sp.onclick=()=>{ if(music.el && !music.el.paused) try{ mPause(); }catch(e){}
@@ -4745,12 +4750,12 @@ function viewCorsa(){
       <div class="cpar"><span>Parziale km in corso</span><b id="cPar">0:00</b></div>
     </div>
     ${cBtns+hrBox()+musicRowHTML()}
+    ${corsa&&canListen?`<div class="chips wrapchips qa" role="group" aria-label="Comandi a voce"><button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button></div>${AU.mic?'':`<button class="btn big" type="button" id="qPtt" aria-pressed="false">🎙 Parla</button><p class="note" style="margin:4px 0 8px">Tocca «Parla» e di' il comando: la musica di Spotify si ferma solo per quei secondi.</p>`}<div class="micbar" id="micBar" hidden></div>`:''}
     ${myKg()?'':`<p class="note">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}
     <div class="cmapgl" id="cMapGL" ${TM?'hidden':''}><button class="btn small" id="cCenter" type="button" hidden>◎ Segui la mia posizione</button></div>
     <div class="card cmap" id="cMap" ${TM?'hidden':''}></div>
     <div class="card" id="cLaps" hidden></div>
     <p class="err" id="cMsg"></p>`}
-    ${corsa&&canListen?`<div class="chips wrapchips qa" role="group" aria-label="Comandi a voce"><button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button></div><div class="micbar" id="micBar" hidden></div>`:''}
     ${corsa?`<p class="lead" style="margin-top:14px">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>`:''}
     ${runProgress()}
     ${past.length?`<div class="group-title"><h2>Ultime corse</h2></div>${past.map(w=>`<div class="card"><p style="margin:0 0 4px"><strong>${df.format(new Date(w.at))}</strong></p><p style="margin:0">${kmTxt(w.run.m)} km · ${fmtDur(w.run.sec)} · passo ${paceTxt(w.run.sec,w.run.m)} · ${w.run.kcal!=null?w.run.kcal:kcalOf(w.run.m)} kcal</p>${pathSVG(w.run.pts,340,160,w.run.kms)}<div class="confirm"><button class="btn ghost small" type="button" data-delrun="${w.id}">Elimina</button></div></div>`).join('')}${delAllHTML('run')}`:''}
@@ -4764,9 +4769,9 @@ function viewCorsa(){
   on('cdGo', corsaGo); on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
   on('cDrop', ()=>{ const b=document.getElementById('cDrop'); if(b.dataset.sure){ corsaFinish(false); } else { b.dataset.sure='1'; b.textContent='Sicuro? Premi ancora per eliminare la corsa'; } });
   rpBind(); corsaPaint(); hrPaint();
-  bindMusicRow(viewCorsa);
+  bindMusicRow(viewCorsa); const pt=document.getElementById('qPtt'); if(pt) pt.onclick=pttStart;
   const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; if(AU.mic) AU.ext=false; saveAU(); mic.msg='';
-    if(AU.mic){ say("Comandi a voce attivi. Chiedimi per esempio: quanto manca?", true); micStart(); } else { micStop(); say('Comandi a voce spenti.', true); } paintMic(); };
+    if(AU.mic){ say("Comandi a voce attivi. Chiedimi per esempio: quanto manca?", true); micStart(); } else { micStop(); say('Comandi a voce spenti.', true); } paintMic(); viewCorsa(); };
   paintMic(); if(micWanted()) micStart(); else micStop();
 }
 /* ---------------- PIANI DI CORSA PER LIVELLO (guida a tempo con voce) ----------------
