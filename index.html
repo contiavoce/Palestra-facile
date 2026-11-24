@@ -2967,7 +2967,7 @@ function viewList(){
   const hadFocus = document.activeElement && document.activeElement.id==='q';
   $app.innerHTML = `<section class="view">
     ${runBanner()}
-    <div><div class="eyebrow">${EX.length} esercizi con l'omino 3D</div><h1 style="font-size:40px;text-transform:uppercase">Esercizi</h1></div>
+    <div><div class="eyebrow">${EX.length} esercizi spiegati passo passo</div><h1 style="font-size:40px;text-transform:uppercase">Esercizi</h1></div>
     <label class="search"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
       <input id="q" type="search" placeholder="Cerca un esercizio o un macchinario" value="${esc(filt.q)}" aria-label="Cerca"></label>
     <div class="gtiles" role="group" aria-label="Muscolo">${gChips}</div>
@@ -4921,7 +4921,7 @@ function viewDiary(){
           <div class="confirm" data-delwrap="${w.id}"><button class="btn ghost small" type="button" data-del="${w.id}">Elimina</button></div></div></details>`}).join('')}</div>`
       : `<div class="empty">Qui compariranno le sessioni completate.<br><a href="#sessioni">Scegli una sessione e premi Inizia</a> per registrare la prima.</div>`}
     ${log.length?`<div class="delalls">${delAllHTML('gym')}${delAllHTML('run')}</div>`:''}
-    <p class="fine">${DB?'I dati sono salvati sul tuo account: li ritrovi anche da un altro dispositivo aprendo questa app.':'Aperta fuori da Claude, l\'app salva i dati solo su questo dispositivo.'}</p>
+    <p class="fine">${DB?'I dati sono salvati sul tuo account: li ritrovi anche da un altro dispositivo aprendo questa app.':'I dati restano solo su questo telefono. Ogni tanto fai un backup da Impostazioni.'}</p>
   </section>`;
   $app.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
     const id=b.dataset.del, wrap=$app.querySelector(`[data-delwrap="${id}"]`);
@@ -6445,7 +6445,7 @@ function viewHome(){
     ${heroHTML()}
     ${coachOn() ? coachCardHTML() : ''}
     <div class="qgrid">
-      <a class="qtile" href="#esercizi"><b>📖 Esercizi</b><span>Come si fanno, con l'omino 3D</span></a>
+      <a class="qtile" href="#esercizi"><b>📖 Esercizi</b><span>Come si fanno, passo passo</span></a>
       <a class="qtile" href="#diario"><b>📈 Progressi</b><span>Diario, muscoli, peso e misure</span></a>
     </div>
   </section>`;

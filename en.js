@@ -4967,5 +4967,8 @@ window.PF_EN={
 "Peso di partenza dal test:": "Starting weight from the test:",
 ", {*} ripetizioni.": ", {*} reps.",
 "e fai {*} ripetizioni. Quando arrivi a {*} in tutte le serie, l'app ti dirà di salire": "and do {*} reps. When you reach {*} in all sets, the app will tell you to go up",
-"L'ultima volta:": "Last time:"
+"L'ultima volta:": "Last time:",
+"I dati restano solo su questo telefono. Ogni tanto fai un backup da Impostazioni.": "Your data stays only on this phone. Make a backup from Settings now and then.",
+"{*} esercizi spiegati passo passo": "{*} exercises explained step by step",
+"Come si fanno, passo passo": "How to do them, step by step"
 };
