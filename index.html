@@ -554,6 +554,10 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .crun .hrrow{flex-wrap:nowrap}.crun .hrrow .btn{flex:1 1 0;min-width:0;justify-content:center;white-space:nowrap;padding-left:8px;padding-right:8px;font-size:14px}
 .crun .hrbox .hrbt{display:none}
 .crun .hrlive{flex-wrap:nowrap;padding:6px 10px;gap:8px}.crun .hrico.big{width:30px;height:30px}.crun .hrlive>b{font-size:30px;flex:none;min-width:0}.crun .hrunit{flex:none}.crun .hrinfo{flex:1 1 auto;font-size:13px;gap:2px}.crun .hrinfo>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.crun .hrlive .btn{white-space:nowrap;flex:none;padding:6px 10px}.crun .hrage{margin-top:4px}
+.cdbox{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;border-left:6px solid var(--red)}
+.cdbox span{font:600 15px/1.2 'Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#666)}
+.cdbox b{font:800 88px/1 'Barlow Condensed',sans-serif;font-variant-numeric:tabular-nums}
+.cdbox small{color:var(--muted,#666);margin-bottom:8px}
 .crun .rpguide{gap:2px;padding-top:6px;padding-bottom:6px}.crun .rpnow b{font-size:20px}.crun .rpnow span{font-size:30px;line-height:1.1}.crun .rpgh span{font-size:11px}.crun .rpgh small{display:none}.crun .rpz{font-size:13px}.crun .rpbar{height:10px;margin:2px 0}.crun .rpguide .note{font-size:12px;margin:0;line-height:1.3}.crun .rpguide .note:empty,.crun .rpz:empty{display:none}
 .rplans .chips{display:flex;gap:8px;flex-wrap:wrap}.rpgl{margin:8px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .rpnext{display:grid;gap:4px;background:var(--sunk);border-radius:14px;padding:12px;margin:0 0 10px}.rpnext span{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.rpnext b{font-size:19px}.rpnext i{font-style:normal;color:var(--muted);font-size:14px;margin-bottom:6px}
@@ -4031,6 +4035,7 @@ function corsaDo(a){
   if(a.ask) return say(runAnswer(a.ask, a), true);
   if(a.hr) return say(hrSpoken(), true);
   if(a.pause) return corsa.paused ? say("Sei già in pausa. Di' riprendi per ripartire.", true) : corsaPause();
+  if(corsa.cd && (a.go || a.resume)) return corsaGo();
   if(a.resume || (a.go && corsa.paused)) return corsa.paused ? corsaResume() : say('Stai già correndo.', true);
   if(a.music){ if(!music.list.length) return say('Non hai canzoni salvate.', true); if(a.music==='next') return mNext(); return mToggle(); }
   if(a.repeat && corsa.plan){ const q=rpPos(); if(q && !q.end) return say(rpCue(corsa.plan,q.i), true); }
@@ -4485,7 +4490,7 @@ const RUN_IMG='data:image/webp;base64,UklGRpwdAABXRUJQVlA4IJAdAAAwfwCdASoiAWgBPn
 const corsaCard = () => `<a class="card ccard" href="#corsa"><div><b>Corsa all'aperto</b><span>${corsa?'Corsa in corso: tocca per tornare':'Piani per livello con guida a voce, GPS, tempo e km'}</span><i class="cgo">${corsa?'Torna alla corsa':'Inizia'} →</i></div><img src="${RUN_IMG}" alt="" aria-hidden="true"></a>`;
 const myKg = () => { const E=(S.body.entries||[]).filter(e=>e.weight!=null).sort((a,b)=>a.at-b.at); const w=E.length?+E[E.length-1].weight:0; return w>30&&w<250 ? w : 0; };
 const kcalOf = m => Math.round((myKg()||75) * m/1000 * 1.0);
-const corsaSec = () => !corsa ? 0 : (corsa.acc + (corsa.paused ? 0 : Date.now()-corsa.t0))/1000;
+const corsaSec = () => !corsa || corsa.cd ? 0 : (corsa.acc + (corsa.paused ? 0 : Date.now()-corsa.t0))/1000;
 function pathSVG(pts, w=340, h=230, kms){
   const P0 = (pts||[]).filter(Boolean);
   if(P0.length<2) return '<div class="cempty">Il percorso comparirà qui mentre corri.</div>';
@@ -4570,7 +4575,7 @@ function onFix(pos){
   if(!corsa || corsa.paused) return;
   const c=pos.coords, p=[+c.latitude.toFixed(6), +c.longitude.toFixed(6)];
   corsa.acc_m = Math.round(c.accuracy); corsaMsg='';
-  if(c.accuracy > 35){ corsaPaint(); return; }
+  if(c.accuracy > 35 || corsa.cd){ corsaPaint(); return; }
   corsa.win=(corsa.win||[]).filter(x=>x.t<pos.timestamp&&pos.timestamp-x.t<=10000).concat([{p,t:pos.timestamp,a:c.accuracy,v:(c.speed!=null&&c.speed>=0)?c.speed:null}]);
   corsa.spd=liveSpeed(corsa.win); if(corsa.spd>(corsa.vmax||0) && corsa.spd<25) corsa.vmax=corsa.spd;
   const last = corsa.last;
@@ -4590,8 +4595,19 @@ function onFix(pos){
 function onGpsErr(e){ corsaMsg = e && e.code===1 ? 'Il telefono non dà il permesso alla posizione. Attivalo per questo sito nelle impostazioni di Chrome (Impostazioni sito → Posizione).' : 'Sto cercando il segnale GPS… meglio all\'aperto, lontano da palazzi alti.'; corsaPaint(); }
 function gpsOn(){ if(gpsWatch!=null || (corsa&&corsa.plan&&corsa.plan.tm) || !('geolocation' in navigator)) return; gpsWatch = navigator.geolocation.watchPosition(onFix, onGpsErr, {enableHighAccuracy:true, maximumAge:1000, timeout:20000}); }
 function gpsOff(){ if(gpsWatch!=null){ try{ navigator.geolocation.clearWatch(gpsWatch); }catch(e){} gpsWatch=null; } }
-function corsaStart(plan){ corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0, kms:[], ...(plan?{plan}:{})}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn(); if(plan){ const q0=rpPos(); if(q0 && !q0.end){ plan.i=q0.i; beep('go'); } say(coachStartTxt()+motStart()+(q0 && !q0.end ? rpCue(plan,q0.i) : ''), true); corsaSave(); } else say(coachStartTxt()+motStart()+'Corsa iniziata. Buona corsa!', true); corsaLoop(); viewCorsa(); window.scrollTo(0,0); }
-function corsaPause(){ if(!corsa||corsa.paused) return; corsa.acc += Date.now()-corsa.t0; corsa.paused=true; corsa.gap=true; corsaSave(); say('Pausa.', true); viewCorsa(); }
+// partenza: 15 secondi di conto alla rovescia (il coach parla in questo tempo), poi il via
+const CD_SEC = 15;
+function corsaStart(plan){ const intro=coachStartTxt()+motStart(), cdMs=Math.max(CD_SEC*1000, Math.min(30000, intro.length*65+3000));
+  corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0, kms:[], cd:Date.now()+cdMs, ...(plan?{plan}:{})}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn();
+  say(intro+'Si parte tra '+Math.round(cdMs/1000)+' secondi.', true); corsaLoop(); viewCorsa(); window.scrollTo(0,0); }
+function corsaGo(){ if(!corsa || !corsa.cd) return; corsa.cd=0; corsa.t0=corsa.start=Date.now(); corsa.acc=0; corsa.gap=true; beep('go');
+  const p=corsa.plan; if(p){ const q0=rpPos(); if(q0 && !q0.end){ p.i=q0.i; say('Via! '+rpCue(p,q0.i), true); } } else say('Via! Corsa iniziata. Buona corsa!', true);
+  corsaSave(); viewCorsa(); }
+function cdTick(){ const left=Math.ceil((corsa.cd-Date.now())/1000); if(left<=0) return corsaGo();
+  if(left<=3 && corsa.cdb!==left){ corsa.cdb=left; beep('tick'); }
+  const e=document.getElementById('cdN'); if(e) e.textContent=left; }
+const cdHTML = ()=>`<div class="card cdbox" id="cdBox"><span>Si parte tra</span><b id="cdN">${Math.max(0,Math.ceil((corsa.cd-Date.now())/1000))}</b><small>secondi · preparati e ascolta il coach</small><button class="btn small" type="button" id="cdGo">▶ Parti ora</button></div>`;
+function corsaPause(){ if(!corsa||corsa.paused||corsa.cd) return; corsa.acc += Date.now()-corsa.t0; corsa.paused=true; corsa.gap=true; corsaSave(); say('Pausa.', true); viewCorsa(); }
 function corsaResume(){ if(!corsa||!corsa.paused) return; corsa.t0=Date.now(); corsa.paused=false; corsaSave(); gpsOn(); corsaWakeOn(); say('Si riparte.', true); viewCorsa(); }
 function corsaFinish(save){
   if(!corsa) return; const sec=Math.round(corsaSec()), m=Math.round(corsa.m);
@@ -4606,7 +4622,7 @@ function corsaFinish(save){
   gpsOff(); micStop(); mic.endAsk=0; clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
   corsa=null; store.del('corsa'); location.hash = save ? 'diario' : 'sessioni'; if(!save) viewCorsa();
 }
-function corsaLoop(){ clearInterval(corsaTick); corsaTick=setInterval(()=>{ rpTick(); if(view==='corsa') corsaPaint(); }, 500); }
+function corsaLoop(){ clearInterval(corsaTick); corsaTick=setInterval(()=>{ if(corsa && corsa.cd) cdTick(); rpTick(); if(view==='corsa') corsaPaint(); }, 500); }
 function corsaPaint(){
   if(view!=='corsa') return; const sec=corsaSec(), m=corsa?corsa.m:0;
   const set=(id,v)=>{ const e=document.getElementById(id); if(e) e.textContent=v; };
@@ -4626,13 +4642,13 @@ function viewCorsa(){
   const past = S.workouts.filter(w=>w.run).slice(0,5);
   const TM = !!(corsa&&corsa.plan&&corsa.plan.tm);
   const cBtns = `<div class="cbtns">${!corsa ? `<button class="btn big" id="cGo">▶ Inizia la corsa</button>`
-      : corsa.paused ? `<button class="btn big" id="cRes">▶ Riprendi</button><button class="btn ghost big" id="cEnd">■ Fine e salva</button>`
+      : corsa.cd ? '' : corsa.paused ? `<button class="btn big" id="cRes">▶ Riprendi</button><button class="btn ghost big" id="cEnd">■ Fine e salva</button>`
       : `<button class="btn ghost big" id="cPau">❚❚ Pausa</button><button class="btn big" id="cEnd">■ Fine e salva</button>`}${corsa?`<button class="btn ghost small cdrop" type="button" id="cDrop">🗑 Elimina senza salvare</button>`:''}</div>`;
   const PRE = !corsa, FREE = PRE && rplan.mode==='libera';
   $app.innerHTML = `<section class="view${corsa?' crun':' cpre'}">
     <div class="chead" ${corsa?'hidden':''}><h1 style="font-size:34px;text-transform:uppercase;margin:0">Corsa</h1><img src="${RUN_IMG}" alt="" aria-hidden="true"></div>
     ${PRE?`<div class="seg" role="tablist" aria-label="Corsa"><button type="button" role="tab" data-cmode="piani" aria-selected="${!FREE}">Obiettivi</button><button type="button" role="tab" data-cmode="libera" aria-selected="${FREE}">Corsa libera</button></div>`:''}
-    ${corsa ? rpGuideHTML() : FREE ? `<div class="card cfree"><p style="margin:0"><strong>Corri come vuoi, senza un programma.</strong></p>${cBtns}<p class="note" id="cGps"></p><p class="err" id="cMsg"></p>${hrBox()}<p class="note" style="margin:10px 0 0">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>${myKg()?'':`<p class="note" style="margin:6px 0 0">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}</div>` : rpPlansHTML()}
+    ${corsa && corsa.cd ? cdHTML() : ''}${corsa ? rpGuideHTML() : FREE ? `<div class="card cfree"><p style="margin:0"><strong>Corri come vuoi, senza un programma.</strong></p>${cBtns}<p class="note" id="cGps"></p><p class="err" id="cMsg"></p>${hrBox()}<p class="note" style="margin:10px 0 0">Tieni l'app aperta durante la corsa: lo schermo resta acceso da solo. Ogni chilometro la voce ti dice tempo e passo. Il percorso si disegna mentre corri e lo ritrovi nel Diario.</p>${myKg()?'':`<p class="note" style="margin:6px 0 0">Per contare meglio le calorie scrivi il tuo peso nella scheda <a href="#corpo">Corpo</a> (ora uso 75 kg).</p>`}</div>` : rpPlansHTML()}
     ${PRE?'':`<div class="card cspeed" ${TM?'hidden':''}><div id="cGauge"></div><div class="cvnum"><b id="cV">0,0</b><span>km/h</span></div>
       <div class="cvsub"><span>Media <b id="cVavg">0</b> km/h</span><span>Massima <b id="cVmax">0</b> km/h</span></div>${corsa?'<p class="note" id="cGps"></p>':''}</div>
     ${corsa?'':hrBox()}
@@ -4660,7 +4676,7 @@ function viewCorsa(){
   on('cCenter', ()=>{ cmapFollow=true; document.getElementById('cCenter').hidden=true; updMap(); });
   cmapReady=false; mountMap();
   $app.querySelectorAll('[data-cmode]').forEach(b=>b.onclick=()=>{ rplan.mode=b.dataset.cmode; rpSave(); viewCorsa(); });
-  on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
+  on('cdGo', corsaGo); on('cPau', corsaPause); on('cRes', corsaResume); on('cEnd', ()=>corsaFinish(true));
   on('cDrop', ()=>{ const b=document.getElementById('cDrop'); if(b.dataset.sure){ corsaFinish(false); } else { b.dataset.sure='1'; b.textContent='Sicuro? Premi ancora per eliminare la corsa'; } });
   rpBind(); corsaPaint(); hrPaint();
   const qk=document.getElementById('qMic'); if(qk) qk.onclick=()=>{ AU.mic=!AU.mic; saveAU(); mic.msg='';
@@ -4800,7 +4816,7 @@ function rpCue(p, i){ const sg=p.segs[i], T=RSEG[sg[0]];
   if(!nx && p.segs.length>1) txt += ' È l\'ultima parte.';
   return txt; }
 function rpTick(){
-  const p=corsa&&corsa.plan; if(!p || corsa.paused || p.fin) return;
+  const p=corsa&&corsa.plan; if(!p || corsa.paused || corsa.cd || p.fin) return;
   const q=rpPos(); if(!q) return;
   if(q.end){ p.fin=1; beep('done'); say('Allenamento del piano finito, bravo! Cammina qualche minuto, poi premi Fine e salva.', true); corsaSave(); return; }
   if(q.i!==p.i){ p.i=q.i; p.push=-1; beep('go'); say(rpCue(p,q.i), true); corsaSave(); return; }
