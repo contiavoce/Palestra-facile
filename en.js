@@ -4813,5 +4813,18 @@ window.PF_EN={
 "Tieni il telefono a 15-20 cm: troppo vicino resta sfocato.": "Hold the phone 15-20 cm away: too close and it stays blurry.",
 "Tocca l'immagine per mettere a fuoco.": "Tap the image to focus.",
 "📷 Scatta una foto": "📷 Take a photo",
-"🔦 Luce": "🔦 Light"
+"🔦 Luce": "🔦 Light",
+"▥ Leggi il codice a barre o QR": "▥ Scan the barcode or QR",
+"Leggi il codice a barre o QR": "Scan the barcode or QR",
+"Inquadra il codice a barre o il QR dentro il riquadro": "Frame the barcode or QR inside the box",
+"Questo QR porta al sito del prodotto: dal link mi sembra il tipo qui sotto. Controlla, oppure fotografa l'etichetta.": "This QR leads to the product's website: from the link it looks like the type below. Check it, or photograph the label.",
+"Questo QR porta al sito del prodotto. Fotografa una volta l'etichetta (o scegli tu il tipo) e da adesso, quando leggi questo QR, lo riconosco subito.": "This QR leads to the product's website. Photograph the label once (or choose the type yourself) and from now on, when you scan this QR, I'll recognise it straight away.",
+"Ho letto il testo del codice: mi sembra il tipo qui sotto. Controlla, oppure fotografa l'etichetta.": "I read the text in the code: it looks like the type below. Check it, or photograph the label.",
+"Ho letto il codice, ma non dice che prodotto è. Fotografa una volta l'etichetta (o scegli tu il tipo) e da adesso lo riconosco subito.": "I read the code, but it doesn't say what product it is. Photograph the label once (or choose the type yourself) and from now on I'll recognise it straight away.",
+"Apri il sito del prodotto ↗": "Open the product's website ↗",
+"Trovato su internet nell'archivio Open Food Facts (licenza ODbL): controlla che sia il tuo prodotto.": "Found online in the Open Food Facts database (ODbL licence): check it's your product.",
+"🔎 Cerca il prodotto su internet ↗": "🔎 Search for the product online ↗",
+"Quando hai capito che prodotto è, tocca il tipo giusto: ti dico io come e quando prenderlo.": "Once you know what product it is, tap the right type: I'll tell you how and when to take it.",
+"Codice QR: {*}": "QR code: {*}",
+"Codice QR: {*} · già salvato su questo telefono": "QR code: {*} · already saved on this phone"
 };

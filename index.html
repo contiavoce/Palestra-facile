@@ -6738,7 +6738,7 @@ function scanHTML(){
   if(!iscan) return `<section class="card"><h2>Aggiungi un integratore</h2>
       <p class="note">Fotografa l'etichetta: leggo il nome e la tabella e ti dico quando e come prenderlo. Funziona anche senza internet. La foto resta sul telefono.</p>
       <div class="links"><label class="btn" style="cursor:pointer">📷 Fotografa l'etichetta<input type="file" accept="image/*" capture="environment" id="iCam" hidden></label>
-        <button class="btn" type="button" id="iBar">▥ Leggi il codice a barre</button>
+        <button class="btn" type="button" id="iBar">▥ Leggi il codice a barre o QR</button>
         <label class="btn ghost" style="cursor:pointer">🖼 Scegli una foto<input type="file" accept="image/*" id="iGal" hidden></label></div>
       <p class="note">Il codice a barre riconosce il prodotto dall'archivio libero Open Food Facts (serve internet la prima volta). Se non lo trova, fotografa l'etichetta.</p>
       <p class="note">Consiglio: luce buona, etichetta dritta e da vicino, con il nome del prodotto ben visibile.</p>
@@ -6751,7 +6751,10 @@ function scanHTML(){
       ${iscan.thumb?`<img class="ithumb" src="${iscan.thumb}" alt="">`:''}
       ${iscan.err?`<p class="err">${esc(iscan.err)}</p>`:''}
       ${iscan.ask?`<div class="links"><label class="btn" style="cursor:pointer">📷 Fotografa l'etichetta<input type="file" accept="image/*" capture="environment" id="iCam" hidden></label><label class="btn ghost" style="cursor:pointer">🖼 Scegli una foto<input type="file" accept="image/*" id="iGal" hidden></label></div>`:''}
-      ${iscan.code?`<p class="note">Codice a barre: ${esc(iscan.code)}${iscan.src==='off'?' · dati prodotto da Open Food Facts (licenza ODbL)':iscan.src==='mem'?' · già salvato su questo telefono':''}</p>`:''}
+      ${iscan.url?`<div class="links"><a class="btn ghost small" href="${esc(iscan.url)}" target="_blank" rel="noopener">Apri il sito del prodotto ↗</a></div>`:''}
+      ${iscan.web?`<p class="note">Trovato su internet nell'archivio Open Food Facts (licenza ODbL): controlla che sia il tuo prodotto.</p>`:''}
+      ${!iscan.busy && (iscan.ask || !g) && (iscan.q || iscan.code) ? `<div class="links"><a class="btn ghost small" href="https://www.google.com/search?q=${encodeURIComponent(((iscan.q||'')+' '+(iscan.q?'':iscan.code)+' integratore').trim())}" target="_blank" rel="noopener">🔎 Cerca il prodotto su internet ↗</a></div><p class="note">Quando hai capito che prodotto è, tocca il tipo giusto: ti dico io come e quando prenderlo.</p>`:''}
+      ${iscan.code?`<p class="note">${isURL(iscan.code)||/[a-z]{3}/i.test(iscan.code)?'Codice QR':'Codice a barre'}: ${esc(codeShow(iscan.code))}${iscan.src==='off'?' · dati prodotto da Open Food Facts (licenza ODbL)':iscan.src==='mem'?' · già salvato su questo telefono':''}</p>`:''}
       ${g?`<p class="lead">${SUPP[g].ico} <b>${esc(SUPP[g].n)}</b></p><details><summary class="note">Non è giusto? Tocca il tipo corretto</summary>${typeChips(g)}</details>`:`<p class="note">${iscan.lines?'Non sono riuscito a capire che prodotto è. ':''}Tocca il tipo di integratore:</p>${typeChips(g)}`}
       ${g?`<form id="iForm" class="mgrid">
         <label class="wide">Nome (facoltativo)<input id="iName" value="${esc(iscan.name||'')}" placeholder="${esc(SUPP[g].n)}"></label>
@@ -6802,13 +6805,20 @@ let bdet = null;
 /* codici delle farmacie italiane (Code 32 / codice AIC-ministeriale): scritti in Code 39 in base 32 → "A" + 9 cifre */
 function codeNorm(t, f){ t=String(t||'').trim(); if(!t) return '';
   if(/39/.test(f||'') && /^[0-9B-DF-HJ-NP-TV-Z]{6}$/.test(t)){ const A='0123456789BCDFGHJKLMNPQRSTUVWXYZ'; let v=0; for(const c of t) v=v*32+A.indexOf(c); return 'A'+String(v).padStart(9,'0'); }
-  return t; }
+  t = t.replace(/^\][A-Za-z]\d/,'').replace(/<GS>/g,'\x1d').replace(/[\x00-\x1f]/g,'\x1d');
+  /* GS1 (DataMatrix, QR, GS1-128): (01) + codice prodotto di 14 cifre → codice EAN */
+  const gs = /^(?:\x1d)?\(?01\)?(\d{14})/.exec(t) || /[\/=]01\/(\d{14})(?:[\/?#]|$)/.exec(t) || /[?&]gtin=(\d{8,14})/i.exec(t);
+  if(gs){ const g=gs[1].replace(/^0+(?=\d{13}$)/,''); return /^0\d{12}$/.test(g)&&g.length===13 ? g : g; }
+  return t.replace(/\x1d/g,' ').trim().slice(0,300); }
 const isEAN = c => /^\d{8}$|^\d{12,14}$/.test(c);
+const isURL = c => /^https?:\/\/|^www\./i.test(c);
+const codeShow = c => c.length>42 ? c.slice(0,40)+'…' : c;
 async function barcodeIn(canvas){
-  try{ if(bdet===null && 'BarcodeDetector' in window){ const f = await BarcodeDetector.getSupportedFormats(); bdet = f.includes('ean_13') ? new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_39','code_128','code_93','itf','codabar'].filter(x=>f.includes(x))}) : false; } }catch(e){ bdet=false; }
+  try{ if(bdet===null && 'BarcodeDetector' in window){ const f = await BarcodeDetector.getSupportedFormats(); const all=['qr_code','data_matrix','aztec','pdf417','ean_13','ean_8','upc_a','upc_e','code_39','code_128','code_93','itf','codabar'].filter(x=>f.includes(x)); bdet = all.length ? new BarcodeDetector({formats:all}) : false; } }catch(e){ bdet=false; }
   if(bdet){ try{ const r = await bdet.detect(canvas); if(r && r[0]) return codeNorm(r[0].rawValue, r[0].format); }catch(e){} }
   const Z = await zxLoad(); const x = canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);
-  const r = await Z.readBarcodes(x, {formats:['Linear-Codes'], tryHarder:true, tryRotate:true, maxNumberOfSymbols:1});
+  /* tutti i formati: QR, DataMatrix, Aztec, PDF417, EAN/UPC, Code 39/93/128, ITF, Codabar… anche se il telefono non ha il lettore integrato */
+  const r = await Z.readBarcodes(x, {formats:[], tryHarder:true, tryRotate:true, tryInvert:true, maxNumberOfSymbols:1});
   return r && r[0] && r[0].isValid ? codeNorm(r[0].text, r[0].format) : '';
 }
 async function offLookup(code){
@@ -6820,11 +6830,24 @@ async function offLookup(code){
   const nums = suppNums(lines);
   return {name:[brand,name].filter(Boolean).join(' · ').slice(0,50), lines, dose: sv?parseFloat(sv[1].replace(',','.')):nums.dose, caf:nums.caf};
 }
+async function offSearch(q){
+  const r = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(q.slice(0,60))}&search_simple=1&json=1&page_size=5&fields=product_name,product_name_it,brands,categories,generic_name_it`, {cache:'no-store'});
+  if(!r.ok) return null; const d = await r.json(); const P = (d && d.products || []).find(x=>x && (x.product_name_it||x.product_name)); if(!P) return null;
+  const name = [(P.brands||'').split(',')[0].trim(), (P.product_name_it||P.product_name||'').trim()].filter(Boolean).join(' · ').slice(0,50);
+  return {name, lines:[{t:P.product_name_it||P.product_name||'',w:3},{t:P.generic_name_it||'',w:2},{t:P.categories||'',w:1.5}].filter(l=>l.t)};
+}
 /* dal codice al prodotto: prima la memoria del telefono, poi internet */
 async function integCode(code){
   iscan = Object.assign(iscan||{}, {busy:true, pct:0, code}); paintScan();
   const mem = INTEG.codes && INTEG.codes[code];
   if(mem){ Object.assign(iscan, {busy:false, type:mem.type, name:mem.name||'', dose:mem.dose, caf:mem.caf, src:'mem', err:''}); paintScan(); say('Prodotto già conosciuto.'); return true; }
+  if(!isEAN(code) && (isURL(code) || /[a-z]{3}/i.test(code))){
+    const words = decodeURIComponent(code.replace(/%(?![0-9a-f]{2})/gi,'')).replace(/[\/_\-.?=&+:#]+/g,' ');
+    const g = suppGuess([{t:words, w:1.5}]), url = isURL(code) ? (/^www\./i.test(code)?'https://'+code:code) : '';
+    Object.assign(iscan, {busy:false, type:g.length?g[0][0]:'', ask:1, url, err: url
+      ? (g.length?'Questo QR porta al sito del prodotto: dal link mi sembra il tipo qui sotto. Controlla, oppure fotografa l\'etichetta.':'Questo QR porta al sito del prodotto. Fotografa una volta l\'etichetta (o scegli tu il tipo) e da adesso, quando leggi questo QR, lo riconosco subito.')
+      : (g.length?'Ho letto il testo del codice: mi sembra il tipo qui sotto. Controlla, oppure fotografa l\'etichetta.':'Ho letto il codice, ma non dice che prodotto è. Fotografa una volta l\'etichetta (o scegli tu il tipo) e da adesso lo riconosco subito.')});
+    paintScan(); return !!g.length; }
   if(!isEAN(code)){ Object.assign(iscan, {busy:false, type:'', ask:1, err:'Codice letto! È un codice del negozio o della farmacia: non è nell\'archivio dei prodotti. Fotografa una volta l\'etichetta (o scegli tu il tipo) e da adesso, quando leggi questo codice, lo riconosco subito.'}); paintScan(); return false; }
   if(!navigator.onLine){ Object.assign(iscan, {busy:false, type:'', ask:1, err:'Codice letto, ma per cercare il prodotto serve internet. Fotografa l\'etichetta o scegli tu il tipo: la prossima volta lo riconosco anche senza internet.'}); paintScan(); return false; }
   let P = null; try{ P = await offLookup(code); }catch(e){}
@@ -6838,7 +6861,7 @@ function bcStop(){ if(!bcam) return; clearInterval(bcam.t); try{ bcam.stream.get
 async function bcScan(){
   bcStop();
   const v = document.createElement('div'); v.className='viewer bcview'; v.setAttribute('role','dialog'); v.setAttribute('aria-label','Leggi il codice a barre');
-  v.innerHTML = `<video playsinline muted></video><i class="bcbox" aria-hidden="true"></i><p class="bcmsg" aria-live="polite">Inquadra il codice a barre dentro il riquadro</p>
+  v.innerHTML = `<video playsinline muted></video><i class="bcbox" aria-hidden="true"></i><p class="bcmsg" aria-live="polite">Inquadra il codice a barre o il QR dentro il riquadro</p>
     <p class="bchint">Tieni il telefono a 15-20 cm: troppo vicino resta sfocato. Tocca l'immagine per mettere a fuoco.</p>
     <div class="confirm bcbtns"><label class="btn small" style="cursor:pointer">📷 Scatta una foto<input type="file" accept="image/*" capture="environment" hidden data-bcph></label><button class="btn small" type="button" data-torch hidden>🔦 Luce</button><button class="btn ghost small" type="button" data-close style="background:transparent;color:#fff;border-color:#fff8">Chiudi</button></div>`;
   document.body.appendChild(v); v.querySelector('[data-close]').onclick=bcStop;
@@ -6890,12 +6913,17 @@ async function integPhoto(file){
       const r = document.createElement('canvas'); r.width=p.canvas.height; r.height=p.canvas.width; const x=r.getContext('2d');
       x.translate(r.width/2, r.height/2); x.rotate(deg*Math.PI/180); x.drawImage(p.canvas, -p.canvas.width/2, -p.canvas.height/2);
       iscan.pct=3; const l2 = ocrLines(await ocrRead(r, pct=>{ const u=document.querySelector('#iScan .cbar u'); if(u) u.style.width=Math.max(3,pct)+'%'; }));
-      const g2 = suppGuess(l2); if(g2.length || l2.length>lines.length){ lines=l2; g=g2; } }
+      const g2 = suppGuess(l2); const wq = L => L.map(l=>l.t).join(' ').split(/\s+/).filter(w=>/^[a-zà-ú]{3,}$/i.test(w)).length;
+      if(g2.length || wq(l2)>wq(lines)){ lines=l2; g=g2; } }
     if(!iscan) return;
     const nums = suppNums(lines);
     if(!g.length && code && !keep){ iscan.lines=lines; return integCode(code); }
+    /* non riconosciuto dalla foto: cerco il nome letto nell'archivio di Open Food Facts (serve internet) */
+    let web = '';
+    if(!g.length && navigator.onLine){ const q = suppName(lines); if(q.replace(/[^a-z]/gi,'').length>=4){ try{ const W = await offSearch(q); if(W){ const g2=suppGuess(W.lines); if(g2.length){ g=g2; web=W.name; } } }catch(e){} } }
+    if(!iscan) return;
     if(code) iscan.code=code;
-    Object.assign(iscan, {busy:false, lines, type:g.length?g[0][0]:'', name:'', dose:nums.dose, caf:nums.caf});
+    Object.assign(iscan, {busy:false, lines, type:g.length?g[0][0]:'', name:web||'', web:!!web, q:suppName(lines), dose:nums.dose, caf:nums.caf});
     if(iscan.type) say('Mi sembra '+SUPP[iscan.type].n.replace(/\(.*\)/,'')+'.');
   }catch(e){
     if(!iscan) return;
