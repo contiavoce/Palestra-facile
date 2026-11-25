@@ -17,7 +17,7 @@ window.PF_EN={
 "Quanto vicino al limite": "How close to your limit",
 ": 1–3 ripetizioni in canna bastano, non serve lo sfinimento. Refalo e coll., Sports Med 2023; Robinson e coll., Sports Med 2024.": ": 1–3 reps in reserve are enough, no need for total exhaustion. Refalo et al., Sports Med 2023; Robinson et al., Sports Med 2024.",
 "Panca inclinata per il petto alto": "Incline bench for the upper chest",
-", accanto alla piana. Chaves e coll., 2024.": ", alongside the flat bench. Chaves et al., 2024.",
+", accanto alla piana. Chaves e coll., Int J Exerc Sci 2020.": ", alongside the flat bench. Chaves et al., Int J Exerc Sci 2020.",
 "Tricipiti con le braccia sopra la testa": "Triceps with arms overhead",
 ": crescono circa il 40% in più. Maeo e coll., Eur J Sport Sci 2023.": ": they grow about 40% more. Maeo et al., Eur J Sport Sci 2023.",
 "Leg curl da seduto": "Seated leg curl",
