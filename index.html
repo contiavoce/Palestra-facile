@@ -677,6 +677,8 @@ body.noscroll{overflow:hidden}
 .gear{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;margin-left:8px;margin-right:-6px;flex:none;border-radius:999px;color:var(--fg);text-decoration:none}
 .gear:active{background:var(--sunk)}
 .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scard .scit{display:grid;gap:6px}.scard p{margin:0}.scard .src{font-size:13px;color:var(--muted)}.scard .src a{color:inherit}.sciday .btn{justify-self:start}
+.rir{display:grid;gap:6px;margin-top:2px}.rirq{font-weight:600;font-size:14px}.rir small{font-size:12px}
 .qtile{display:flex;flex-direction:column;gap:4px;padding:14px;border-radius:16px;background:var(--surface);border:1px solid var(--line);color:var(--fg);text-decoration:none}
 .qtile b{font-size:16px}.qtile span{font-size:13px;color:var(--muted)}
 .hero .hero-2{margin-top:8px;display:inline-flex;background:transparent;color:inherit;border:1.5px solid currentColor}
@@ -3299,6 +3301,7 @@ function viewExercise(id){
       ${x.note?`<p class="note">${esc(x.note)}</p>`:''}
     </section>
     ${x.cues&&x.cues.length?`<section class="card"><h2>I consigli del trainer</h2>${x.feel?`<p class="feel"><b>Dove devi sentirlo:</b> ${esc(x.feel)}</p>`:''}<ul class="cues">${x.cues.map(c=>`<li>${esc(c)}</li>`).join('')}</ul></section>`:''}
+    ${sciCard(x)}
     <section class="card"><h2>Errori da evitare</h2><ul class="errs">${x.err.map(s=>{ const [e,f]=s.split(' → '); return `<li>${esc(e)}${f?`<span class="fx"><b>Correggi:</b> ${esc(f)}</span>`:''}</li>`; }).join('')}</ul></section>
     <section class="card"><h2>Quanto farne</h2>
       <div class="dose"><div><b>${x.dose[0]}</b><span>Serie</span></div><div><b>${x.dose[1]}</b><span>Ripetizioni</span></div><div><b>${x.dose[2]}</b><span>Recupero</span></div></div>
@@ -3579,6 +3582,7 @@ function drawRun(){
         <div class="next">${run.set>1?`Prossima: serie ${run.set} di ${esc(x.name)}`:`Prossimo esercizio: ${esc(x.name)}`}</div>
         <div class="links"><button class="btn ghost small" id="minus" type="button">−15"</button><button class="btn ghost small" id="plus" type="button">+15"</button><button class="btn ghost small" id="pauseRest" type="button">${run.pauseLeft!=null?'▶ Riprendi':'❚❚ Pausa'}</button><button class="btn small" id="skip" type="button">Salta recupero</button></div></div>
       ${run.cMsg&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cMsg)}</span>${run.cMsg===run.cLast?fbBtns(run.cMsg):''}</div>`:''}
+      ${run.rirMsg?`<div class="remind rirm"><span><b>🎯 Fatica:</b> ${esc(run.rirMsg)}</span></div>`:''}
       <div class="remind"><span><b>Intanto:</b> respira lento e profondo, inspira dal naso ed espira dalla bocca.</span></div>`
     : `
       <div class="pips" aria-hidden="true">${Array.from({length:p.sets},(_,k)=>`<i class="${k<run.set-1?'done':k===run.set-1?'now':''}"></i>`).join('')}</div>
@@ -3589,7 +3593,7 @@ function drawRun(){
       ${timeEx ? '' : `<div class="logger">
         <div class="stepper"><label for="kgIn">Peso kg</label><div class="ctl"><button type="button" data-step="kg" data-d="-2.5" aria-label="Meno 2,5 kg">−</button><input id="kgIn" inputmode="decimal" value="${d.kg===''?'':kgf(+d.kg)}" placeholder="0"><button type="button" data-step="kg" data-d="2.5" aria-label="Più 2,5 kg">+</button></div></div>
         <div class="stepper"><label for="repsIn">Ripetizioni</label><div class="ctl"><button type="button" data-step="reps" data-d="-1" aria-label="Una in meno">−</button><input id="repsIn" inputmode="numeric" value="${d.reps}" placeholder="0"><button type="button" data-step="reps" data-d="1" aria-label="Una in più">+</button></div></div>
-      </div>`}
+      </div>${rirHTML()}`}
       ${run.cLast&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cLast)}</span>${fbBtns(run.cLast)}</div>`:''}
       <div class="remind"><span><b>Inspira</b> ${esc(x.br.in.toLowerCase())} <b>Espira</b> ${esc(x.br.out.toLowerCase())}</span></div>
       <p class="err" id="err" hidden></p>
@@ -3622,6 +3626,7 @@ function drawRun(){
     const d2 = document.getElementById('demo2'), pl2 = d2 ? d2.closest('.player') : $app.querySelector('.player.mini');
     if(d2){ animCtl = makeAnim(x, d2, document.getElementById('w2'), null); if(!reduceMotion) animCtl.play(); }
     if(pl2) videoSrc(x.id).then(v=>{ if(!v||!pl2.isConnected) return; if(!d2 && !v.mine) return; if(animCtl&&animCtl.playing) animCtl.pause(); if(typeof dispose3D==='function') dispose3D(); const w=pl2; w.innerHTML=`<video class="runvid" src="${v.src}" autoplay muted loop playsinline></video>`; });
+    $app.querySelectorAll('[data-rir]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.rir; rirSel = rirSel===k ? null : k; $app.querySelectorAll('[data-rir]').forEach(c=>c.setAttribute('aria-pressed', String(+c.dataset.rir===rirSel))); });
     document.getElementById('addSet').onclick = ()=>{ P0.sets++; saveRun(); drawRun(); };
     document.getElementById('skipEx').onclick = ()=>{ if(run.i>=run.plan.length-1) return finish(); run.i++; run.set=1; saveRun(); drawRun(); };
     document.getElementById('doneSet').onclick = ()=>{
@@ -3631,7 +3636,9 @@ function drawRun(){
         const reps = parseInt(document.getElementById('repsIn').value,10);
         if(!(reps>0)){ const e=document.getElementById('err'); e.textContent='Scrivi quante ripetizioni hai fatto.'; e.hidden=false; return; }
         rec.kg = kg>0 ? Math.round(kg*100)/100 : 0; rec.reps = reps;
+        if(rirSel!=null) rec.rir = rirSel;
       } else rec.done = true;
+      run.rirMsg = rec.rir!=null ? RIR_MSG[rec.rir] : ''; rirSel = null;
       rec.t = Date.now();
       run.sets.push(rec);
       run.cMsg = coachRestTxt(rec);
@@ -6651,6 +6658,57 @@ function lastBtn(){
   const s = getSess(w.sid); if(!s) return '';
   return `<a class="btn ghost hero-2" href="#allena-${s.id}">Rifai: ${esc(s.name)}</a>`;
 }
+/* ---------------- LO DICE LA SCIENZA: consigli dagli studi (scritti da noi, con la fonte) ---------------- */
+const pmq = q => 'https://pubmed.ncbi.nlm.nih.gov/?term='+encodeURIComponent(q);
+const SRC = {
+  kassiano:['Kassiano e colleghi, 2023','https://pubmed.ncbi.nlm.nih.gov/37015016/'],
+  chaves:['Chaves e colleghi, 2024',pmq('horizontal incline bench press regional hypertrophy pectoralis major')],
+  schoenLoad:['Schoenfeld e colleghi, 2017','https://pubmed.ncbi.nlm.nih.gov/28834797/'],
+  refalo:['Refalo e colleghi, 2023',pmq('Refalo proximity-to-failure hypertrophy meta-analysis')],
+  schoenVol:['Schoenfeld e colleghi, 2017',pmq('Schoenfeld Ogborn Krieger dose-response weekly sets hypertrophy')],
+  schoenFreq:['Schoenfeld e colleghi, 2016',pmq('Schoenfeld Ogborn Krieger effects of resistance training frequency hypertrophy meta-analysis')],
+  morton:['Morton e colleghi, 2018',pmq('Morton protein supplementation meta-analysis 2018 resistance training')],
+  maeoTri:['Maeo e colleghi, 2023',pmq('Maeo triceps overhead extension pushdown hypertrophy')],
+  maeoHam:['Maeo e colleghi, 2021',pmq('Maeo greater hamstrings hypertrophy seated prone leg curl')],
+  kubo:['Kubo e colleghi, 2019',pmq('Kubo squat depth lower limb muscle volume')]
+};
+const TIP_CALF = ["Scendi bene col tallone e fermati un attimo giù: la parte bassa, con il polpaccio ben allungato, è quella che lo fa crescere di più. In uno studio di 8 settimane, chi faceva solo la metà bassa è cresciuto circa il doppio di chi faceva il movimento completo.",'kassiano'];
+const TIP_FLAT = ["Questo esercizio fa crescere bene la parte centrale e bassa del petto. Per la parte alta funziona meglio la panca inclinata: se vuoi un petto completo, aggiungila alla tua scheda.",'chaves'];
+const TIP_INCL = ["È l'esercizio migliore per la parte alta del petto: in uno studio di 8 settimane l'ha fatta crescere circa il doppio della panca piana.",'chaves'];
+const TIP_TRI_OVER = ["Con le braccia sopra la testa il tricipite lavora ben allungato: in uno studio è cresciuto circa il 40% in più che con le estensioni ai cavi.",'maeoTri'];
+const SCI = {
+  'polpacci':[TIP_CALF], 'polpacci-gradino':[TIP_CALF],
+  'panca-piana':[TIP_FLAT], 'panca-manubri':[TIP_FLAT], 'chest-press':[TIP_FLAT],
+  'panca-inclinata':[TIP_INCL], 'panca-inclinata-manubri':[TIP_INCL],
+  'estensioni-sopra-testa':[TIP_TRI_OVER], 'french-press':[["Portare i gomiti un po' dietro la testa allunga di più il tricipite: con le braccia sopra la testa, in uno studio, è cresciuto circa il 40% in più che con le estensioni ai cavi.",'maeoTri']],
+  'pushdown':[["Va bene, ma aggiungi anche un esercizio con le braccia sopra la testa (per esempio le estensioni sopra la testa): in uno studio ha fatto crescere i tricipiti circa il 40% in più.",'maeoTri']],
+  'leg-curl':[["Se la palestra ha la versione da seduto, preferiscila: con il busto piegato i femorali lavorano più allungati e in uno studio sono cresciuti di più che da sdraiati.",'maeoHam']],
+  'squat':[["Scendere fino in fondo fa crescere i glutei molto più del mezzo squat. Le cosce davanti invece crescono più o meno uguale.",'kubo']],
+  'mezzo-squat':[["Va bene per le cosce, ma se vuoi glutei più forti prova anche lo squat completo: scendendo di più i glutei crescono molto di più.",'kubo']]
+};
+const srcLink = k => { const q=SRC[k]; return q?`<p class="src"><span>Fonte:</span> <a href="${q[1]}" target="_blank" rel="noopener">${esc(q[0])} ↗</a></p>`:''; };
+const sciCard = x => { const t=SCI[x.id]; if(!t) return ''; return `<section class="card scard"><h2>🔬 Lo dice la scienza</h2>${t.map(([txt,k])=>`<div class="scit"><p>${esc(txt)}</p>${srcLink(k)}</div>`).join('')}</section>`; };
+/* pillole per la Home: una al giorno, "Un'altra" per cambiarla */
+const PILLS = [
+  ["Pesi leggeri o pesanti? Per far crescere i muscoli funzionano quasi uguale, se arrivi vicino al limite. I pesi pesanti però ti rendono più forte.",'schoenLoad'],
+  ["Non serve arrivare allo sfinimento: fermarti quando ti restano 1-2 ripetizioni funziona quasi uguale e ti stanca meno.",'refalo'],
+  ["Per i polpacci conta la parte bassa: scendi bene col tallone e fermati un attimo giù prima di risalire.",'kassiano'],
+  ["Per la parte alta del petto la panca inclinata funziona circa il doppio della panca piana.",'chaves'],
+  ["Più serie a settimana fanno crescere di più: punta ad almeno 10 serie a settimana per ogni muscolo, divise in più giorni.",'schoenVol'],
+  ["Allenare ogni muscolo 2 volte a settimana fa crescere di più che allenarlo 1 volta sola.",'schoenFreq'],
+  ["Per i muscoli conta il totale di proteine del giorno: circa 1,6 g per ogni kg del tuo peso, divisi nei pasti.",'morton'],
+  ["Per i tricipiti gli esercizi con le braccia sopra la testa li fanno crescere di più.",'maeoTri'],
+  ["Per i femorali il leg curl da seduto funziona meglio di quello da sdraiato.",'maeoHam'],
+  ["Lo squat completo fa crescere i glutei molto più del mezzo squat.",'kubo']
+];
+let pillOff = 0;
+const pillHTML = () => { const n=PILLS.length, i=((Math.floor(Date.now()/864e5)+pillOff)%n+n)%n, [t,k]=PILLS[i];
+  return `<section class="card scard sciday" id="pill"><h2>💡 Lo sapevi?</h2><p>${esc(t)}</p>${srcLink(k)}<button class="btn ghost small" type="button" id="pillNext">Un altro consiglio ›</button></section>`; };
+const bindPill = () => { const b=document.getElementById('pillNext'); if(b) b.onclick=()=>{ pillOff++; const p=document.getElementById('pill'); p.outerHTML=pillHTML(); bindPill(); }; };
+/* fatica della serie: quante ripetizioni restavano (RIR) */
+let rirSel = null;
+const RIR_MSG = ["Hai dato tutto. Va bene ogni tanto, ma non serve sempre: fermarti 1-2 ripetizioni prima dà quasi lo stesso risultato.","Perfetto: è la zona che fa crescere i muscoli.","Perfetto: è la zona che fa crescere i muscoli.","Ti restava un po' di margine: nella prossima serie prova a fare 1-2 ripetizioni in più.","Troppo facile: nella prossima serie aumenta il peso o fai più ripetizioni."];
+const rirHTML = () => `<div class="rir"><span class="rirq">Quante ripetizioni ti restavano?</span><div class="chips wrapchips" role="group" aria-label="Ripetizioni che restavano">${['0','1','2','3','4+'].map((l,k)=>`<button class="chip" type="button" data-rir="${k}" aria-pressed="${rirSel===k}">${l}</button>`).join('')}</div><small class="muted">Facoltativo. L'ideale è 1 o 2.</small></div>`;
 function viewHome(){
   view='home'; brand(); setTab('home');
   $app.innerHTML = `<section class="view">
@@ -6658,11 +6716,13 @@ function viewHome(){
     ${bkReminder()}
     ${heroHTML()}
     ${coachOn() ? coachCardHTML() : ''}
+    ${pillHTML()}
     <div class="qgrid">
       <a class="qtile" href="#esercizi"><b>📖 Esercizi</b><span>Come si fanno, passo passo</span></a>
       <a class="qtile" href="#diario"><b>📈 Progressi</b><span>Diario, muscoli, peso e misure</span></a>
     </div>
   </section>`;
+  bindPill();
 }
 function progSwitch(on){
   return `<div class="seg" role="tablist" aria-label="Progressi"><a href="#diario" role="tab" aria-selected="${on==='diario'}">Allenamenti</a><a href="#corpo" role="tab" aria-selected="${on==='corpo'}">Corpo</a></div>`;
