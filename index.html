@@ -3297,7 +3297,6 @@ function viewExercise(id){
       ${pacerHTML(x)}
       <div class="links">
         ${canSpeak?'<button class="btn small" type="button" id="explain">🔊 Ascolta la spiegazione</button>':''}
-        <a class="btn ghost small" href="${yt(x.name+' esecuzione corretta palestra')}" target="_blank" rel="noopener">Guarda video su YouTube ↗</a>
         ${mine?`<a class="btn small" href="${esc(mine)}" target="_blank" rel="noopener">▶ Il mio video ↗</a>`:''}
       </div>
       <details class="more"><summary>Salva il link di un video</summary>
@@ -3392,7 +3391,7 @@ function sessCard(s, mine, day){
     <div class="meta"><span>≈ ${min} min</span><span>${s.items.length} esercizi</span><span>${sets} serie</span></div>
     <ol>${s.items.map(i=>`<li><b>${esc(EXMAP[i[0]].name)}</b> · ${i[1]>1?i[1]+' × ':''}${esc(i[2])}${i[4]?` <span class="muted">· ${esc(i[4])}</span>`:''}</li>`).join('')}</ol>
     <div class="actions"><a class="btn" href="#allena-${s.id}">Inizia</a>
-      ${mine?`<a class="btn ghost" href="#scheda-${s.id}">Modifica</a>`:`<button class="btn ghost" type="button" data-copy="${s.id}">Personalizza</button><a class="btn ghost" href="${yt(s.name+' allenamento palestra')}" target="_blank" rel="noopener">Video ↗</a>`}</div>
+      ${mine?`<a class="btn ghost" href="#scheda-${s.id}">Modifica</a>`:`<button class="btn ghost" type="button" data-copy="${s.id}">Personalizza</button>`}</div>
   </article>`;
 }
 let lvlSel = (()=>{ try{ const v=localStorage.getItem('pf-lvl'); return LIVELLI[v]?v:'principiante'; }catch(e){ return 'principiante'; } })();
