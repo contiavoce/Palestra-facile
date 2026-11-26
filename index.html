@@ -3635,6 +3635,7 @@ function drawRun(){
       ${run.rirMsg?`<div class="remind rirm"><span><b>🎯 Fatica:</b> ${esc(run.rirMsg)}</span></div>`:''}
       <div class="remind"><span><b>Intanto:</b> respira lento e profondo, inspira dal naso ed espira dalla bocca.</span></div>`
     : `
+      ${builtinVid(x.id)?`<div class="player mini"><video class="runvid" src="${builtinVid(x.id)}" autoplay muted loop playsinline></video></div>`:ANIM[x.id]?`<div class="player mini"><canvas class="demo" id="demo2" role="img" aria-label="Animazione di ${esc(x.name)}"></canvas><div class="label"><b id="w2"></b></div></div>`:''}
       <div class="prev">Serie <b>${run.set} di ${p.sets}</b> · obiettivo <b>${esc(p.reps)}</b>${P0.pyr?` <span class="muted">(piramide ${esc(P0.pyr.join('–'))})</span>`:''}${!timeEx&&last?` · volta scorsa <b>${last.sets.map(s=>setTxt(s)).join(', ')}</b>`:''}</div>
       ${progHTML(run.i, true)}
       ${timeEx ? '' : `<div class="logger">
@@ -3650,7 +3651,6 @@ function drawRun(){
  ${timeEx?'':rirHTML()}
       ${run.cLast&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cLast)}</span>${fbBtns(run.cLast)}</div>`:''}
       <div class="remind"><span><b>Inspira</b> ${esc(x.br.in.toLowerCase())} <b>Espira</b> ${esc(x.br.out.toLowerCase())}</span></div>
-      ${builtinVid(x.id)?`<div class="player mini"><video class="runvid" src="${builtinVid(x.id)}" autoplay muted loop playsinline></video></div>`:ANIM[x.id]?`<div class="player mini"><canvas class="demo" id="demo2" role="img" aria-label="Animazione di ${esc(x.name)}"></canvas><div class="label"><b id="w2"></b></div></div>`:''}
       <div class="next">${esc(nxt)}</div>`}
     <div class="chips wrapchips qa" role="group" aria-label="Audio">${canSpeak?`<button class="chip" type="button" id="qVoice" aria-pressed="${AU.voice}">${AU.voice?'🔊 Voce':'🔇 Voce'}</button>`:''}${music.list.length?`<button class="chip" type="button" id="qMusic" aria-pressed="${!!(music.el&&!music.el.paused)}">${music.el&&!music.el.paused?'❚❚ Musica':'▶ Musica'}</button>`:''}<a class="chip" href="https://open.spotify.com/" target="_blank" rel="noopener">Apri Spotify</a><button class="chip" type="button" id="qCoach" aria-pressed="${coachOn()}">${coachOn()?'🧠 Coach':'🧠 Coach: spento'}</button>${canSpeak&&!run.sets.length&&!resting?`<button class="chip" type="button" data-img="gym" aria-pressed="false">🧠 1 minuto per concentrarti</button>`:''}${canListen?`<button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button>`:''}</div>
     <div class="micbar" id="micBar" hidden></div>
