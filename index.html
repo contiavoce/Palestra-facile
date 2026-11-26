@@ -7485,11 +7485,19 @@ function viewSettings(){
   bindAudioCard(()=>viewSettings());
   bindBackup();
 }
+// recupero in corso ma sei andato su un'altra pagina (es. «Come si fa»): a fine recupero torni da solo all'esercizio
+function restWatch(h){ if(!run || !(run.restEnd>Date.now()) || run.pauseLeft!=null || h==='corsa' || h.startsWith('mob-')) return;
+  const id=run.id, sec0=Math.ceil((run.restEnd-Date.now())/1000); let lastSec=sec0;
+  tick=setInterval(()=>{ if(!run || run.id!==id || run.pauseLeft!=null){ clearInterval(tick); return; }
+    const sec=Math.ceil((run.restEnd-Date.now())/1000); if(sec!==lastSec){ if(sec>=1 && sec<=3) beep('tick'); lastSec=sec; }
+    if(sec<=0){ clearInterval(tick); beep('go'); run.restEnd=0; saveRun(); location.hash='allena-'+id; } },250); }
+// telefono riacceso o app riaperta durante l'allenamento: aggiorno subito la schermata (recupero finito → serie successiva)
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible' && run && view==='run' && location.hash==='#allena-'+run.id) drawRun(); });
 function route(soft){
   stopPacer(); stopAnim(); dispose3D(); imgStop(); if(typeof bcStop==='function') bcStop();
   if(explaining){ explaining=false; try{speechSynthesis.cancel()}catch(e){} }
   const h = (location.hash||'#home').slice(1);
-  if(!h.startsWith('allena-')){ clearInterval(tick); if(!h.startsWith('sessioni') && h!=='corsa') micStop(); }
+  if(!h.startsWith('allena-')){ clearInterval(tick); if(!h.startsWith('sessioni') && h!=='corsa') micStop(); restWatch(h); }
   if(mobTick && !h.startsWith('mob-')){ if(mob && mob.left==null) mob.left=Math.max(0,mob.end-Date.now()); mobStop(); }
   const go = ()=>{
     if(h.startsWith('ex-')) return viewExercise(h.slice(3));
