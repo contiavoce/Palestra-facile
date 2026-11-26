@@ -1,5 +1,17 @@
 /* Dizionario italiano → inglese per Palestra Facile. Per tradurre un testo nuovo aggiungi una riga "testo italiano": "English". {*} = parte che cambia (numeri, nomi). */
 window.PF_EN={
+"Cuore e resistenza": "Heart and endurance",
+"Ancora nessuna corsa o cardio in questi 7 giorni.": "No runs or cardio in these 7 days yet.",
+"Ti mancano {*} minuti per arrivare a 150.": "{*} more minutes to reach 150.",
+"Obiettivo raggiunto: ottimo per cuore e resistenza.": "Goal reached: great for heart and endurance.",
+"Oltre 300 minuti: tantissimo movimento.": "Over 300 minutes: lots of movement.",
+"Obiettivo: 150–300 minuti a settimana di corsa, camminata svelta o cardio.": "Goal: 150–300 minutes a week of running, brisk walking or cardio.",
+"Gambe, glutei e polpacci hanno lavorato anche correndo ({*} km). La corsa allena cuore e fiato, ma per far crescere questi muscoli servono le serie con i pesi.": "Legs, glutes and calves also worked while running ({*} km). Running trains heart and breathing, but to grow these muscles you need sets with weights.",
+"La corsa non conta come serie.": "Running doesn't count as sets.",
+" Correre allena cuore e resistenza e in chi inizia può far crescere un po' le gambe, ma molto meno dei pesi, soprattutto in chi si allena già. Per questo la corsa ha una barra a parte e non colora i muscoli.": " Running trains heart and endurance and in beginners can grow the legs a little, but much less than weights, especially in trained people. That's why running has its own bar and doesn't color the muscles.",
+"Konopka e Harber, Exerc Sport Sci Rev 2014": "Konopka and Harber, Exerc Sport Sci Rev 2014",
+"150–300 minuti a settimana.": "150–300 minutes a week.",
+" Le linee guida dell'OMS consigliano 150–300 minuti a settimana di movimento moderato (oppure 75–150 di attività intensa come la corsa), più 2 giorni di esercizi di forza.": " WHO guidelines recommend 150–300 minutes a week of moderate activity (or 75–150 of vigorous activity like running), plus 2 days of strength exercises.",
 "Meglio da seduto, se c'è": "Seated version is better, if available",
 "Scendi bene e fermati 1\" giù": "Go all the way down and pause 1\" at the bottom",
 "Scendi fino in fondo, se la schiena resta dritta": "Go all the way down, as long as your back stays straight",
