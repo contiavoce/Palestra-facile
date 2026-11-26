@@ -256,6 +256,10 @@ nav.tabs a[aria-current="page"] svg{stroke-width:2.4}
 .sprog li.ok{color:var(--fg)}.sprog li.ok::after{content:'✓';margin-left:auto;color:var(--green);font-weight:700}
 .sprog li.now{color:var(--fg);font-weight:600}.sprog li.now::after{content:'ora';margin-left:auto;font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 .undo{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.altro{display:contents}.altro summary{list-style:none;cursor:pointer}.altro summary::-webkit-details-marker{display:none}
+.altro[open]>div{flex-basis:100%;margin-top:2px}
+.restnx{display:grid;gap:4px;text-align:center}.restnx h2{margin:0;font-size:26px;text-transform:uppercase;line-height:1.05}
+.rest .btn.big{width:100%}
 .rest{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:12px;justify-items:center;text-align:center}
 .clock{font-family:var(--display);font-weight:800;font-size:96px;line-height:.9;font-variant-numeric:tabular-nums}
 .remind{display:flex;gap:10px;align-items:flex-start;background:var(--sunk);border-radius:8px;padding:12px;font-size:15px}
@@ -3618,38 +3622,38 @@ function drawRun(){
   $app.innerHTML = `<section class="run">
     <div class="progress" aria-label="Avanzamento"><i style="width:${Math.min(100,Math.round(done/total*100))}%"></i></div>
     <div><div class="eyebrow">${esc(run.name)} · esercizio ${run.i+1} di ${run.plan.length}</div><h1>${esc(x.name)}</h1></div>
-    ${hrBox()}
+    ${hr.state!=='off'?hrBox():''}
     ${resting ? `
       <div class="rest"><div class="eyebrow">${run.pauseLeft!=null?'Recupero in pausa':'Recupero'}</div><div class="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="90"/><circle class="arc" id="arc" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="${ringOff()}"/></svg><div class="clock" id="clock">${fmt((run.restEnd-Date.now())/1000)}</div></div>
-        <div class="next">${run.set>1?`Prossima: serie ${run.set} di ${esc(x.name)}`:`Prossimo esercizio: ${esc(x.name)}`}</div>
-        <div class="links"><button class="btn ghost small" id="minus" type="button">−15"</button><button class="btn ghost small" id="plus" type="button">+15"</button><button class="btn ghost small" id="pauseRest" type="button">${run.pauseLeft!=null?'▶ Riprendi':'❚❚ Pausa'}</button><button class="btn small" id="skip" type="button">Salta recupero</button></div></div>
+        ${run.set>1?`<div class="next">Prossima: <b>serie ${run.set} di ${p.sets}</b> · obiettivo ${esc(p.reps)}${d.kg!==''&&!timeEx?` · ${kgf(+d.kg)} kg`:''}</div>`
+          :`<div class="restnx"><div class="eyebrow">Prossimo esercizio</div><h2>${esc(x.name)}</h2><div class="next">${p.sets} serie · obiettivo ${esc(p.reps)}${d.kg!==''&&!timeEx?` · ${kgf(+d.kg)} kg`:''}</div></div>`}
+        <div class="links"><button class="btn ghost small" id="minus" type="button">−15"</button><button class="btn ghost small" id="plus" type="button">+15"</button><button class="btn ghost small" id="pauseRest" type="button">${run.pauseLeft!=null?'▶ Riprendi':'❚❚ Pausa'}</button></div><button class="btn big" id="skip" type="button">${run.set>1?'Sono pronto ▶':'Vai al prossimo esercizio ▶'}</button></div>
       ${(l=>l?progHTML(l.pi!=null?l.pi:Math.max(0,run.set>1?run.i:run.i-1), false):'')(run.sets[run.sets.length-1])}
       <div class="undo"><button class="btn ghost small" type="button" id="undoSet">↶ Annulla l'ultima serie</button></div>
       ${run.cMsg&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cMsg)}</span>${run.cMsg===run.cLast?fbBtns(run.cMsg):''}</div>`:''}
       ${run.rirMsg?`<div class="remind rirm"><span><b>🎯 Fatica:</b> ${esc(run.rirMsg)}</span></div>`:''}
       <div class="remind"><span><b>Intanto:</b> respira lento e profondo, inspira dal naso ed espira dalla bocca.</span></div>`
     : `
-      <div class="pips" aria-hidden="true">${Array.from({length:p.sets},(_,k)=>`<i class="${k<run.set-1?'done':k===run.set-1?'now':''}"></i>`).join('')}</div>
       <div class="prev">Serie <b>${run.set} di ${p.sets}</b> · obiettivo <b>${esc(p.reps)}</b>${P0.pyr?` <span class="muted">(piramide ${esc(P0.pyr.join('–'))})</span>`:''}${!timeEx&&last?` · volta scorsa <b>${last.sets.map(s=>setTxt(s)).join(', ')}</b>`:''}</div>
       ${progHTML(run.i, true)}
-      ${p.note?`<div class="remind"><span><b>📝 Nota della scheda:</b> ${esc(p.note)}</span></div>`:''}
-      ${runAdvice(p, x)}
-      ${isWarm(p)&&run.set===1?mobRunCta():''}
       ${timeEx ? '' : `<div class="logger">
         <div class="stepper"><label for="kgIn">Peso kg</label><div class="ctl"><button type="button" data-step="kg" data-d="-2.5" aria-label="Meno 2,5 kg">−</button><input id="kgIn" inputmode="decimal" value="${d.kg===''?'':kgf(+d.kg)}" placeholder="0"><button type="button" data-step="kg" data-d="2.5" aria-label="Più 2,5 kg">+</button></div></div>
         <div class="stepper"><label for="repsIn">Ripetizioni</label><div class="ctl"><button type="button" data-step="reps" data-d="-1" aria-label="Una in meno">−</button><input id="repsIn" inputmode="numeric" value="${d.reps}" placeholder="0"><button type="button" data-step="reps" data-d="1" aria-label="Una in più">+</button></div></div>
-      </div>${rirHTML()}`}
-      ${run.cLast&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cLast)}</span>${fbBtns(run.cLast)}</div>`:''}
-      <div class="remind"><span><b>Inspira</b> ${esc(x.br.in.toLowerCase())} <b>Espira</b> ${esc(x.br.out.toLowerCase())}</span></div>
+      </div>`}
       <p class="err" id="err" hidden></p>
       <button class="btn big" id="doneSet" type="button">${timeEx?'Fatto ✓':'Serie fatta ✓'}${p.rest>0 && !(run.set>=p.sets && run.i>=run.plan.length-1) ? ` <span style="font-weight:500;opacity:.75">· parte il recupero ${fmt(p.rest)}</span>` : ''}</button>
-      <div class="minor undo">${run.sets.length?`<button class="btn ghost small" type="button" id="undoSet">↶ Annulla l'ultima serie</button>`:''}${setsOfPi(run.i).length?`<button class="btn ghost small" type="button" id="restartEx">⟲ Ricomincia esercizio</button>`:''}</div>
-      <div class="minor"><button class="btn ghost small" type="button" id="addSet">+ Serie</button><a class="btn ghost small" href="#ex-${x.id}">Come si fa</a></div>
-      <div class="minor undo" id="skipWrap" style="justify-content:flex-end"><button class="btn ghost small" type="button" id="skipEx">Salta esercizio ›</button></div>
+      <div class="minor undo" id="skipWrap">${run.sets.length?`<button class="btn ghost small" type="button" id="undoSet">↶ Annulla l'ultima serie</button>`:''}<details class="altro"><summary class="btn ghost small">Altro ▾</summary><div class="minor">${setsOfPi(run.i).length?`<button class="btn ghost small" type="button" id="restartEx">⟲ Ricomincia esercizio</button>`:''}<button class="btn ghost small" type="button" id="addSet">+ Serie</button><a class="btn ghost small" href="#ex-${x.id}">Come si fa</a><button class="btn ghost small" type="button" id="skipEx">Salta esercizio ›</button></div></details></div>
+      ${p.note?`<div class="remind"><span><b>📝 Nota della scheda:</b> ${esc(p.note)}</span></div>`:''}
+      ${isWarm(p)&&run.set===1?mobRunCta():''}
+      ${runAdvice(p, x)}
+ ${timeEx?'':rirHTML()}
+      ${run.cLast&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cLast)}</span>${fbBtns(run.cLast)}</div>`:''}
+      <div class="remind"><span><b>Inspira</b> ${esc(x.br.in.toLowerCase())} <b>Espira</b> ${esc(x.br.out.toLowerCase())}</span></div>
       ${builtinVid(x.id)?`<div class="player mini"><video class="runvid" src="${builtinVid(x.id)}" autoplay muted loop playsinline></video></div>`:ANIM[x.id]?`<div class="player mini"><canvas class="demo" id="demo2" role="img" aria-label="Animazione di ${esc(x.name)}"></canvas><div class="label"><b id="w2"></b></div></div>`:''}
       <div class="next">${esc(nxt)}</div>`}
     <div class="chips wrapchips qa" role="group" aria-label="Audio">${canSpeak?`<button class="chip" type="button" id="qVoice" aria-pressed="${AU.voice}">${AU.voice?'🔊 Voce':'🔇 Voce'}</button>`:''}${music.list.length?`<button class="chip" type="button" id="qMusic" aria-pressed="${!!(music.el&&!music.el.paused)}">${music.el&&!music.el.paused?'❚❚ Musica':'▶ Musica'}</button>`:''}<a class="chip" href="https://open.spotify.com/" target="_blank" rel="noopener">Apri Spotify</a><button class="chip" type="button" id="qCoach" aria-pressed="${coachOn()}">${coachOn()?'🧠 Coach':'🧠 Coach: spento'}</button>${canSpeak&&!run.sets.length&&!resting?`<button class="chip" type="button" data-img="gym" aria-pressed="false">🧠 1 minuto per concentrarti</button>`:''}${canListen?`<button class="chip" type="button" id="qMic" aria-pressed="${!!AU.mic}">${AU.mic?'🎙 Comandi a voce':'🎙 Comandi a voce: spenti'}</button>`:''}</div>
     <div class="micbar" id="micBar" hidden></div>
+    ${hr.state==='off'?hrBox():''}
     <div class="confirm" id="endWrap" style="margin-top:8px"><button class="btn ghost small" type="button" id="endRun">Termina allenamento</button></div>
   </section>`;
   if(resting){
