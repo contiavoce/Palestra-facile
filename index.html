@@ -371,7 +371,7 @@ nav.tabs a[aria-current="page"] svg{background:var(--sunk)}
 .mobtag{color:var(--muted);font-size:15px;margin-top:4px}.mobtag b{color:var(--fg)}
 .mobhow{margin:0;padding-left:20px;display:grid;gap:4px;font-size:16px}
 .mobrun .player.mini{display:flex;justify-content:center}.mobrun .ring{width:min(170px,46vw)}.mobrun .ring .clock{font-size:56px}.mobrun .rest{gap:10px;padding-top:12px;padding-bottom:12px}.mobrun .demo3 .cnt{display:none}.mobrun .demo3.mini{max-width:340px}.mobrun .demo3.mini{width:100%}
-.ccard.mobcta{border-left-color:var(--violet)}.ccard.mobcta .cgo{color:var(--violet)}.ccard.mobcta img{height:96px}
+.wsteps{margin:0;padding:0 0 0 4px;list-style:none;counter-reset:w;display:flex;flex-direction:column;gap:10px;text-align:left}.wsteps li{counter-increment:w;display:flex;flex-direction:column;gap:2px;padding-left:40px;position:relative}.wsteps li::before{content:counter(w);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--violet);color:#fff;font-weight:700;display:grid;place-items:center}.wsteps b{font-size:18px}.wsteps span{color:var(--mut,#6b6b70);font-size:15px}.cool{text-align:left;display:flex;flex-direction:column;gap:12px;margin:16px 0;padding:14px;border:1px solid var(--line);border-left:6px solid var(--violet);border-radius:16px}.ccard.mobcta{border-left-color:var(--violet)}.ccard.mobcta .cgo{color:var(--violet)}.ccard.mobcta img{height:96px}
 .ring .clock{position:absolute;inset:0;display:grid;place-items:center;font-size:clamp(56px,16vw,76px)}
 .sess .stack{height:10px;border-radius:5px}
 .sess h2{font-size:28px}
@@ -3569,6 +3569,7 @@ function startRun(id){
   }
   if(!run){
     run = {id, name:s.name, plan:s.items.map(i=>{ const r=String(s.fedele||pyrOf(i[2]) ? i[2] : goalReps(i[0], String(i[2]), s.lvl)), heavy=tGoal()==='for' && r!==String(i[2]) && !/^8/.test(r), py=pyrOf(r); return Object.assign({ex:i[0], sets:+i[1]||1, reps:r, rest: heavy ? Math.max(+i[3]||0, 150) : (+i[3]||0)}, i[4]?{note:String(i[4])}:{}, py?{pyr:py}:{}); }), i:0, set:1, restEnd:0, start:Date.now(), sets:[]};
+    if(!run.plan.some(isWarm)) run.warm='ask';
     saveRun();
   }
   try{ navigator.wakeLock && navigator.wakeLock.request('screen').then(w=>wake=w).catch(()=>{}) }catch(e){}
@@ -3603,6 +3604,7 @@ function restartEx(){ const pi=run.i; const mine=new Set(setsOfPi(pi)); run.sets
   run.set=1; run.restEnd=0; delete run.pauseLeft; delete run.pre; run.setKey=''; lastSaid=''; saveRun(); drawRun(); }
 function drawRun(){
   clearInterval(tick); stopAnim();
+  if(run.warm==='ask' && !run.sets.length) return drawWarm();
   if(run.pauseLeft!=null){ if(run.restEnd) run.restEnd = Date.now()+run.pauseLeft; else delete run.pauseLeft; }
   const P0 = run.plan[run.i], p = P0.pyr ? Object.assign({}, P0, {reps: String(P0.pyr[Math.min(run.set, P0.pyr.length)-1])}) : P0, x = EXMAP[p.ex];
   const total = run.plan.reduce((a,q)=>a+q.sets,0);
@@ -3647,6 +3649,7 @@ function drawRun(){
       <div class="minor undo" id="skipWrap">${run.sets.length?`<button class="btn ghost small" type="button" id="undoSet">↶ Annulla l'ultima serie</button>`:''}<details class="altro"><summary class="btn ghost small">Altro ▾</summary><div class="minor">${setsOfPi(run.i).length?`<button class="btn ghost small" type="button" id="restartEx">⟲ Ricomincia esercizio</button>`:''}<button class="btn ghost small" type="button" id="addSet">+ Serie</button><a class="btn ghost small" href="#ex-${x.id}">Come si fa</a><button class="btn ghost small" type="button" id="skipEx">Salta esercizio ›</button></div></details></div>
       ${p.note?`<div class="remind"><span><b>📝 Nota della scheda:</b> ${esc(p.note)}</span></div>`:''}
       ${isWarm(p)&&run.set===1?mobRunCta():''}
+      ${run.warm==='done'&&run.i===0&&run.set===1&&!run.sets.length?`<div class="remind warmr"><span><b>🔥 Avvicinamento:</b> ${esc(rampTxt(p,x,d))}</span></div>`:''}
       ${runAdvice(p, x)}
  ${timeEx?'':rirHTML()}
       ${run.cLast&&coachOn()?`<div class="remind coachl"><span><b>🧠 Coach:</b> ${esc(run.cLast)}</span>${fbBtns(run.cLast)}</div>`:''}
@@ -3748,7 +3751,7 @@ function finish(){
   });
   const name = run.name, nsets = run.sets.length, mk = 'post-'+mobKind(run.plan.map(q=>q.ex));
   endRun(); view='done'; lastSaid=''; const cTip=coachGoalTip('gym');
-  beep('done'); say('Allenamento completato. '+nsets+' serie in '+(mins===1?'un minuto':mins+' minuti')+'.'+(hs?' Battito medio '+hs.avg+'.':'')+' Ottimo lavoro!'+(prs.length&&coachOn()?` Hai battuto ${prs.length===1?'un record':prs.length+' record'}!`:'')+coachEndTxt()+cTip);
+  beep('done'); say('Allenamento completato. '+nsets+' serie in '+(mins===1?'un minuto':mins+' minuti')+'.'+(hs?' Battito medio '+hs.avg+'.':'')+' Ottimo lavoro!'+(prs.length&&coachOn()?` Hai battuto ${prs.length===1?'un record':prs.length+' record'}!`:'')+coachEndTxt()+cTip+' Se hai qualche minuto, ora il defaticamento: cammina piano, poi lo stretching guidato.');
   try{ history.replaceState(null,'','#fatto'); }catch(e){}
   backBar('Allenati','#sessioni');
   $app.innerHTML = `<section class="rest" style="margin-top:24px"><div class="eyebrow">Fatto</div>
@@ -3757,8 +3760,9 @@ function finish(){
     ${prs.length?`<div class="prs"><div class="eyebrow">Nuovi record</div>${prs.map(p=>`<div><b>${esc(p[0])}</b><span>${esc(p[1])}</span></div>`).join('')}</div>`:''}
     ${coachOn()?`<p class="next coachl"><b>🧠 Coach:</b> ${esc((coachEndTxt()+cTip).trim())}</p>${cTip?`<p class="note fbq">Ti è utile questo consiglio? ${fbBtns(cTip)}</p>`:''}`:''}
     ${integNowHTML()}
-    <p class="next">Salvata nel diario. Bevi acqua e, se hai qualche minuto, sciogliti con lo stretching guidato.</p>
-    <div class="links"><a class="btn" href="#mob-${mk}">🧘 Stretching guidato · ${mobMin(MOBRMAP[mk])}'</a><a class="btn ghost" href="#diario">Vai al diario</a><a class="btn ghost" href="#sessioni">Altre sessioni</a></div></section>`;
+    <p class="next">Salvata nel diario. Bevi un po' d'acqua.</p>
+    ${coolHTML(mk)}
+    <div class="links"><a class="btn ghost" href="#diario">Vai al diario</a><a class="btn ghost" href="#sessioni">Altre sessioni</a></div></section>`;
 }
 
 /* ---------------- AUDIO: suoni, voce, musica ---------------- */
@@ -4169,7 +4173,7 @@ function corsaDo(a){
   if(a.repeat && corsa.plan){ const q=rpPos(); if(q && !q.end) return say(rpCue(corsa.plan,q.i), true); }
   if(a.repeat || a.done) return say(runAnswer('how'), true);
 }
-function micWanted(){ return !!(canListen && (AU.mic || mic.ptt) && !mic.mute && document.visibilityState!=='hidden' && ((run && view==='run' && location.hash==='#allena-'+run.id) || (view==='sessions' && mic.pick) || (view==='corsa' && corsa))); }
+function micWanted(){ return !!(canListen && (AU.mic || mic.ptt) && !mic.mute && document.visibilityState!=='hidden' && ((run && view==='run' && run.warm!=='ask' && location.hash==='#allena-'+run.id) || (view==='sessions' && mic.pick) || (view==='corsa' && corsa))); }
 function pickSess(id){
   const s=getSess(id); if(!s) return;
   mic.pick=id; mic.heard=''; markPick();
@@ -6719,6 +6723,55 @@ function mobCard(r){
     <div class="actions"><a class="btn" href="#mob-${r.id}">▶ Inizia</a></div>
   </article>`;
 }
+/* RISCALDAMENTO prima della scheda e DEFATICAMENTO dopo (saltabili) */
+const r25 = v => Math.max(2.5, Math.round(v/2.5)*2.5);
+function rampTxt(p, x, d){
+  if(isTime(x)) return 'Fai il primo minuto piano, poi alza il ritmo.';
+  const kg = +d.kg || 0;
+  if(kg>=10) return `Prima di ${x.name} fai 2 serie leggere che non contano: ${kgf(r25(kg*.5))} kg × 8, poi ${kgf(r25(kg*.75))} kg × 4. Poi parti.`;
+  return `Prima di ${x.name} fai 1–2 serie leggere che non contano: circa metà del peso per 8 ripetizioni, poi tre quarti del peso per 4. Poi parti.`;
+}
+const SCI_WARM = `<div class="sci">
+  <p>${pill('s')}<b>Scaldarsi ti rende più forte nelle prime serie.</b> Nella maggior parte degli studi (circa 8 su 10) un riscaldamento fatto bene ha migliorato la prestazione. Ordine consigliato: cardio leggero, movimenti dinamici, poi serie leggere del primo esercizio.<cite>Fradkin, Zazryn e Smoliga, J Strength Cond Res 2010 (meta-analisi) · McGowan e coll., Sports Med 2015 (revisione)</cite></p>
+  <p>${pill('m')}<b>Cardio leggero + serie di avvicinamento è meglio delle sole serie leggere.</b> In uno studio sulla leg press, chi ha fatto prima qualche minuto di bici e poi le serie leggere ha alzato di più al massimale.<cite>Abad e coll., J Strength Cond Res 2011</cite></p>
+  <p>${pill('s')}<b>Prima: movimenti, non allungamenti fermi lunghi.</b> Tenere un allungamento fermo per più di 60 secondi prima dei pesi toglie un po' di forza. Per questo il riscaldamento guidato usa solo movimenti.<cite>Behm e coll., Appl Physiol Nutr Metab 2016 (revisione)</cite></p>
+  <p class="note">È facoltativo: se sei già caldo (per esempio arrivi correndo o hai appena fatto cardio), puoi saltarlo.</p>
+</div>`;
+const SCI_COOL = `<div class="sci">
+  <p>${pill('m')}<b>Il defaticamento è facoltativo.</b> Gli studi non mostrano che tolga i dolori del giorno dopo o prevenga gli infortuni. Però riporta battito e respiro a riposo con calma e ti fa sentire meglio: se hai fretta, puoi saltarlo.<cite>Van Hooren e Peake, Sports Med 2018 (revisione)</cite></p>
+  <p>${pill('s')}<b>Lo stretching fermo serve per diventare più sciolto.</b> Tieni ogni allungamento circa 30 secondi, senti tirare ma mai dolore. Meglio dopo l'allenamento che prima.<cite>ACSM, Garber e coll., Med Sci Sports Exerc 2011 · Herbert, de Noronha e Kamper, Cochrane 2011</cite></p>
+</div>`;
+const WARM_FOR = {gambe:'gambe e glutei', alta:'petto, schiena, spalle e braccia', corpo:'tutto il corpo'};
+function drawWarm(){
+  clearInterval(tick); stopAnim(); micStop();
+  const k=mobKind(run.plan.map(q=>q.ex)), r=MOBRMAP['pre-'+k], p=run.plan[0], x=EXMAP[p.ex], d=defaults(p,1);
+  backBar('Esci','#sessioni'); setTab('sessioni');
+  if(lastSaid!=='warm'){ lastSaid='warm'; say('Riscaldamento facoltativo. Da cinque a dieci minuti di cardio leggero, come la camminata in salita, poi il riscaldamento guidato. Se non ti serve, premi salta.'); }
+  $app.innerHTML = `<section class="run">
+    <div><div class="eyebrow">${esc(run.name)} · Facoltativo</div><h1>Riscaldamento</h1></div>
+    <p class="lead">Circa ${5+mobMin(r)} minuti. Muscoli e articolazioni si scaldano e nelle prime serie sei più forte.</p>
+    <ol class="wsteps">
+      <li><b>5–10 minuti di cardio leggero</b><span>Per esempio camminata in salita sul tapis roulant (pendenza 10%, 5 km/h), cyclette o ellittica. Devi riuscire a parlare.</span></li>
+      <li><b>${esc(r.name)} · ${mobMin(r)} min</b><span>Movimenti guidati a voce per ${WARM_FOR[k]}.</span></li>
+      <li><b>Serie di avvicinamento</b><span>${esc(rampTxt(p,x,d))}</span></li>
+    </ol>
+    <a class="card ccard mobcta" href="#mob-pre-${k}" id="mobGo"><div><b>Finito il cardio? Riscaldamento guidato</b><span>${esc(r.name)} · ${mobMin(r)} minuti di movimenti a voce, poi torni qui al primo esercizio</span><i class="cgo">▶ Inizia</i></div><img src="${MOB_IMG}" alt="" aria-hidden="true"></a>
+    <button class="btn ghost big" type="button" id="warmSkip">Salta, vai al primo esercizio ⏭</button>
+    <details class="more"><summary>🔬 Lo dice la scienza</summary>${SCI_WARM}</details>
+    <div class="confirm" id="endWrap" style="margin-top:8px"><button class="btn ghost small" type="button" id="endRun">Chiudi senza allenarmi</button></div>
+  </section>`;
+  document.getElementById('mobGo').onclick=()=>{ mobRet=run.id; mob=null; };
+  document.getElementById('warmSkip').onclick=()=>{ try{speechSynthesis.cancel()}catch(e){} run.warm='done'; saveRun(); lastSaid=''; drawRun(); };
+  document.getElementById('endRun').onclick=()=>{ endRun(true); location.hash='sessioni'; };
+}
+function coolHTML(mk){ const r=MOBRMAP[mk];
+  return `<div class="cool"><div class="eyebrow">Defaticamento · facoltativo</div>
+    <ol class="wsteps">
+      <li><b>3–5 minuti di camminata o cyclette piano</b><span>Il battito scende con calma e il respiro torna normale.</span></li>
+      <li><b>${esc(r.name)} · ${mobMin(r)} min</b><span>Allungamenti fermi di 30 secondi per i muscoli di oggi, guidati a voce.</span></li>
+    </ol>
+    <div class="links"><a class="btn" href="#mob-${mk}">🧘 Stretching guidato · ${mobMin(r)}'</a></div>
+    <details class="more"><summary>🔬 Lo dice la scienza</summary>${SCI_COOL}</details></div>`; }
 function mobRunCta(){ const k=mobKind(run.plan.map(q=>q.ex)), r=MOBRMAP['pre-'+k];
   return `<a class="card ccard mobcta" href="#mob-pre-${k}" id="mobGo"><div><b>Finito il cardio? Riscaldamento guidato</b><span>${esc(r.name)} · ${mobMin(r)} minuti di movimenti a voce, poi torni qui al primo esercizio</span><i class="cgo">▶ Inizia</i></div><img src="${MOB_IMG}" alt="" aria-hidden="true"></a>`; }
 function mobCtaHTML(){ return `<a class="card ccard wc" href="#mobilita" style="border-left-color:var(--violet)"><div><b>Mobilità e stretching</b><span>Riscaldamento prima, allungamenti dopo, guidati a voce</span><i class="cgo" style="color:var(--violet)">Apri →</i></div>${typeof MOB_IMG!=='undefined'?`<img src="${MOB_IMG}" alt="" aria-hidden="true">`:''}</a>`; }
@@ -6819,7 +6872,7 @@ function drawMob(){
 function mobDone(skipped){
   mobStop(); stopAnim(); dispose3D(); const r=MOBRMAP[mob.id]; mob=null;
   const back = mobRet && run && run.id===mobRet; mobRet='';
-  if(back){ const p=run.plan[run.i];
+  if(back){ const p=run.plan[run.i]; if(run.warm==='ask'){ run.warm='done'; saveRun(); }
     if(isWarm(p) && run.set===1){ if(!skipped) run.sets.push({ex:p.ex, done:true, t:Date.now()}); if(run.i<run.plan.length-1){ run.i++; run.set=1; } saveRun(); }
     if(!skipped) say('Riscaldamento finito. Ora il primo esercizio: fai prima una o due serie leggere.'); else try{speechSynthesis.cancel()}catch(e){}
     location.hash='allena-'+run.id; return; }
