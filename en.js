@@ -5214,5 +5214,14 @@ window.PF_EN={
 "Mujika e Padilla, Sports Med 2000": "Mujika and Padilla, Sports Med 2000",
 "Ultima ripetuta a {*} chilometri all'ora.": "Last rep at {*} kilometres per hour.",
 "Ottimo, il lavoro duro è fatto.": "Great, the hard work is done.",
-"Ripetuta a {*} chilometri all'ora.": "Rep at {*} kilometres per hour."
+"Ripetuta a {*} chilometri all'ora.": "Rep at {*} kilometres per hour.",
+"↶ Annulla l'ultima serie": "↶ Undo last set",
+"⟲ Ricomincia esercizio": "⟲ Restart exercise",
+"Salta esercizio ›": "Skip exercise ›",
+"Sì, annulla": "Yes, undo",
+"Sì, ricomincia": "Yes, restart",
+"Sì, salta": "Yes, skip",
+"Serie {*}": "Set {*}",
+"obiettivo {*}": "target {*}",
+"ora": "now"
 };
