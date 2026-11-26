@@ -5223,5 +5223,9 @@ window.PF_EN={
 "Sì, salta": "Yes, skip",
 "Serie {*}": "Set {*}",
 "obiettivo {*}": "target {*}",
-"ora": "now"
+"ora": "now",
+"Altro ▾": "More ▾",
+"Sono pronto ▶": "I'm ready ▶",
+"Vai al prossimo esercizio ▶": "Go to next exercise ▶",
+"Prossimo esercizio": "Next exercise"
 };
