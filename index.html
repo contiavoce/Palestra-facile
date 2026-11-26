@@ -3587,6 +3587,7 @@ function drawRun(){
   const h = histFor(p.ex), last = h[h.length-1];
   const d = defaults(p, run.set);
   const sayKey = resting ? 'r'+run.restEnd : run.i+'-'+run.set;
+  if(!resting && run.setKey!==run.i+'-'+run.set){ run.setKey=run.i+'-'+run.set; run.setAt=Date.now(); saveRun(); }
   if(sayKey!==lastSaid){ lastSaid=sayKey;
     if(resting) say('Recupero, '+spokenRest(Math.round((run.restEnd-Date.now())/1000))+'. '+(run.cMsg?run.cMsg+' ':'')+(run.set>1?'Poi serie '+run.set+' di '+p.sets+'.':'Poi '+x.name+'.'));
     else say(coachSetTxt(p,total,done)+(run.set===1?x.name+'. ':'')+(run.set===1&&!timeEx?(a=>a&&a.act==='up'&&a.kg>0?'Oggi sali a '+kgf(a.kg)+' chili. ':a&&a.act==='down'&&a.kg>0?'Oggi scendi a '+kgf(a.kg)+' chili. ':'')(advise(x,p.reps)):'')+'Serie '+run.set+' di '+p.sets+'. '+spokenReps(p.reps)+(!timeEx && /^[\d–\- ]+$/.test(String(p.reps).trim())?' ripetizioni':'')+'.'+(isWarm(p)&&run.set===1?' Finito il cardio, premi riscaldamento guidato.':'')); }
@@ -3645,8 +3646,9 @@ function drawRun(){
     if(pl2) videoSrc(x.id).then(v=>{ if(!v||!pl2.isConnected) return; if(!d2 && !v.mine) return; if(animCtl&&animCtl.playing) animCtl.pause(); if(typeof dispose3D==='function') dispose3D(); const w=pl2; w.innerHTML=`<video class="runvid" src="${v.src}" autoplay muted loop playsinline></video>`; });
     $app.querySelectorAll('[data-rir]').forEach(b=>b.onclick=()=>{ const k=+b.dataset.rir; rirSel = rirSel===k ? null : k; $app.querySelectorAll('[data-rir]').forEach(c=>c.setAttribute('aria-pressed', String(+c.dataset.rir===rirSel))); });
     document.getElementById('addSet').onclick = ()=>{ P0.sets++; saveRun(); drawRun(); };
-    document.getElementById('skipEx').onclick = ()=>{ if(run.i>=run.plan.length-1) return finish(); run.i++; run.set=1; saveRun(); drawRun(); };
+    document.getElementById('skipEx').onclick = ()=>{ if(Date.now()-(run.setAt||0) < 1500) return; if(run.i>=run.plan.length-1) return finish(); run.i++; run.set=1; saveRun(); drawRun(); };
     document.getElementById('doneSet').onclick = ()=>{
+      if(Date.now()-(run.setAt||0) < 1500) return; // doppio tocco: non segnare due serie insieme
       let rec = {ex:p.ex};
       if(!timeEx){
         const kg = parseFloat(document.getElementById('kgIn').value.replace(',','.'));
@@ -3744,7 +3746,7 @@ function say(text, force){
   try{ speechSynthesis.cancel(); duck(true); micMute(String(text));
     const parts = String(text).split(/(?<=[.;!?])\s+/).filter(Boolean), tok = mic.muteTok;
     parts.forEach((t,k)=>{ const u=new SpeechSynthesisUtterance(t); u.lang='it-IT'; if(itVoice) u.voice=itVoice; u.rate=1.02; u.volume = AU.vvol!=null ? AU.vvol : 1;
-      if(k===parts.length-1) u.onend=()=>{ duck(false); mic.quietUntil=Date.now()+2500; micUnmute(tok); }; u.onerror=()=>{ duck(false); micUnmute(tok); }; speechSynthesis.speak(u); });
+      if(k===parts.length-1) u.onend=()=>{ duck(false); mic.quietUntil=Date.now()+2500; micUnmute(tok); }; if(k===parts.length-1) u.onerror=()=>{ duck(false); micUnmute(tok); }; speechSynthesis.speak(u); });
   }catch(e){}
 }
 const spokenReps = r => String(r).replace(/(\d+)\s*–\s*(\d+)/g,'da $1 a $2').replace(/(\d+)"/g,'$1 secondi').replace(/(\d+)'/g,'$1 minuti');
@@ -3894,6 +3896,9 @@ function micAsk(s){ // domande al coach: tornano una chiave, oppure ''
   if(has(/\b(cosa (viene|c e|ce) dopo|e dopo)\b/)) return 'next';
   return '';
 }
+const MIC_FILL = /^(ok|okay|si|ho|ne|la|l|serie|questa|anche|e|ed|con|allora|ecco|bene|perfetto|chil\w*|kil\w*|kg|ripetizion\w*|rip|reps?|volte|peso)$/;
+const MIC_DONE = /^(fatt[aoie]|finit[aoie]|completat[ao]|terminat[ao])$/;
+const MIC_SKIPEX = /^(salta|saltiamo|esercizio|questo|quest|lo|il|prossimo|passa|al|vai)$/;
 function micParse(raw){
   const s = micNorm(raw), has = re=>re.test(s), a = {};
   const q = micAsk(s); if(q){ a.ask = q; if(q==='goal'){ const g=s.match(/(\d+(?:\.\d+)?) ?(?:km|chilometr\w*)/); a.goalM = g ? Math.round(parseFloat(g[1])*1000) : 0; } return a; }
@@ -3915,8 +3920,13 @@ function micParse(raw){
   else if(has(/\b(musica|canzone)\b/)) a.music = has(/\b(prossima|successiva|cambia)\b/) ? 'next' : 1;
   else if(has(/\b(piu|aggiungi|altri)\b.*\b(tempo|secondi|15)\b/)) a.more = 1;
   else if(has(/\bmeno\b.*\b(tempo|secondi|15)\b/)) a.less = 1;
-  else if(has(/\b(salta|saltiamo|pronto|pronta|via|vai|avanti)\b/)) a.go = 1;
+  else if(s.split(' ').length<=3 && has(/\b(salta|saltiamo|pronto|pronta|via|vai|avanti)\b/)) a.go = 1;
   if(has(/\b(fatt[aoie]|finit[aoie]|completat[ao]|serie fatta|terminat[ao])\b/) && !a.end) a.done = 1;
+  // «fatta» e «salta esercizio» valgono solo come comando corto: una frase più lunga (la voce dell'app,
+  // il coach «Hai già fatto cose più difficili», chi parla vicino) non deve chiudere la serie o saltare l'esercizio
+  const core = s.replace(/[.,]/g,' ').split(' ').filter(w=>w && !/^\d/.test(w) && !MIC_FILL.test(w));
+  if(a.done && !core.every(w=>MIC_DONE.test(w))) delete a.done;
+  if(a.skipEx && !core.every(w=>MIC_SKIPEX.test(w))) delete a.skipEx;
   return Object.keys(a).length ? a : null;
 }
 function micEcho(t){ // la frase è la voce dell'app stessa?
@@ -3988,11 +3998,13 @@ function micDo(a){
     if(a.kg!=null || a.reps!=null) return say('Ora sei in recupero. Dimmi i numeri quando inizi la serie.', true);
     return;
   }
-  if(a.skipEx) return tap('skipEx');
+  const fresh = Date.now()-(run.setAt||0) < 8000; // serie appena iniziata: «fatta» sentito ora è quasi sempre un'eco
+  if(a.skipEx){ if(fresh){ mic.heard+=' (ignorato)'; return paintMic(); } return tap('skipEx'); }
   if(a.pause){ mic.hold=true; paintMic(); return say("In pausa. Di' riprendi quando vuoi ripartire.", true); }
   const parts=[];
   if(a.reps!=null && micSetVal('repsIn', a.reps)) parts.push(a.reps+(a.reps===1?' ripetizione':' ripetizioni'));
   if(a.kg!=null && micSetVal('kgIn', a.kg)) parts.push(kgf(a.kg).replace('.',',')+' chili');
+  if(a.done && fresh){ mic.heard+=' (ignorato: la serie è appena iniziata)'; paintMic(); a.done=0; }
   if(a.done){
     tap('doneSet');
     const e=document.getElementById('err'); if(e && !e.hidden) say('Quante ripetizioni hai fatto?', true);
