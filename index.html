@@ -561,6 +561,10 @@ nav.tabs a[aria-current="page"] svg{background:color-mix(in srgb,var(--blue) 16%
 .cdbox b{font:800 88px/1 'Barlow Condensed',sans-serif;font-variant-numeric:tabular-nums}
 .cdbox small{color:var(--muted,#666);margin-bottom:8px}
 .crun .rpguide{gap:2px;padding-top:6px;padding-bottom:6px}.crun .rpnow b{font-size:20px}.crun .rpnow span{font-size:30px;line-height:1.1}.crun .rpgh span{font-size:11px}.crun .rpgh small{display:none}.crun .rpz{font-size:13px}.crun .rpbar{height:10px;margin:2px 0}.crun .rpguide .note{font-size:12px;margin:0;line-height:1.3}.crun .rpguide .note:empty,.crun .rpz:empty{display:none}
+.rcadv{display:grid;gap:6px;background:color-mix(in srgb,var(--yellow,#f5c542) 16%,var(--sunk));border-radius:14px;padding:10px 12px;margin:0 0 10px}.rcadv p{margin:0;font-size:14px;line-height:1.4}.rcadv .btn{justify-self:start}
+.rcask{background:#000b}.rcbox{width:100%;max-width:420px;max-height:92vh;overflow:auto}.rcbox h2{margin:0 0 6px;font-family:var(--display);text-transform:uppercase}.rcbox .rpgl small{text-transform:none;letter-spacing:0}
+.rcrpe{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.rcrpe button{font:inherit;font-weight:700;font-size:18px;padding:10px 0;border-radius:10px;border:2px solid transparent;background:hsl(var(--h) 60% 45% / .18);color:var(--fg,inherit)}.rcrpe button[aria-pressed=true]{background:hsl(var(--h) 65% 42%);color:#fff;border-color:#0003}
+.rcleg{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin:4px 2px 0}.rcbox .chips{display:flex;gap:8px;flex-wrap:wrap}.rcbox .cbtns{display:flex;gap:8px;justify-content:flex-end}.rcbox .btn[disabled]{opacity:.45}
 .rplans .chips{display:flex;gap:8px;flex-wrap:wrap}.rpgl{margin:8px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .rpnext{display:grid;gap:4px;background:var(--sunk);border-radius:14px;padding:12px;margin:0 0 10px}.rpnext span{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}.rpnext b{font-size:19px}.rpnext i{font-style:normal;color:var(--muted);font-size:14px;margin-bottom:6px}
 .rpweeks{display:grid;gap:12px}.rpw{display:grid;gap:4px}.rpw>b{font-size:15px}
@@ -4711,7 +4715,7 @@ function corsaStart(plan){ const intro=coachStartTxt()+motStart(), cdMs=Math.max
   corsa={t0:Date.now(), start:Date.now(), acc:0, paused:false, m:0, pts:[], last:null, gap:false, laps:[], lapAt:0, kms:[], cd:Date.now()+cdMs, ...(plan?{plan}:{})}; corsaMsg=''; corsaSave(); gpsOn(); corsaWakeOn();
   say(intro+'Si parte tra '+Math.round(cdMs/1000)+' secondi.', true); corsaLoop(); viewCorsa(); window.scrollTo(0,0); }
 function corsaGo(){ if(!corsa || !corsa.cd) return; corsa.cd=0; corsa.t0=corsa.start=Date.now(); corsa.acc=0; corsa.gap=true; beep('go');
-  const p=corsa.plan; if(p){ const q0=rpPos(); if(q0 && !q0.end){ p.i=q0.i; say('Via! '+rpCue(p,q0.i), true); } } else say('Via! Corsa iniziata. Buona corsa!', true);
+  const p=corsa.plan; if(p){ const q0=rpPos(); if(q0 && !q0.end){ p.i=q0.i; p.s0={t:0, m:0}; say('Via! '+rpCue(p,q0.i), true); } } else say('Via! Corsa iniziata. Buona corsa!', true);
   corsaSave(); viewCorsa(); }
 function cdTick(){ const left=Math.ceil((corsa.cd-Date.now())/1000); if(left<=0) return corsaGo();
   if(left<=3 && corsa.cdb!==left){ corsa.cdb=left; beep('tick'); }
@@ -4725,13 +4729,18 @@ function corsaFinish(save){
     const pts=[]; corsa.pts.forEach(p=>{ if(!pts.length || hav(pts[pts.length-1],p)>=8) pts.push(p); });
     const step=Math.ceil(pts.length/1200)||1, small=pts.filter((p,i)=>i%step===0||i===pts.length-1);
     const end=Date.now(), hs=hrSummary(corsa.start, end);
-    const pl=corsa.plan; if(pl && (pl.fin || corsaSec()>=rpTot(pl)*0.8)){ rplan.done[rpKey(pl.lv,pl.w,pl.d)]=end; rpSave(); }
-    addWorkout({id:'w'+end.toString(36), sid:'corsa', name: pl ? 'Corsa · '+RUNPLANS[pl.lv].name+' sett. '+(pl.w+1)+' giorno '+(pl.d+1)+(pl.tm?' (tapis roulant)':'') : 'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10}, ...(hs?{hr:hs}:{})});
+    const pl=corsa.plan; if(pl && !pl.fin && pl.i>=0) rcClose(pl, corsaSec());
+    const fr = pl ? Math.min(1, pl.fin ? 1 : corsaSec()/rpTot(pl)) : 0;
+    if(pl && fr>=0.8){ rplan.done[rpKey(pl.lv,pl.w,pl.d)]=end; rpSave(); }
+    addWorkout({id:'w'+end.toString(36), sid:'corsa', name: pl ? 'Corsa · '+RUNPLANS[pl.lv].name+' sett. '+(pl.w+1)+' giorno '+(pl.d+1)+(pl.tm?' (tapis roulant)':'') : 'Corsa all\'aperto', at:corsa.start, end, min:Math.max(1,Math.round(sec/60)), vol:0, sets:[], run:{m, sec, laps:corsa.laps||[], kms:corsa.kms||[], pts:small, kcal:kcalOf(m), vmax:Math.round((corsa.vmax||0)*10)/10, ...(pl&&pl.sr?{seg:pl.sr}:{})}, ...(hs?{hr:hs}:{}), ...(pl?{rp:{lv:pl.lv, w:pl.w, d:pl.d, hard:rcHard(pl)?1:0, fr:Math.round(fr*100)/100}}:{})});
+    if(pl && sec>=300) rcAskW = S.workouts[0];
     say(`Corsa finita. ${kmTxt(m).replace(',', ' virgola ')} chilometri in ${Math.floor(sec/60)} minuti. Circa ${kcalOf(m)} calorie. Bravo!`+motEnd(m,sec)+coachEndTxt()+coachGoalTip('run'), true);
   }
   gpsOff(); micStop(); mic.endAsk=0; clearInterval(corsaTick); corsaTick=null; try{ corsaWake&&corsaWake.release(); }catch(e){} corsaWake=null;
   corsa=null; store.del('corsa'); location.hash = save ? 'diario' : 'sessioni'; if(!save) viewCorsa();
+  if(rcAskW){ const w=rcAskW; rcAskW=null; setTimeout(()=>rcAsk(w), 600); }
 }
+let rcAskW=null;
 function corsaLoop(){ clearInterval(corsaTick); corsaTick=setInterval(()=>{ if(corsa && corsa.cd) cdTick(); rpTick(); if(view==='corsa') corsaPaint(); }, 500); }
 function corsaPaint(){
   if(view!=='corsa') return; const sec=corsaSec(), m=corsa?corsa.m:0;
@@ -4890,6 +4899,11 @@ const SCI_RUN = `<div class="sci">
   <p>${pill('w')}<b>Velocità sul tapis roulant.</b> Le velocità per le parti veloci sono calcolate dalla tua velocità facile: sono una stima, se hai la fascia segui il battito.</p>
   <p>${pill('m')}<b>La voce che motiva aiuta.</b> Frasi di incoraggiamento durante lo sforzo hanno fatto durare di più e sentire meno fatica. L'app ti confronta solo con te stesso, con le tue corse passate.<cite>Blanchfield e coll., Med Sci Sports Exerc 2014 · Hatzigeorgiadis e coll., Perspect Psychol Sci 2011 (meta-analisi)</cite></p>
   <p>${pill('w')}<b>Allunghi e settimane leggere.</b> Pratiche diffuse tra gli allenatori per tecnica e recupero, con poche prove dirette.</p>
+  <p>${pill('m')}<b>Ripetute regolari.</b> Partire troppo forte fa calare molto le ultime: un ritmo regolare spreca meno energie. Per questo la voce confronta ogni ripetuta con la prima.<cite>Abbiss e Laursen, Sports Med 2008 (revisione)</cite></p>
+  <p>${pill('s')}<b>Il battito che sale da solo.</b> Nelle corse lunghe il battito sale anche se il ritmo resta uguale, soprattutto col caldo e quando bevi poco. Se succede, la voce ti dice di rallentare e bere.<cite>Coyle e González-Alonso, Exerc Sport Sci Rev 2001</cite></p>
+  <p>${pill('m')}<b>Quanto è stata dura, da 1 a 10.</b> Il voto di fatica a fine allenamento è un modo semplice e affidabile per capire se il carico è giusto. Le corse facili devono restare sotto il 5.<cite>Foster e coll., J Strength Cond Res 2001</cite></p>
+  <p>${pill('m')}<b>Un piccolo fastidio.</b> Si può continuare se durante la corsa non peggiora ed è sparito la mattina dopo; se no, si riposa.<cite>Silbernagel e coll., Am J Sports Med 2007</cite></p>
+  <p>${pill('m')}<b>Dopo una pausa si torna un passo indietro.</b> Dopo 2–4 settimane senza allenamento il fiato cala in modo misurabile: per questo, se sei fermo da più di 10 giorni, l'app ti propone di ripartire dalla settimana prima.<cite>Mujika e Padilla, Sports Med 2000</cite></p>
   <p class="note">Se hai problemi di cuore, pressione alta, dolori o non ti alleni da tanto, senti prima il medico. Se senti dolore al petto, giramenti di testa o fiato che non torna, fermati.</p>
 </div>`;
 let rplan = Object.assign({lv:'principiante', done:{}}, store.get('runplan',{}));
@@ -4929,8 +4943,9 @@ function rpCue(p, i){ const sg=p.segs[i], T=RSEG[sg[0]];
 function rpTick(){
   const p=corsa&&corsa.plan; if(!p || corsa.paused || corsa.cd || p.fin) return;
   const q=rpPos(); if(!q) return;
-  if(q.end){ p.fin=1; beep('done'); say('Allenamento del piano finito, bravo! Cammina qualche minuto, poi premi Fine e salva.', true); corsaSave(); return; }
-  if(q.i!==p.i){ p.i=q.i; p.push=-1; beep('go'); say(rpCue(p,q.i), true); corsaSave(); return; }
+  rcSample(p, q);
+  if(q.end){ rcClose(p, q.t); p.fin=1; beep('done'); say('Allenamento del piano finito, bravo! Cammina qualche minuto, poi premi Fine e salva.', true); corsaSave(); return; }
+  if(q.i!==p.i){ const fb = p.i>=0 ? rcClose(p, q.t) : ''; p.i=q.i; p.push=-1; p.s0={t:q.t, m:corsa.m}; beep('go'); say(fb+rpCue(p,q.i), true); corsaSave(); return; }
   const sg=p.segs[q.i], L=Math.round(q.left);
   if(sg[2]){ const ml=q.mLeft; if(ml<=1000 && sg[2]>1500 && p.k1!==q.i){ p.k1=q.i; say('Ultimo chilometro, dai!', true); } if(ml<=200 && p.k2!==q.i){ p.k2=q.i; say('Ultimi 200 metri!', true); } }
   else if(L<=3 && L>=1 && p.cd!==q.i+'-'+L){ p.cd=q.i+'-'+L; beep('tick'); }
@@ -4941,11 +4956,109 @@ function rpTick(){
   // consigli dal battito (solo con la fascia o l'orologio collegati)
   const T=RSEG[sg[0]], mx=hrMax();
   if(T.z && mx && hrLive() && q.el>60){ const b=hr.bpm, now=Date.now();
-    if(['cam','fac','rec'].includes(sg[0]) && b>T.z[1]*mx+3){ if(!p.hiAt) p.hiAt=now; if(now-p.hiAt>20000 && now-(p.warn||0)>60000){ p.warn=now; say('Rallenta: battito '+b+', sei sopra la zona facile.', true); } }
+    if(['cam','fac','rec'].includes(sg[0]) && !(sg[0]==='rec' && q.i>0 && ['int','sog'].includes(p.segs[q.i-1][0])) && b>T.z[1]*mx+3){ if(!p.hiAt) p.hiAt=now; if(now-p.hiAt>20000 && now-(p.warn||0)>60000){ p.warn=now; say('Rallenta: battito '+b+', sei sopra la zona facile.', true); } }
     else p.hiAt=0;
     if(sg[0]==='int' && q.el>100 && b<T.z[0]*mx-3 && p.push!==q.i){ p.push=q.i; say('Puoi spingere un po\' di più.', true); }
   }
+  rcTips(p, q, sg);
 }
+/* ---------------- CONSIGLI IN BASE ALL'ANDAMENTO (durante la corsa e tra una corsa e l'altra) ----------------
+   - Ritmo facile: confronto col tuo ritmo facile delle corse passate (solo GPS, quando non c'è la fascia).
+   - Ripetute regolari: ognuna confrontata con la prima (Abbiss e Laursen, Sports Med 2008: ritmo regolare = meno spreco).
+   - Recupero col battito: pronto sotto il 70% (Helgerud 2007), 30" in più se ancora sopra l'80%.
+   - Deriva del battito nei lunghi (Coyle e González-Alonso, Exerc Sport Sci Rev 2001).
+   - Fine corsa: fatica 1-10 (Foster e coll., J Strength Cond Res 2001) e dolore (Silbernagel e coll., Am J Sports Med 2007).
+   - Pausa lunga: si torna indietro (Mujika e Padilla, Sports Med 2000). */
+const rcSpd = (m, s) => s>0 ? m/s*3.6 : 0;
+const rcKmh = v => (Math.round(v*2)/2).toLocaleString('it-IT',{maximumFractionDigits:1}).replace(',5',' e mezzo').replace(',',' virgola ');
+const rcHard = s => s.segs.some(x=>['int','sog','pro'].includes(x[0]));
+function rcHr(t0, t1){ const a=hr.log.filter(x=>x[0]>=t0 && x[0]<=t1).map(x=>x[1]); return a.length>=3 ? a.reduce((x,y)=>x+y,0)/a.length : 0; }
+// campioni ogni 10 secondi: [secondi di corsa, metri]
+function rcSample(p, q){ if(q.end) return; p.hs=p.hs||[]; const L=p.hs[p.hs.length-1]; if(!L || q.t-L[0]>=10){ p.hs.push([Math.round(q.t), Math.round(corsa.m), Date.now()]); if(p.hs.length>400) p.hs.splice(0, p.hs.length-400); } }
+function rcWin(p, sec){ const H=p.hs||[]; if(H.length<2) return null; const b=H[H.length-1]; let a=null; for(let i=H.length-1;i>=0;i--){ if(b[0]-H[i][0]>=sec){ a=H[i]; break; } } return a ? {s:b[0]-a[0], m:b[1]-a[1], v:rcSpd(b[1]-a[1], b[0]-a[0]), ta:a[2], tb:b[2]} : null; }
+// il tuo ritmo facile: mediana delle parti facili (≥ 4 minuti) delle ultime corse col GPS
+function rcEasy(){ const v=[]; S.workouts.filter(w=>w.run && w.run.seg && (!corsa || w.at<corsa.start)).slice(0,15).forEach(w=>w.run.seg.forEach(x=>{ if(x[0]==='fac' && x[1]>=240 && x[2]>0){ const s=rcSpd(x[2],x[1]); if(s>=4 && s<=20) v.push(s); } }));
+  if(v.length<2) return 0; v.sort((a,b)=>a-b); return v[Math.floor(v.length/2)]; }
+// chiude la parte appena finita: la salva e, se era una ripetuta, dice com'è andata
+function rcClose(p, t){ if(p.i<0 || !p.s0 || p.cl===p.i) return ''; p.cl=p.i; const sg=p.segs[p.i], sec=Math.max(1,Math.round(t-p.s0.t)), m=p.tm?0:Math.round(corsa.m-p.s0.m);
+  const bpm=Math.round(rcHr(Date.now()-sec*1000, Date.now()));
+  p.sr=(p.sr||[]).concat([[sg[0], sec, m, bpm]]);
+  if(p.tm || !['int','sog'].includes(sg[0]) || sec<45 || m<80) return '';
+  const v=rcSpd(m,sec), reps=p.sr.filter(x=>x[0]===sg[0] && x[2]>=80), first=reps[0], f=rcSpd(first[2],first[1]);
+  if(reps.length===1) return 'Ripetuta fatta a '+rcKmh(v)+' chilometri all\'ora. ';
+  const r=v/f, prev=reps[reps.length-2], rp=rcSpd(prev[2],prev[1])/f, more=p.segs.slice(p.i+1).some(x=>x[0]===sg[0]);
+  if(!more) return 'Ultima ripetuta a '+rcKmh(v)+' chilometri all\'ora. Ottimo, il lavoro duro è fatto. ';
+  if(p.drop) return 'Ripetuta a '+rcKmh(v)+' chilometri all\'ora. ';
+  if(r<0.9 && rp<0.9){ p.drop=1; return 'Ripetuta a '+rcKmh(v)+'. Le ultime due sono calate molto rispetto alla prima: è stanchezza. Fai le prossime più piano, oppure salta l\'ultima: hai già fatto un buon lavoro. '; }
+  if(r<0.93) return 'Ripetuta a '+rcKmh(v)+', un po\' più lenta della prima. Normale: tieni un ritmo che reggi fino alla fine. ';
+  if(r>1.07) return 'Ripetuta a '+rcKmh(v)+', più veloce della prima. Bene, ma non esagerare: regolare è meglio. ';
+  return 'Ripetuta a '+rcKmh(v)+', uguale alla prima. Perfetto, regolare. '; }
+function rcSay(p, txt){ const now=Date.now(); if(now-(p.tipAt||0)<75000) return false; p.tipAt=now; say(txt, true); return true; }
+function rcTips(p, q, sg){ if(!sg || q.end) return; const T=RSEG[sg[0]], mx=hrMax(), live=mx && hrLive();
+  // 1) parti facili troppo veloci (senza fascia, col GPS)
+  if(!p.tm && !live && ['fac','rec'].includes(sg[0]) && sg[1]>=480 && q.el>=150 && (p.fast||0)<3 && Date.now()-(p.fastAt||0)>240000){
+    if(p.ez==null) p.ez=rcEasy(); const w=rcWin(p,120);
+    if(p.ez && w && w.m>=200 && w.v>p.ez*1.1){ if(rcSay(p, (p.fast? 'Ancora un po\' veloce. ' : 'Stai andando a '+rcKmh(w.v)+' chilometri all\'ora, più forte del tuo ritmo facile di '+rcKmh(p.ez)+'. ')+'Rallenta: oggi deve essere facile, devi riuscire a parlare.')){ p.fast=(p.fast||0)+1; p.fastAt=Date.now(); } } }
+  // 2) ripetute: a metà, confronto con la prima
+  if(!p.tm && ['int','sog'].includes(sg[0]) && sg[1]>=90 && p.mid!==q.i && q.el>=Math.min(75, sg[1]/2)){
+    p.mid=q.i; const reps=(p.sr||[]).filter(x=>x[0]===sg[0] && x[2]>=80), m=corsa.m-(p.s0?p.s0.m:corsa.m);
+    if(reps.length && m>=80){ const v=rcSpd(m,q.el), f=rcSpd(reps[0][2],reps[0][1]);
+      if(v>f*1.08) rcSay(p, 'Vai più forte della prima ripetuta. Tieni lo stesso ritmo, così arrivi bene all\'ultima.');
+      else if(v<f*0.88) rcSay(p, 'Sei più lento della prima ripetuta. Non forzare: tieni un ritmo che riesci a reggere fino alla fine.'); } }
+  // 3) recupero col battito
+  if(live && sg[0]==='rec' && sg[1]>=60 && q.i>0 && ['int','sog'].includes(p.segs[q.i-1][0])){ const b=hr.bpm;
+    if(q.el>=30 && b<=0.7*mx && p.rdy!==q.i && q.left>20){ p.rdy=q.i; rcSay(p, 'Battito sceso a '+b+': sei pronto per la prossima.'); }
+    if(Math.round(q.left)===12 && b>0.8*mx && p.ext!==q.i && (p.extN||0)<3 && p.segs[q.i+1]){ p.ext=q.i; p.extN=(p.extN||0)+1; p.segs=p.segs.map(x=>x.slice()); p.segs[q.i][1]+=30; p.tipAt=Date.now(); say('Battito ancora alto, '+b+'. Ti do 30 secondi in più di recupero.', true); corsaSave(); } }
+  // 4) deriva del battito nelle corse facili lunghe
+  if(live && sg[0]==='fac' && sg[1]>=1800 && !p.drift){
+    if(!p.dB && q.el>=600){ const w=rcWin(p,300); if(w){ const b=rcHr(w.ta,w.tb); if(b) p.dB=[b, p.tm?0:w.v]; } }
+    if(p.dB && q.el>=1500 && Math.round(q.el)%60===0){ const w=rcWin(p,300); if(w){ const b=rcHr(w.ta,w.tb);
+      if(b && b>p.dB[0]*1.08 && (p.tm || w.v<=p.dB[1]*1.02)){ p.drift=1; rcSay(p, 'Il battito sta salendo anche se vai allo stesso ritmo, ora è '+Math.round(b)+'. È normale con la fatica e il caldo. Rallenta un po\' e, se puoi, bevi.'); } } } }
+}
+// dopo una pausa lunga dal piano: quante settimane tornare indietro
+function rcGap(lv){ const ts=Object.keys(rplan.done).filter(k=>k.startsWith(lv+'|')).map(k=>rplan.done[k]); if(!ts.length) return null;
+  const last=Math.max(...ts), days=Math.floor((Date.now()-last)/864e5), nx=rpNext(lv); if(days<=10 || !nx || nx[0]<1) return null;
+  return {days, back: Math.min(nx[0], days>28?2:1), w:nx[0]}; }
+function rcBack(lv, n){ const nx=rpNext(lv); if(!nx) return; for(let w=Math.max(0,nx[0]-n); w<=nx[0]; w++) RUNPLANS[lv].weeks[w].forEach((s,d)=>delete rplan.done[rpKey(lv,w,d)]); rpSave(); }
+// consiglio dopo la corsa: fatica 1-10 e dolore
+function rcAdvice(w){ const r=w.rp; if(!r) return null; const e=r.rpe, hard=r.hard, P=S.workouts.filter(x=>x.rp && x.rp.lv===r.lv && x.rp.rpe && x.id!==w.id).slice(0,2);
+  const tooHard = x => x.rp.pain===2 || (x.rp.hard ? x.rp.rpe>=9 : x.rp.rpe>=7), good = x => x.rp.fr>=0.8 && !x.rp.pain && !tooHard(x) && !(x.rp.hard && x.rp.rpe<=4);
+  if(r.pain===2) return {t:'Con un dolore forte non correre per 2 o 3 giorni. Se dopo una settimana c\'è ancora, o ti fa zoppicare, fatti vedere da un medico o da un fisioterapista.', rep:1};
+  if(r.fr<0.8) return {t:'Non l\'hai finita: va benissimo. La prossima volta l\'app ti ripropone la stessa seduta.'+(r.pain?' Se il fastidio domani c\'è ancora, riposa un giorno in più.':'')};
+  let t='', rep=0;
+  if(!hard && e>=7){ t='Era una corsa facile ma ti è sembrata dura. Riposa un giorno in più e la prossima volta vai più piano: devi riuscire a parlare.'; if(P[0] && tooHard(P[0])){ t+=' Due corse di fila troppo dure: meglio rifare questa seduta.'; rep=1; } }
+  else if(hard && e>=9){ t='Molto dura. Prima della prossima seduta veloce fai almeno un giorno facile o di riposo, e nelle ripetute parti un po\' più piano.'; if(P[0] && tooHard(P[0])){ t+=' Due sedute di fila al limite: meglio rifare questa.'; rep=1; } }
+  else if(hard && e<=4) t='Ti è sembrata facile: nella prossima seduta veloce spingi un po\' di più nelle ripetute, restando regolare.';
+  else if(!hard && e>=5) t='Un po\' più dura del previsto. Nelle corse facili rallenta pure: conta il tempo, non la velocità.';
+  else t = (good(w) && P.length===2 && P.every(good)) ? 'Tre corse di fila con la fatica giusta: il piano è perfetto per te. Vai avanti così.' : 'Fatica giusta, perfetto. Prossima corsa tra 1 o 2 giorni.';
+  if(r.pain===1) t+=' Il piccolo fastidio va bene se mentre corri non peggiora ed è sparito la mattina dopo. Se domani c\'è ancora, riposa un giorno in più.';
+  return {t, rep}; }
+function rcAsk(w){ if(!w || !w.rp) return; const old=document.querySelector('.rcask'); if(old) old.remove();
+  const v=document.createElement('div'); v.className='viewer rcask'; v.setAttribute('role','dialog'); v.setAttribute('aria-label','Com\'è andata?');
+  const st={e:0, p:-1};
+  const paint=()=>{ const ok=st.e && st.p>=0;
+    v.innerHTML=`<div class="card rcbox"><h2>Com'è andata?</h2>
+      <p class="rpgl">Quanto è stata dura? <small>(1 = facilissima, 10 = al massimo)</small></p>
+      <div class="rcrpe">${[1,2,3,4,5,6,7,8,9,10].map(n=>`<button type="button" data-e="${n}" aria-pressed="${st.e===n}" style="--h:${130-n*13}">${n}</button>`).join('')}</div>
+      <p class="rcleg"><span>facile</span><span>dura</span><span>massimo</span></p>
+      <p class="rpgl">Hai dolore da qualche parte?</p>
+      <div class="chips">${['No','Un po\'','Sì, forte'].map((x,i)=>`<button class="chip" type="button" data-p="${i}" aria-pressed="${st.p===i}">${x}</button>`).join('')}</div>
+      <div class="cbtns" style="margin-top:12px"><button class="btn ghost" type="button" id="rcNo">Salta</button><button class="btn" type="button" id="rcOk" ${ok?'':'disabled'}>Vedi il consiglio</button></div></div>`;
+    v.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>{ st.e=+b.dataset.e; paint(); });
+    v.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>{ st.p=+b.dataset.p; paint(); });
+    v.querySelector('#rcNo').onclick=()=>v.remove();
+    v.querySelector('#rcOk').onclick=()=>{ w.rp.rpe=st.e; w.rp.pain=st.p; store.set('workouts',S.workouts); if(DB) serial('w'+w.id,()=>wcol().doc(w.id).set(clone(w)));
+      const a=rcAdvice(w); rplan.adv={t:a.t, at:Date.now(), k:rpKey(w.rp.lv,w.rp.w,w.rp.d), rep:a.rep?1:0}; rpSave(); say(a.t, true);
+      v.innerHTML=`<div class="card rcbox"><h2>Il consiglio</h2><p class="lead">${esc(a.t)}</p>
+        <div class="cbtns" style="margin-top:12px">${a.rep && rplan.done[rplan.adv.k]?'<button class="btn ghost" type="button" id="rcRep">↺ Rifai questa seduta</button>':''}<button class="btn" type="button" id="rcX">OK</button></div></div>`;
+      v.querySelector('#rcX').onclick=()=>v.remove();
+      const rb=v.querySelector('#rcRep'); if(rb) rb.onclick=()=>{ delete rplan.done[rplan.adv.k]; rplan.adv.rep=0; rpSave(); v.remove(); };
+    }; };
+  paint(); document.body.appendChild(v); }
+// riquadro nella pagina Corsa: ultimo consiglio e pausa lunga
+function rcBoxHTML(lv){ const g=rcGap(lv), a=rplan.adv && Date.now()-rplan.adv.at<6*864e5 && rplan.adv.k.startsWith(lv+'|') ? rplan.adv : null; if(!g && !a) return '';
+  return `<div class="rcadv">${a?`<p><b>💡 Dall'ultima corsa:</b> ${esc(a.t)}</p>${a.rep && rplan.done[a.k]?'<button class="btn ghost small" type="button" id="rcRep2">↺ Rifai quella seduta</button>':''}`:''}
+    ${g?`<p><b>📅 Sei fermo da ${g.days} giorni.</b> Dopo una pausa il fiato cala un po': meglio ripartire ${g.back===1?'dalla settimana prima':'da 2 settimane prima'}.</p><button class="btn ghost small" type="button" id="rcBack" data-n="${g.back}">↺ Riparti dalla settimana ${g.w+1-g.back}</button>`:''}</div>`; }
 function rpGuideHTML(){ const p=corsa&&corsa.plan; if(!p) return '';
   return `<div class="card rpguide" id="rpG"><div class="rpgh"><span>${esc(RUNPLANS[p.lv].name)} · Sett. ${p.w+1} · Giorno ${p.d+1}</span><small>${esc(p.t)}</small></div>
     <div class="rpnow"><b id="rpN">–</b><span id="rpL">0:00</span></div><p class="rpz" id="rpZ"></p>
@@ -4970,7 +5083,7 @@ function rpPlansHTML(){
   const lv=rplan.lv, P=RUNPLANS[lv], nx=rpNext(lv);
   const ns = nx && rpGet(lv,nx[0],nx[1]);
   const doneN = Object.keys(rplan.done).filter(k=>k.startsWith(lv+'|')).length, totN=P.weeks.reduce((a,w)=>a+w.length,0);
-  return `<div class="card rplans">
+  return `<div class="card rplans">${rcBoxHTML(lv)}
     ${ns ? `<div class="rpnext"><b class="rpnm">${esc(P.name)}</b><span>Prossima: settimana ${nx[0]+1}, giorno ${nx[1]+1}</span><b>${esc(ns.t)}</b><i>Circa ${Math.round(rpTot(ns)/60)} minuti · fatte ${doneN} di ${totN}</i>
       <button class="btn big" type="button" data-rpgo="${nx[0]}|${nx[1]}">▶ Inizia con la guida</button></div>`
       : `<div class="rpnext"><b>Piano completato! 🎉</b><span>Puoi passare al livello successivo o ricominciare.</span><button class="btn ghost small" type="button" id="rpReset">Ricomincia questo piano</button></div>`}
@@ -4997,6 +5110,8 @@ function rpBind(){
   $app.querySelectorAll('[data-rpl]').forEach(b=>b.onclick=()=>{ rplan.lv=b.dataset.rpl; rpSave(); keepScroll(viewCorsa); });
   $app.querySelectorAll('[data-rpgo]').forEach(b=>b.onclick=()=>{ const [w,d]=b.dataset.rpgo.split('|').map(Number); rpStart(rplan.lv,w,d); });
   $app.querySelectorAll('[data-rpok]').forEach(b=>b.onclick=()=>{ const k=b.dataset.rpok; if(rplan.done[k]) delete rplan.done[k]; else rplan.done[k]=Date.now(); rpSave(); keepScroll(viewCorsa); });
+  const rr=document.getElementById('rcRep2'); if(rr) rr.onclick=()=>{ delete rplan.done[rplan.adv.k]; rplan.adv.rep=0; rpSave(); keepScroll(viewCorsa); };
+  const rbk=document.getElementById('rcBack'); if(rbk) rbk.onclick=()=>{ rcBack(rplan.lv, +rbk.dataset.n); keepScroll(viewCorsa); };
   const r=document.getElementById('rpReset'); if(r) r.onclick=()=>{ Object.keys(rplan.done).forEach(k=>{ if(k.startsWith(rplan.lv+'|')) delete rplan.done[k]; }); rpSave(); keepScroll(viewCorsa); };
 }
 function runProgress(){
