@@ -3611,7 +3611,8 @@ function drawRun(){
   const h = histFor(p.ex), last = h[h.length-1];
   const d = defaults(p, run.set);
   const sayKey = resting ? 'r'+run.restEnd : run.i+'-'+run.set;
-  if(!resting && run.setKey!==run.i+'-'+run.set){ run.setKey=run.i+'-'+run.set; run.setAt=Date.now(); saveRun(); }
+  const newSet = !resting && run.setKey!==run.i+'-'+run.set;
+  if(newSet){ run.setKey=run.i+'-'+run.set; run.setAt=Date.now(); saveRun(); }
   if(sayKey!==lastSaid){ lastSaid=sayKey;
     if(resting) say('Recupero, '+spokenRest(Math.round((run.restEnd-Date.now())/1000))+'. '+(run.cMsg?run.cMsg+' ':'')+(run.set>1?'Poi serie '+run.set+' di '+p.sets+'.':'Poi '+x.name+'.'));
     else say(coachSetTxt(p,total,done)+(run.set===1?x.name+'. ':'')+(run.set===1&&!timeEx?(a=>a&&a.act==='up'&&a.kg>0?'Oggi sali a '+kgf(a.kg)+' chili. ':a&&a.act==='down'&&a.kg>0?'Oggi scendi a '+kgf(a.kg)+' chili. ':'')(advise(x,p.reps)):'')+'Serie '+run.set+' di '+p.sets+'. '+spokenReps(p.reps)+(!timeEx && /^[\d–\- ]+$/.test(String(p.reps).trim())?' ripetizioni':'')+'.'+(isWarm(p)&&run.set===1?' Finito il cardio, premi riscaldamento guidato.':'')); }
@@ -3652,6 +3653,7 @@ function drawRun(){
     <div class="micbar" id="micBar" hidden></div>
     <div class="confirm" id="endWrap" style="margin-top:8px"><button class="btn ghost small" type="button" id="endRun">Termina allenamento</button></div>
   </section>`;
+  if(newSet || (resting && run.restShown!==run.restEnd)){ run.restShown = resting ? run.restEnd : 0; try{ scrollTo(0,0); }catch(e){} }
   if(resting){
     const c = document.getElementById('clock');
     let lastSec = Math.ceil((run.restEnd-Date.now())/1000);
@@ -7533,6 +7535,9 @@ function route(soft){
 try{ const q=new URLSearchParams(location.search), st=[q.get('title'),q.get('text')].filter(Boolean).join('\n');
   if(st){ history.replaceState(null,'',location.pathname+'#importa'); const d=parseScheda(st); imp={days:d.length?d:null, text:st}; } }catch(e){}
 window.addEventListener('hashchange',()=>route());
+// app riaperta con un allenamento in corso (ultima serie da meno di 30 minuti): si torna dritti all'esercizio
+(()=>{ try{ const h=(location.hash||'#home').slice(1); if(!run || !(h==='home'||h==='')) return;
+  const lastT=run.sets.reduce((a,x)=>Math.max(a,x.t||0), run.start||0); if(Date.now()-lastT < 30*60000) history.replaceState(null,'','#allena-'+run.id); }catch(e){} })();
 route();
 initDb();
 </script>
